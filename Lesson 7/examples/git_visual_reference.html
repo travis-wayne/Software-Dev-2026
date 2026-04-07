@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Visual Reference – Lesson 7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green: #3fb950;
+    --green-dim: #1a3a22;
+    --red: #f85149;
+    --red-dim: #3a1a1a;
+    --blue: #58a6ff;
+    --blue-dim: #1a2a3a;
+    --orange: #f0883e;
+    --orange-dim: #3a2a1a;
+    --purple: #bc8cff;
+    --yellow: #e3b341;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,17,23,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 56px;
+    overflow-x: auto;
+  }
+  nav .brand {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--orange);
+    white-space: nowrap;
+    margin-right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0 0.9rem;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav a:hover { color: var(--text); border-bottom-color: var(--border); }
+  nav a.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* LAYOUT */
+  .page { max-width: 980px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  /* SECTION HEADERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    width: 2rem; height: 2rem;
+    background: var(--orange);
+    color: #000;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.35rem; font-weight: 700; }
+  .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.15rem; }
+
+  section { margin-bottom: 4rem; }
+
+  /* CARDS */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+  }
+  .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.7; }
+
+  /* TERMINAL / CODE BLOCKS */
+  .terminal {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+  .terminal-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #28c840; }
+  .terminal-label { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); font-family: var(--mono); }
+  .terminal-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.82rem; line-height: 1.9; }
+  .t-prompt { color: var(--green); }
+  .t-cmd { color: var(--text); }
+  .t-out { color: var(--text-muted); }
+  .t-green { color: var(--green); }
+  .t-red { color: var(--red); }
+  .t-blue { color: var(--blue); }
+  .t-yellow { color: var(--yellow); }
+  .t-orange { color: var(--orange); }
+
+  /* COPY BUTTON */
+  .cmd-block {
+    position: relative;
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1.25rem;
+    padding-right: 3.5rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--green);
+    margin: 0.6rem 0;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .cmd-block:hover { border-color: var(--blue); }
+  .copy-btn {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: background 0.15s, color 0.15s;
+  }
+  .copy-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+
+  /* WORKFLOW DIAGRAM */
+  .workflow {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    margin: 1.5rem 0;
+  }
+  .wf-area {
+    border: 1px solid var(--border);
+    border-right: none;
+    padding: 1.25rem 1rem;
+    text-align: center;
+    position: relative;
+    background: var(--surface);
+    transition: background 0.2s;
+  }
+  .wf-area:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--radius) var(--radius) 0; }
+  .wf-area:first-child { border-radius: var(--radius) 0 0 var(--radius); }
+  .wf-area:hover { background: var(--surface2); }
+  .wf-label {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+  .wf-icon { font-size: 1.6rem; margin-bottom: 0.4rem; display: block; }
+  .wf-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.3rem; }
+  .wf-desc { font-size: 0.75rem; color: var(--text-muted); }
+  .wf-arrow {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    align-items: center;
+    margin: 0.5rem 0;
+  }
+  .arrow-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 0.4rem 0;
+    font-size: 0.78rem;
+  }
+  .arrow-row code {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.15rem 0.5rem;
+    font-family: var(--mono);
+    color: var(--orange);
+    font-size: 0.75rem;
+  }
+  .arrow { color: var(--blue); font-size: 1rem; }
+
+  /* COMMAND GRID */
+  .cmd-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  @media (max-width: 640px) { .cmd-grid { grid-template-columns: 1fr; } .workflow { grid-template-columns: 1fr 1fr; } }
+
+  .cmd-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .cmd-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .cmd-card .cmd-name {
+    font-family: var(--mono);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--green);
+    margin-bottom: 0.4rem;
+  }
+  .cmd-card .cmd-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .cmd-card .cmd-example {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.6rem 0.8rem;
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .cmd-card .cmd-example .prompt { color: var(--green); }
+  .cmd-card .cmd-example .out { color: var(--text-muted); }
+
+  /* BADGE */
+  .badge {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+  }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+  .badge-red { background: var(--red-dim); color: var(--red); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-orange { background: var(--orange-dim); color: var(--orange); }
+
+  /* ANALOGY BOX */
+  .analogy {
+    background: linear-gradient(135deg, #1a2a3a 0%, #1a1a2e 100%);
+    border: 1px solid #2a3a4a;
+    border-left: 4px solid var(--blue);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    margin: 1.5rem 0;
+  }
+  .analogy .analogy-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 0.5rem;
+  }
+  .analogy p { font-size: 0.9rem; color: var(--text); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+  th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+  td code { font-family: var(--mono); color: var(--orange); font-size: 0.82rem; background: var(--surface2); padding: 0.1rem 0.35rem; border-radius: 3px; }
+
+  /* STATUS STATES */
+  .status-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+  @media (max-width: 640px) { .status-demo { grid-template-columns: 1fr; } }
+  .status-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .status-box-header {
+    padding: 0.5rem 1rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid var(--border);
+  }
+  .status-box-body { padding: 0.75rem 1rem; font-family: var(--mono); font-size: 0.78rem; line-height: 1.8; }
+
+  /* GITIGNORE */
+  .gitignore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+  @media (max-width: 640px) { .gitignore-grid { grid-template-columns: 1fr; } }
+
+  /* TIPS */
+  .tip {
+    display: flex;
+    gap: 0.75rem;
+    background: #1a2a1a;
+    border: 1px solid #2a3a2a;
+    border-left: 4px solid var(--green);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+  }
+  .tip-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+
+  .warn {
+    display: flex;
+    gap: 0.75rem;
+    background: #2a1a1a;
+    border: 1px solid #3a2020;
+    border-left: 4px solid var(--red);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin: 0.75rem 0;
+    font-size: 0.875rem;
+  }
+
+  /* CHEAT SHEET */
+  .cheat-section { margin-bottom: 1.5rem; }
+  .cheat-section h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--orange); margin-bottom: 0.75rem; }
+  .cheat-row { display: flex; gap: 1rem; align-items: baseline; padding: 0.35rem 0; border-bottom: 1px solid rgba(48,54,61,0.5); }
+  .cheat-row:last-child { border-bottom: none; }
+  .cheat-cmd { font-family: var(--mono); font-size: 0.82rem; color: var(--green); min-width: 260px; flex-shrink: 0; }
+  .cheat-desc { font-size: 0.82rem; color: var(--text-muted); }
+
+  /* HERO */
+  .hero-banner {
+    background: linear-gradient(135deg, #0d1117 0%, #1a0a2e 50%, #0a1a2e 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: radial-gradient(ellipse at center, rgba(88,166,255,0.05) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-banner h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .hero-banner h1 span { color: var(--orange); }
+  .hero-banner p { color: var(--text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto; }
+  .hero-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--orange); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">⬡ Git Reference</div>
+  <a href="#workflow" class="active">Workflow</a>
+  <a href="#commands">Commands</a>
+  <a href="#status">git status</a>
+  <a href="#github">GitHub</a>
+  <a href="#gitignore">.gitignore</a>
+  <a href="#messages">Messages</a>
+  <a href="#cheatsheet">Cheat Sheet</a>
+</nav>
+
+<div class="page">
+
+  <div class="hero-banner">
+    <div class="hero-tag">Lesson 7 — Interactive Reference</div>
+    <h1>Git <span>&amp;</span> GitHub Visual Guide</h1>
+    <p>A complete interactive reference for the Git basics session. Keep this open in a browser tab while you work.</p>
+  </div>
+
+  <!-- ═══ SECTION 1: WORKFLOW ═══ -->
+  <section id="workflow">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>The Git Workflow — Four Areas</h2>
+        <p>Every file in Git lives in one of four places. Understanding this is the key to everything.</p>
+      </div>
+    </div>
+
+    <div class="workflow">
+      <div class="wf-area">
+        <div class="wf-label">Area 1</div>
+        <span class="wf-icon">📝</span>
+        <div class="wf-name">Working Directory</div>
+        <div class="wf-desc">Your files as you edit them. Changes here are <em>not yet tracked</em> by Git.</div>
+      </div>
+      <div class="wf-area">
+        <div class="wf-label">Area 2</div>
+        <span class="wf-icon">🧺</span>
+        <div class="wf-name">Staging Area</div>
+        <div class="wf-desc">A "draft zone". You choose which changes to include in the next snapshot.</div>
+      </div>
+      <div class="wf-area">
+        <div class="wf-label">Area 3</div>
+        <span class="wf-icon">💾</span>
+        <div class="wf-name">Local Repository</div>
+        <div class="wf-desc">Your permanent save history. Each commit is a snapshot you can return to.</div>
+      </div>
+      <div class="wf-area">
+        <div class="wf-label">Area 4</div>
+        <span class="wf-icon">☁️</span>
+        <div class="wf-name">Remote (GitHub)</div>
+        <div class="wf-desc">The online backup. Shared with collaborators. Accessed via push &amp; pull.</div>
+      </div>
+    </div>
+
+    <div style="margin: 1rem 0;">
+      <div class="arrow-row">
+        <span>📝 Working Dir</span>
+        <span class="arrow">──</span>
+        <code>git add</code>
+        <span class="arrow">──►</span>
+        <span>🧺 Staging</span>
+        <span class="arrow">──</span>
+        <code>git commit</code>
+        <span class="arrow">──►</span>
+        <span>💾 Local Repo</span>
+        <span class="arrow">──</span>
+        <code>git push</code>
+        <span class="arrow">──►</span>
+        <span>☁️ GitHub</span>
+      </div>
+      <div class="arrow-row" style="justify-content:flex-end; margin-right: 1rem;">
+        <span>☁️ GitHub</span>
+        <span class="arrow">──</span>
+        <code>git pull</code>
+        <span class="arrow">──►</span>
+        <span>💾 Local Repo + 📝 Working Dir</span>
+      </div>
+    </div>
+
+    <div class="analogy">
+      <div class="analogy-label">💡 Video Game Analogy</div>
+      <p>Think of each <strong>commit</strong> as a save point in a video game. If you break something later, you can reload from any previous save. Unlike overwriting a file, Git keeps <em>every</em> save point forever, and you can jump back to any of them.</p>
+    </div>
+
+    <div class="analogy" style="background: linear-gradient(135deg, #1a2a1a 0%, #1a2a10 100%); border-color: #2a3a2a; border-left-color: var(--green);">
+      <div class="analogy-label" style="color:var(--green);">💡 Shopping Basket Analogy (Staging Area)</div>
+      <p>The staging area is like a supermarket basket. You browse the shop (edit files), put items in the basket (<code>git add</code>), and when you're ready, you go to the checkout (<code>git commit</code>). You decide exactly what goes into each basket — and therefore each snapshot.</p>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 2: COMMANDS ═══ -->
+  <section id="commands">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Core Git Commands</h2>
+        <p>Click any command block to copy it to your clipboard.</p>
+      </div>
+    </div>
+
+    <div class="cmd-grid">
+
+      <div class="cmd-card">
+        <div class="cmd-name">git init</div>
+        <div class="cmd-desc">Initialise a new Git repository in the current folder. Creates a hidden <code>.git/</code> directory — Git's brain.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git init<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git init</div>
+          <div class="out">Initialized empty Git repository in ./my-project/.git/</div>
+        </div>
+        <div class="tip" style="margin-top:0.75rem;">
+          <span class="tip-icon">⚠️</span>
+          <span>Always run inside your <em>project</em> folder, not on the Desktop.</span>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git status</div>
+        <div class="cmd-desc">Show the current state of all files — untracked, modified, staged. Your most-used command.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git status<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git status</div>
+          <div class="out">On branch main</div>
+          <div class="out" style="color:var(--red);">Untracked files:</div>
+          <div class="out" style="color:var(--red);">  index.html</div>
+          <div class="out" style="color:var(--green);">Changes to be committed:</div>
+          <div class="out" style="color:var(--green);">  new file: style.css</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git add</div>
+        <div class="cmd-desc">Move changes into the staging area. Stage one file, multiple files, or everything at once.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git add index.html<button class="copy-btn">Copy</button></div>
+        <div class="cmd-block" onclick="copyCmd(this)">git add .<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div class="out"># git add .  stages everything in the</div>
+          <div class="out"># current folder and subfolders</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git commit -m "..."</div>
+        <div class="cmd-desc">Save all staged changes as a permanent snapshot with a descriptive message.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git commit -m "Initial commit - Add HTML structure"<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git commit -m "Add nav bar"</div>
+          <div class="out">[main a3f9c12] Add nav bar</div>
+          <div class="out"> 1 file changed, 22 insertions(+)</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git log</div>
+        <div class="cmd-desc">View the full commit history. Use <code>--oneline</code> for a compact, one-line-per-commit view.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git log --oneline<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git log --oneline</div>
+          <div class="out" style="color:var(--yellow);">a3f9c12</div>
+          <div class="out"> (HEAD → main) Fix broken nav link</div>
+          <div class="out" style="color:var(--yellow);">b0e7d23</div>
+          <div class="out"> Add hero section</div>
+          <div class="out" style="color:var(--yellow);">3c1a5f8</div>
+          <div class="out"> Initial commit</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git diff</div>
+        <div class="cmd-desc">Show exactly what lines changed in your working directory since the last commit. Lines with <code>+</code> were added; <code>-</code> were removed.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git diff<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git diff</div>
+          <div class="out">@@ -1,4 +1,5 @@</div>
+          <div class="out" style="color:var(--red);">-  &lt;title&gt;My Site&lt;/title&gt;</div>
+          <div class="out" style="color:var(--green);">+  &lt;title&gt;My Portfolio&lt;/title&gt;</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git remote add origin</div>
+        <div class="cmd-desc">Link your local repository to a remote repository on GitHub. <code>origin</code> is the conventional name for your primary remote.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git remote add origin https://github.com/username/repo.git<button class="copy-btn">Copy</button></div>
+        <div class="cmd-block" onclick="copyCmd(this)">git remote -v<button class="copy-btn">Copy</button></div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git push</div>
+        <div class="cmd-desc">Upload your local commits to GitHub. Use <code>-u origin main</code> for the first push to set the default upstream.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git push -u origin main<button class="copy-btn">Copy</button></div>
+        <div class="cmd-block" onclick="copyCmd(this)">git push<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div class="out"># -u sets the default so future</div>
+          <div class="out"># pushes only need: git push</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git pull</div>
+        <div class="cmd-desc">Fetch changes from GitHub and merge them into your local repo. Run this at the start of every work session.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git pull<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git pull</div>
+          <div class="out">remote: Counting objects: 3</div>
+          <div class="out" style="color:var(--green);">Updating b0e7d23..a3f9c12</div>
+          <div class="out"> index.html | 2 +-</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git branch &amp; git config</div>
+        <div class="cmd-desc">One-time setup and branch utilities. Configure your identity and rename branches.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git config --global user.name "Your Name"<button class="copy-btn">Copy</button></div>
+        <div class="cmd-block" onclick="copyCmd(this)">git config --global user.email "you@email.com"<button class="copy-btn">Copy</button></div>
+        <div class="cmd-block" onclick="copyCmd(this)">git branch -M main<button class="copy-btn">Copy</button></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 3: GIT STATUS STATES ═══ -->
+  <section id="status">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Understanding git status Output</h2>
+        <p>The output of <code>git status</code> changes as you move files between areas.</p>
+      </div>
+    </div>
+
+    <div class="status-demo">
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--red-dim); color: var(--red);">State 1 — Untracked</div>
+        <div class="status-box-body">
+          <div style="color:var(--text-muted);">Untracked files:</div>
+          <div style="color:var(--red);">  index.html</div>
+          <div style="color:var(--red);">  style.css</div>
+          <div style="margin-top:0.75rem; color:var(--text-muted); font-size:0.72rem;">Git sees these files but is NOT tracking them. Run <span style="color:var(--green);">git add</span> to start tracking.</div>
+        </div>
+      </div>
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--green-dim); color: var(--green);">State 2 — Staged</div>
+        <div class="status-box-body">
+          <div style="color:var(--text-muted);">Changes to be committed:</div>
+          <div style="color:var(--green);">  new file: index.html</div>
+          <div style="color:var(--green);">  new file: style.css</div>
+          <div style="margin-top:0.75rem; color:var(--text-muted); font-size:0.72rem;">Files are in the staging area. Run <span style="color:var(--orange);">git commit</span> to save the snapshot.</div>
+        </div>
+      </div>
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--blue-dim); color: var(--blue);">State 3 — Clean</div>
+        <div class="status-box-body">
+          <div style="color:var(--green);">On branch main</div>
+          <div style="color:var(--text-muted);">nothing to commit,</div>
+          <div style="color:var(--text-muted);">working tree clean</div>
+          <div style="margin-top:0.75rem; color:var(--text-muted); font-size:0.72rem;">All changes are committed. Your working directory matches the last snapshot.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="status-demo" style="margin-top:1rem;">
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--orange-dim); color: var(--orange);">State 4 — Modified (unstaged)</div>
+        <div class="status-box-body">
+          <div style="color:var(--text-muted);">Changes not staged:</div>
+          <div style="color:var(--red);">  modified: index.html</div>
+          <div style="margin-top:0.75rem; color:var(--text-muted); font-size:0.72rem;">You've edited a tracked file. Run <span style="color:var(--green);">git add index.html</span> to stage the changes.</div>
+        </div>
+      </div>
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--orange-dim); color: var(--orange);">State 5 — Partially Staged</div>
+        <div class="status-box-body">
+          <div style="color:var(--green);">Changes to be committed:</div>
+          <div style="color:var(--green);">  modified: index.html</div>
+          <div style="color:var(--text-muted);">Changes not staged:</div>
+          <div style="color:var(--red);">  modified: style.css</div>
+          <div style="margin-top:0.5rem; color:var(--text-muted); font-size:0.72rem;">One file staged, one not. This is why staging gives you fine-grained control.</div>
+        </div>
+      </div>
+      <div class="status-box">
+        <div class="status-box-header" style="background: var(--red-dim); color: var(--red);">State 6 — Deleted File</div>
+        <div class="status-box-body">
+          <div style="color:var(--text-muted);">Changes not staged:</div>
+          <div style="color:var(--red);">  deleted: about.html</div>
+          <div style="margin-top:0.75rem; color:var(--text-muted); font-size:0.72rem;">A tracked file was deleted. Run <span style="color:var(--green);">git add about.html</span> then commit to record the deletion.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 4: GITHUB ═══ -->
+  <section id="github">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Connecting to GitHub — Step by Step</h2>
+        <p>The full workflow for taking a local project live on GitHub.</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>Step</th><th>Command / Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-blue">1</span></td>
+          <td>Initialise local repo</td>
+          <td><code>git init</code></td>
+          <td>Run once inside your project folder</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">2</span></td>
+          <td>Stage all files</td>
+          <td><code>git add .</code></td>
+          <td>The dot = everything in current folder</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">3</span></td>
+          <td>First commit</td>
+          <td><code>git commit -m "Initial commit"</code></td>
+          <td>You must have at least one commit before pushing</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">4</span></td>
+          <td>Create GitHub repo</td>
+          <td>github.com → New repository</td>
+          <td><strong>Do NOT</strong> add README/gitignore — leave it empty</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">5</span></td>
+          <td>Link remote</td>
+          <td><code>git remote add origin &lt;URL&gt;</code></td>
+          <td>Copy the HTTPS URL from GitHub</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">6</span></td>
+          <td>Rename branch</td>
+          <td><code>git branch -M main</code></td>
+          <td>GitHub uses <code>main</code> by default</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">7</span></td>
+          <td>First push</td>
+          <td><code>git push -u origin main</code></td>
+          <td>The <code>-u</code> sets the default; future pushes just need <code>git push</code></td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">✓</span></td>
+          <td>Verify</td>
+          <td><code>git remote -v</code></td>
+          <td>Should show your GitHub URL for fetch and push</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="warn">
+      <span class="tip-icon">❌</span>
+      <div><strong>Common mistake:</strong> Ticking "Add a README file" when creating the GitHub repo. If your local project already has files, this creates a conflict and your first <code>git push</code> will be rejected. Always create an <em>empty</em> repo when pushing an existing project.</div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">🔑</span>
+      <div><strong>Authentication:</strong> GitHub no longer accepts your account password for <code>git push</code>. You need a Personal Access Token (PAT). Go to: GitHub → Settings → Developer settings → Personal access tokens → Generate new token. Use this token wherever Git asks for a password.</div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 5: GITIGNORE ═══ -->
+  <section id="gitignore">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <h2>.gitignore — Telling Git What to Ignore</h2>
+        <p>Some files should <em>never</em> be committed. The <code>.gitignore</code> file tells Git to skip them.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Why do I need a .gitignore?</h3>
+      <p>Some files are auto-generated, system-specific, or contain sensitive data (passwords, API keys). Committing them clutters your history and can be a security risk. A <code>.gitignore</code> file tells Git to pretend these files don't exist.</p>
+    </div>
+
+    <div class="gitignore-grid">
+      <div>
+        <h4 style="margin-bottom:0.75rem; font-size:0.875rem; color:var(--text-muted);">Common files to ignore</h4>
+        <table>
+          <thead><tr><th>Pattern</th><th>What it ignores</th></tr></thead>
+          <tbody>
+            <tr><td><code>.DS_Store</code></td><td>macOS system files</td></tr>
+            <tr><td><code>Thumbs.db</code></td><td>Windows thumbnail cache</td></tr>
+            <tr><td><code>node_modules/</code></td><td>npm dependencies (huge!)</td></tr>
+            <tr><td><code>.env</code></td><td>Environment variables / secrets</td></tr>
+            <tr><td><code>*.log</code></td><td>All log files</td></tr>
+            <tr><td><code>dist/</code></td><td>Build output folders</td></tr>
+            <tr><td><code>.vscode/</code></td><td>VS Code personal settings</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <h4 style="margin-bottom:0.75rem; font-size:0.875rem; color:var(--text-muted);">Pattern syntax</h4>
+        <div class="terminal">
+          <div class="terminal-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="terminal-label">.gitignore</span></div>
+          <div class="terminal-body">
+            <div class="t-out"># Lines starting with # are comments</div>
+            <div>&nbsp;</div>
+            <div class="t-out"># Ignore a specific file</div>
+            <div class="t-green">.env</div>
+            <div>&nbsp;</div>
+            <div class="t-out"># Ignore all files with this extension</div>
+            <div class="t-green">*.log</div>
+            <div>&nbsp;</div>
+            <div class="t-out"># Ignore an entire folder</div>
+            <div class="t-green">node_modules/</div>
+            <div>&nbsp;</div>
+            <div class="t-out"># Ignore in all subfolders</div>
+            <div class="t-green">**/.DS_Store</div>
+            <div>&nbsp;</div>
+            <div class="t-out"># Un-ignore a file (exception)</div>
+            <div class="t-green">!important.log</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <div>Create a <code>.gitignore</code> file in the <strong>root of your project</strong> (same level as your <code>index.html</code>). Add it and commit it as part of your initial commit. The file has no extension — it's literally just called <code>.gitignore</code>.</div>
+    </div>
+
+    <div class="cmd-block" onclick="copyCmd(this)">
+      # Starter .gitignore for a web project<br>
+      .DS_Store<br>
+      Thumbs.db<br>
+      *.log<br>
+      .env<br>
+      node_modules/
+      <button class="copy-btn">Copy</button>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 6: COMMIT MESSAGES ═══ -->
+  <section id="messages">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <h2>Writing Good Commit Messages</h2>
+        <p>A good commit message is one of the most valuable habits you can build as a developer.</p>
+      </div>
+    </div>
+
+    <div class="cmd-grid">
+      <div>
+        <h4 style="color: var(--green); margin-bottom: 0.75rem;">✅ Good examples</h4>
+        <div class="terminal">
+          <div class="terminal-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+          <div class="terminal-body">
+            <div class="t-green">"Initial commit - Add portfolio HTML structure"</div>
+            <div class="t-green">"Add responsive navigation bar"</div>
+            <div class="t-green">"Fix broken image link on projects page"</div>
+            <div class="t-green">"Update footer with social media links"</div>
+            <div class="t-green">"Style hero section with gradient background"</div>
+            <div class="t-green">"Add README with project description"</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <h4 style="color: var(--red); margin-bottom: 0.75rem;">❌ Bad examples</h4>
+        <div class="terminal">
+          <div class="terminal-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div></div>
+          <div class="terminal-body">
+            <div class="t-red">"stuff"</div>
+            <div class="t-red">"changes"</div>
+            <div class="t-red">"fix"</div>
+            <div class="t-red">"final"</div>
+            <div class="t-red">"v2"</div>
+            <div class="t-red">"asdfjkl"</div>
+            <div class="t-red">"updated things"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analogy" style="margin-top:1.5rem;">
+      <div class="analogy-label">💡 The Rule</div>
+      <p>Write your message as if completing the sentence: <strong>"This commit will..."</strong><br>
+      <span style="color:var(--text-muted);">→ "This commit will <em>Fix broken image link on projects page</em>"</span></p>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 7: CHEAT SHEET ═══ -->
+  <section id="cheatsheet">
+    <div class="section-header">
+      <div class="section-num">7</div>
+      <div>
+        <h2>Git Command Cheat Sheet</h2>
+        <p>Your complete quick-reference for Lesson 7 and beyond.</p>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <div>
+        <div class="cheat-section">
+          <h4>⚙️ Setup</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git --version</div><div class="cheat-desc">Check Git is installed</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git config --global user.name "Name"</div><div class="cheat-desc">Set your name (once)</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git config --global user.email "..."</div><div class="cheat-desc">Set your email (once)</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git config --list</div><div class="cheat-desc">View all settings</div></div>
+        </div>
+        <div class="cheat-section">
+          <h4>📁 Create &amp; Inspect</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git init</div><div class="cheat-desc">Start a new repo</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git status</div><div class="cheat-desc">Show current file states</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git log</div><div class="cheat-desc">Full commit history</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git log --oneline</div><div class="cheat-desc">Compact history</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git log --oneline --graph</div><div class="cheat-desc">History with branch graph</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git diff</div><div class="cheat-desc">Show unstaged changes</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git show HEAD</div><div class="cheat-desc">Show last commit details</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="cheat-section">
+          <h4>📸 Stage &amp; Commit</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git add &lt;file&gt;</div><div class="cheat-desc">Stage a specific file</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git add .</div><div class="cheat-desc">Stage all changes</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git commit -m "message"</div><div class="cheat-desc">Save staged snapshot</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git restore --staged &lt;file&gt;</div><div class="cheat-desc">Unstage a file</div></div>
+        </div>
+        <div class="cheat-section">
+          <h4>☁️ Remote &amp; Sync</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git remote add origin &lt;URL&gt;</div><div class="cheat-desc">Link to GitHub</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git remote -v</div><div class="cheat-desc">Verify remote URLs</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git branch -M main</div><div class="cheat-desc">Rename branch to main</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git push -u origin main</div><div class="cheat-desc">First push (sets default)</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git push</div><div class="cheat-desc">Subsequent pushes</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git pull</div><div class="cheat-desc">Download &amp; merge changes</div></div>
+        </div>
+        <div class="cheat-section">
+          <h4>🔁 Daily Workflow</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git pull</div><div class="cheat-desc">1. Start — get latest</div></div>
+          <div class="cheat-row"><div class="cheat-cmd"><em>edit your files</em></div><div class="cheat-desc">2. Make your changes</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git add .</div><div class="cheat-desc">3. Stage everything</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git commit -m "..."</div><div class="cheat-desc">4. Save the snapshot</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git push</div><div class="cheat-desc">5. Upload to GitHub</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end .page -->
+
+<script>
+  function copyCmd(el) {
+    const btn = el.querySelector('.copy-btn');
+    const text = el.childNodes[0].textContent.trim().replace(/\n\s*/g, '\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

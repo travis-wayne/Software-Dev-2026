@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tailwind CSS Demo – Lesson 6</title>
+
+    <!-- Tailwind CSS via CDN (for learning/prototyping only) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+
+  <body class="bg-gray-50 text-gray-800 font-sans">
+    <!-- ============================== -->
+    <!-- HEADER / NAVIGATION            -->
+    <!-- ============================== -->
+    <header class="bg-slate-800 text-white shadow-lg">
+      <nav
+        class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center p-4"
+      >
+        <h1 class="text-2xl font-bold mb-2 md:mb-0">🎨 Tailwind Demo</h1>
+        <div class="flex flex-col md:flex-row gap-2 md:gap-4 text-sm">
+          <a
+            href="#comparison"
+            class="hover:text-blue-300 transition duration-200"
+            >Compare</a
+          >
+          <a href="#spacing" class="hover:text-blue-300 transition duration-200"
+            >Spacing</a
+          >
+          <a
+            href="#typography"
+            class="hover:text-blue-300 transition duration-200"
+            >Typography</a
+          >
+          <a href="#colours" class="hover:text-blue-300 transition duration-200"
+            >Colours</a
+          >
+          <a href="#layout" class="hover:text-blue-300 transition duration-200"
+            >Layout</a
+          >
+          <a
+            href="#responsive"
+            class="hover:text-blue-300 transition duration-200"
+            >Responsive</a
+          >
+          <a href="#buttons" class="hover:text-blue-300 transition duration-200"
+            >Buttons</a
+          >
+          <a href="#cards" class="hover:text-blue-300 transition duration-200"
+            >Cards</a
+          >
+          <a href="#forms" class="hover:text-blue-300 transition duration-200"
+            >Forms</a
+          >
+          <a
+            href="#portfolio"
+            class="hover:text-blue-300 transition duration-200"
+            >Portfolio</a
+          >
+        </div>
+      </nav>
+    </header>
+
+    <!-- ============================== -->
+    <!-- HERO SECTION                   -->
+    <!-- ============================== -->
+    <section
+      class="bg-gradient-to-br from-blue-600 via-purple-600 to-pink-500 text-white py-20 px-4"
+    >
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4">
+          Build Beautiful UIs Faster
+        </h2>
+        <p class="text-lg md:text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+          This page is styled entirely with Tailwind CSS utility classes. No
+          custom CSS file needed. Inspect any element to see exactly which
+          classes produce each style.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a
+            href="#comparison"
+            class="bg-white text-purple-700 font-bold py-3 px-8 rounded-lg hover:bg-gray-100 transition duration-300 shadow-lg"
+          >
+            See the Comparison
+          </a>
+          <a
+            href="#spacing"
+            class="border-2 border-white text-white font-bold py-3 px-8 rounded-lg hover:bg-white hover:text-purple-700 transition duration-300"
+          >
+            Explore Utilities
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+      <!-- ============================== -->
+      <!-- DEMO 0: SIDE-BY-SIDE COMPARE   -->
+      <!-- ============================== -->
+      <section id="comparison" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          0. Traditional CSS vs. Tailwind — Side by Side
+        </h2>
+        <p class="text-gray-600 mb-6">
+          The same result, two different approaches. Look at how much less code
+          switching is needed with Tailwind.
+        </p>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Traditional CSS Side -->
+          <div class="border-2 border-red-200 rounded-xl overflow-hidden">
+            <div
+              class="bg-red-100 text-red-800 font-bold px-4 py-3 text-center border-b-2 border-red-200"
+            >
+              ❌ Traditional CSS (2 files)
+            </div>
+            <div class="p-4 bg-white">
+              <p class="text-xs font-semibold text-gray-500 mb-1">HTML file:</p>
+              <pre
+                class="bg-gray-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto mb-3"
+              ><code>&lt;nav class="main-nav"&gt;
+  &lt;span class="nav-logo"&gt;MyBrand&lt;/span&gt;
+  &lt;div class="nav-links"&gt;
+    &lt;a href="#"&gt;Home&lt;/a&gt;
+    &lt;a href="#"&gt;About&lt;/a&gt;
+    &lt;a href="#"&gt;Contact&lt;/a&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;</code></pre>
+              <p class="text-xs font-semibold text-gray-500 mb-1">
+                CSS file (separate!):
+              </p>
+              <pre
+                class="bg-gray-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto"
+              ><code>.main-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background-color: #1e293b;
+  color: white;
+}
+.nav-logo {
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+.nav-links { display: flex; gap: 1.5rem; }
+.nav-links a:hover { color: #93c5fd; }</code></pre>
+            </div>
+          </div>
+
+          <!-- Tailwind Side -->
+          <div class="border-2 border-green-200 rounded-xl overflow-hidden">
+            <div
+              class="bg-green-100 text-green-800 font-bold px-4 py-3 text-center border-b-2 border-green-200"
+            >
+              ✅ Tailwind CSS (1 file only)
+            </div>
+            <div class="p-4 bg-white">
+              <p class="text-xs font-semibold text-gray-500 mb-1">
+                HTML file (that's it!):
+              </p>
+              <pre
+                class="bg-gray-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto mb-3"
+              ><code>&lt;nav class="flex justify-between items-center
+            p-4 bg-slate-800 text-white"&gt;
+  &lt;span class="text-xl font-bold"&gt;MyBrand&lt;/span&gt;
+  &lt;div class="flex gap-6"&gt;
+    &lt;a href="#" class="hover:text-blue-300"&gt;
+      Home
+    &lt;/a&gt;
+    &lt;a href="#" class="hover:text-blue-300"&gt;
+      About
+    &lt;/a&gt;
+    &lt;a href="#" class="hover:text-blue-300"&gt;
+      Contact
+    &lt;/a&gt;
+  &lt;/div&gt;
+&lt;/nav&gt;</code></pre>
+              <p class="text-xs font-semibold text-gray-500 mb-1">CSS file:</p>
+              <pre
+                class="bg-gray-900 text-green-400 p-3 rounded-lg text-xs overflow-x-auto"
+              ><code>/* None needed! Everything is in the HTML. */</code></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Result -->
+        <h3 class="text-xl font-semibold mt-6 mb-3">
+          Live Result (built with Tailwind):
+        </h3>
+        <nav
+          class="flex justify-between items-center p-4 bg-slate-800 text-white rounded-lg"
+        >
+          <span class="text-xl font-bold">MyBrand</span>
+          <div class="flex gap-6">
+            <a href="#" class="hover:text-blue-300 transition">Home</a>
+            <a href="#" class="hover:text-blue-300 transition">About</a>
+            <a href="#" class="hover:text-blue-300 transition">Contact</a>
+          </div>
+        </nav>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 1: SPACING                -->
+      <!-- ============================== -->
+      <section id="spacing" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          1. Spacing — Padding & Margin
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Each number in Tailwind's spacing scale equals 0.25rem (4px). So
+          <code class="bg-gray-200 px-1 rounded">p-4</code> = 1rem = 16px.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- p-2 -->
+          <div class="bg-blue-100 border-2 border-blue-300 rounded-lg">
+            <div class="bg-blue-500 text-white p-2 rounded">
+              <code>p-2</code> — 0.5rem (8px) padding
+            </div>
+          </div>
+          <!-- p-4 -->
+          <div class="bg-blue-100 border-2 border-blue-300 rounded-lg">
+            <div class="bg-blue-500 text-white p-4 rounded">
+              <code>p-4</code> — 1rem (16px) padding
+            </div>
+          </div>
+          <!-- p-8 -->
+          <div class="bg-blue-100 border-2 border-blue-300 rounded-lg">
+            <div class="bg-blue-500 text-white p-8 rounded">
+              <code>p-8</code> — 2rem (32px) padding
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">Directional Padding</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-green-100 border-2 border-green-300 rounded-lg">
+            <div class="bg-green-500 text-white px-8 py-2 rounded">
+              <code>px-8 py-2</code> — More horizontal padding
+            </div>
+          </div>
+          <div class="bg-green-100 border-2 border-green-300 rounded-lg">
+            <div class="bg-green-500 text-white px-2 py-8 rounded">
+              <code>px-2 py-8</code> — More vertical padding
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">Margin — Auto Centering</h3>
+        <div class="bg-gray-200 p-4 rounded-lg">
+          <div
+            class="bg-purple-500 text-white p-4 w-1/2 mx-auto rounded text-center"
+          >
+            <code>w-1/2 mx-auto</code> — 50% width, centred
+          </div>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 2: TYPOGRAPHY             -->
+      <!-- ============================== -->
+      <section id="typography" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">2. Typography</h2>
+        <p class="text-gray-600 mb-6">
+          Tailwind gives you utility classes for font size, weight, colour, and
+          alignment.
+        </p>
+
+        <div class="space-y-3 bg-white p-6 rounded-lg shadow-sm border">
+          <p class="text-xs text-gray-500">
+            <code>text-xs</code> — Extra small (0.75rem)
+          </p>
+          <p class="text-sm text-gray-600">
+            <code>text-sm</code> — Small (0.875rem)
+          </p>
+          <p class="text-base text-gray-700">
+            <code>text-base</code> — Base / normal (1rem)
+          </p>
+          <p class="text-lg text-gray-800">
+            <code>text-lg</code> — Large (1.125rem)
+          </p>
+          <p class="text-xl text-gray-800">
+            <code>text-xl</code> — Extra large (1.25rem)
+          </p>
+          <p class="text-2xl text-gray-900">
+            <code>text-2xl</code> — 2× extra large (1.5rem)
+          </p>
+          <p class="text-3xl font-bold text-gray-900">
+            <code>text-3xl font-bold</code> — 3× extra large, bold
+          </p>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">Font Weight</h3>
+        <div class="space-y-2 bg-white p-6 rounded-lg shadow-sm border">
+          <p class="font-light text-lg">font-light — Light weight (300)</p>
+          <p class="font-normal text-lg">font-normal — Normal weight (400)</p>
+          <p class="font-medium text-lg">font-medium — Medium weight (500)</p>
+          <p class="font-semibold text-lg">font-semibold — Semi-bold (600)</p>
+          <p class="font-bold text-lg">font-bold — Bold (700)</p>
+          <p class="font-extrabold text-lg">
+            font-extrabold — Extra bold (800)
+          </p>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 3: COLOURS                -->
+      <!-- ============================== -->
+      <section id="colours" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">3. Colours</h2>
+        <p class="text-gray-600 mb-6">
+          Tailwind includes a comprehensive colour palette. Each colour has
+          shades from 50 (lightest) to 950 (darkest).
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Blue Palette</h3>
+        <div class="grid grid-cols-5 md:grid-cols-11 gap-1 mb-6">
+          <div class="bg-blue-50 p-3 rounded text-center text-xs">50</div>
+          <div class="bg-blue-100 p-3 rounded text-center text-xs">100</div>
+          <div class="bg-blue-200 p-3 rounded text-center text-xs">200</div>
+          <div class="bg-blue-300 p-3 rounded text-center text-xs">300</div>
+          <div class="bg-blue-400 p-3 rounded text-center text-xs text-white">
+            400
+          </div>
+          <div class="bg-blue-500 p-3 rounded text-center text-xs text-white">
+            500
+          </div>
+          <div class="bg-blue-600 p-3 rounded text-center text-xs text-white">
+            600
+          </div>
+          <div class="bg-blue-700 p-3 rounded text-center text-xs text-white">
+            700
+          </div>
+          <div class="bg-blue-800 p-3 rounded text-center text-xs text-white">
+            800
+          </div>
+          <div class="bg-blue-900 p-3 rounded text-center text-xs text-white">
+            900
+          </div>
+          <div class="bg-blue-950 p-3 rounded text-center text-xs text-white">
+            950
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold mb-3">More Colour Families</h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div
+            class="bg-red-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Red-500
+          </div>
+          <div
+            class="bg-green-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Green-500
+          </div>
+          <div
+            class="bg-amber-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Amber-500
+          </div>
+          <div
+            class="bg-purple-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Purple-500
+          </div>
+          <div
+            class="bg-pink-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Pink-500
+          </div>
+          <div
+            class="bg-teal-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Teal-500
+          </div>
+          <div
+            class="bg-indigo-500 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Indigo-500
+          </div>
+          <div
+            class="bg-slate-700 text-white p-4 rounded-lg text-center font-medium"
+          >
+            Slate-700
+          </div>
+        </div>
+
+        <h3 class="text-xl font-semibold mt-6 mb-3">Text Colours</h3>
+        <div class="bg-white p-6 rounded-lg shadow-sm border space-y-2">
+          <p class="text-red-600 font-medium">text-red-600 — Red text</p>
+          <p class="text-blue-600 font-medium">text-blue-600 — Blue text</p>
+          <p class="text-green-600 font-medium">text-green-600 — Green text</p>
+          <p class="text-purple-600 font-medium">
+            text-purple-600 — Purple text
+          </p>
+          <p class="text-gray-400 font-medium">
+            text-gray-400 — Muted/subtle text
+          </p>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 4: LAYOUT (FLEX & GRID)   -->
+      <!-- ============================== -->
+      <section id="layout" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          4. Layout — Flexbox & Grid
+        </h2>
+        <p class="text-gray-600 mb-6">
+          The same Flexbox and Grid concepts from Lesson 5, but written as
+          Tailwind classes.
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Flexbox Row</h3>
+        <div class="flex gap-4 mb-6">
+          <div class="bg-sky-500 text-white p-4 rounded flex-1 text-center">
+            Flex Item 1
+          </div>
+          <div class="bg-sky-500 text-white p-4 rounded flex-1 text-center">
+            Flex Item 2
+          </div>
+          <div class="bg-sky-500 text-white p-4 rounded flex-1 text-center">
+            Flex Item 3
+          </div>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">
+          Classes used:
+          <code class="bg-gray-200 px-1 rounded">flex gap-4</code> on container,
+          <code class="bg-gray-200 px-1 rounded">flex-1</code> on items
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Flexbox with Space Between</h3>
+        <div
+          class="flex justify-between items-center bg-gray-800 text-white p-4 rounded-lg mb-6"
+        >
+          <span class="font-bold text-lg">Logo</span>
+          <div class="flex gap-4">
+            <a href="#" class="hover:text-blue-300">Home</a>
+            <a href="#" class="hover:text-blue-300">About</a>
+            <a href="#" class="hover:text-blue-300">Contact</a>
+          </div>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">
+          Classes used:
+          <code class="bg-gray-200 px-1 rounded"
+            >flex justify-between items-center</code
+          >
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">CSS Grid — 3 Columns</h3>
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">1</div>
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">2</div>
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">3</div>
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">4</div>
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">5</div>
+          <div class="bg-emerald-500 text-white p-4 rounded text-center">6</div>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">
+          Classes used:
+          <code class="bg-gray-200 px-1 rounded">grid grid-cols-3 gap-4</code>
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Centering with Flexbox</h3>
+        <div
+          class="flex justify-center items-center bg-gradient-to-r from-purple-500 to-pink-500 h-40 rounded-lg"
+        >
+          <p class="text-white text-2xl font-bold">Perfectly Centred!</p>
+        </div>
+        <p class="text-sm text-gray-500 mt-2">
+          Classes:
+          <code class="bg-gray-200 px-1 rounded"
+            >flex justify-center items-center h-40</code
+          >
+        </p>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 5: RESPONSIVE DESIGN      -->
+      <!-- ============================== -->
+      <section id="responsive" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          5. Responsive Design
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Resize your browser window to see these respond! Tailwind prefixes:
+          <code class="bg-gray-200 px-1 rounded">sm:</code>,
+          <code class="bg-gray-200 px-1 rounded">md:</code>,
+          <code class="bg-gray-200 px-1 rounded">lg:</code>
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">
+          Responsive Grid (resize to see changes)
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div
+            class="bg-violet-500 text-white p-6 rounded-lg text-center font-medium"
+          >
+            Card A
+          </div>
+          <div
+            class="bg-violet-500 text-white p-6 rounded-lg text-center font-medium"
+          >
+            Card B
+          </div>
+          <div
+            class="bg-violet-500 text-white p-6 rounded-lg text-center font-medium"
+          >
+            Card C
+          </div>
+          <div
+            class="bg-violet-500 text-white p-6 rounded-lg text-center font-medium"
+          >
+            Card D
+          </div>
+        </div>
+        <p class="text-sm text-gray-500 mb-6">
+          Classes:
+          <code class="bg-gray-200 px-1 rounded"
+            >grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4</code
+          >
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Responsive Navigation</h3>
+        <nav
+          class="flex flex-col md:flex-row justify-between items-center bg-slate-700 text-white p-4 rounded-lg mb-6 gap-2"
+        >
+          <span class="text-xl font-bold">MyBrand</span>
+          <div class="flex flex-col md:flex-row gap-2 md:gap-6 text-center">
+            <a href="#" class="hover:text-amber-300 transition">Home</a>
+            <a href="#" class="hover:text-amber-300 transition">Portfolio</a>
+            <a href="#" class="hover:text-amber-300 transition">About</a>
+            <a href="#" class="hover:text-amber-300 transition">Contact</a>
+          </div>
+        </nav>
+        <p class="text-sm text-gray-500 mb-6">
+          Classes:
+          <code class="bg-gray-200 px-1 rounded"
+            >flex flex-col md:flex-row</code
+          >
+          — stacks on mobile, row on tablet+
+        </p>
+
+        <h3 class="text-xl font-semibold mb-3">Responsive Text Size</h3>
+        <div class="bg-white p-6 rounded-lg shadow-sm border">
+          <p
+            class="text-sm md:text-lg lg:text-2xl font-semibold text-slate-700"
+          >
+            This text changes size at different breakpoints!
+          </p>
+          <p class="text-xs text-gray-400 mt-2">
+            Classes:
+            <code class="bg-gray-200 px-1 rounded"
+              >text-sm md:text-lg lg:text-2xl</code
+            >
+          </p>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 6: BUTTONS & HOVER        -->
+      <!-- ============================== -->
+      <section id="buttons" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          6. Buttons & Hover Effects
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Tailwind makes interactive styles easy with
+          <code class="bg-gray-200 px-1 rounded">hover:</code>,
+          <code class="bg-gray-200 px-1 rounded">focus:</code>, and
+          <code class="bg-gray-200 px-1 rounded">transition</code> classes.
+        </p>
+
+        <div class="flex flex-wrap gap-4 mb-6">
+          <!-- Primary Button -->
+          <button
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded transition duration-300"
+          >
+            Primary
+          </button>
+
+          <!-- Secondary Button -->
+          <button
+            class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-6 rounded transition duration-300"
+          >
+            Secondary
+          </button>
+
+          <!-- Success Button -->
+          <button
+            class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded transition duration-300"
+          >
+            Success
+          </button>
+
+          <!-- Danger Button -->
+          <button
+            class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-6 rounded transition duration-300"
+          >
+            Danger
+          </button>
+
+          <!-- Outline Button -->
+          <button
+            class="bg-transparent hover:bg-blue-500 text-blue-700 hover:text-white font-semibold py-2 px-6 border border-blue-500 hover:border-transparent rounded transition duration-300"
+          >
+            Outline
+          </button>
+
+          <!-- Pill Button -->
+          <button
+            class="bg-purple-600 hover:bg-purple-800 text-white font-bold py-2 px-6 rounded-full transition duration-300"
+          >
+            Pill Shape
+          </button>
+        </div>
+
+        <h3 class="text-xl font-semibold mb-3">Scale on Hover</h3>
+        <div class="flex gap-4">
+          <button
+            class="bg-indigo-600 hover:bg-indigo-800 text-white font-bold py-3 px-8 rounded-lg transform hover:scale-105 transition duration-300 shadow-lg hover:shadow-xl"
+          >
+            Hover to Scale
+          </button>
+          <button
+            class="bg-pink-600 hover:bg-pink-800 text-white font-bold py-3 px-8 rounded-lg transform hover:-translate-y-1 transition duration-300 shadow-lg hover:shadow-xl"
+          >
+            Hover to Lift
+          </button>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 7: CARD COMPONENTS        -->
+      <!-- ============================== -->
+      <section id="cards" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          7. Card Components
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Combining multiple Tailwind utilities to build real UI components.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Card 1 -->
+          <div
+            class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden"
+          >
+            <div class="bg-gradient-to-r from-blue-500 to-cyan-500 h-32"></div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">
+                Project Alpha
+              </h3>
+              <p class="text-gray-600 mb-4">
+                A web application built with HTML, CSS, and JavaScript. Features
+                a responsive design and modern UI.
+              </p>
+              <a
+                href="#"
+                class="text-blue-600 hover:text-blue-800 font-semibold transition"
+                >View Project →</a
+              >
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div
+            class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden"
+          >
+            <div
+              class="bg-gradient-to-r from-purple-500 to-pink-500 h-32"
+            ></div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Project Beta</h3>
+              <p class="text-gray-600 mb-4">
+                An e-commerce prototype with product listings, shopping cart,
+                and checkout flow.
+              </p>
+              <a
+                href="#"
+                class="text-purple-600 hover:text-purple-800 font-semibold transition"
+                >View Project →</a
+              >
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div
+            class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden"
+          >
+            <div
+              class="bg-gradient-to-r from-green-500 to-emerald-500 h-32"
+            ></div>
+            <div class="p-6">
+              <h3 class="text-xl font-bold text-gray-800 mb-2">
+                Project Gamma
+              </h3>
+              <p class="text-gray-600 mb-4">
+                A portfolio website showcasing design work with smooth
+                animations and transitions.
+              </p>
+              <a
+                href="#"
+                class="text-green-600 hover:text-green-800 font-semibold transition"
+                >View Project →</a
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 8: FORMS & INPUTS         -->
+      <!-- ============================== -->
+      <section id="forms" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          8. Forms & Inputs
+        </h2>
+        <p class="text-gray-600 mb-6">
+          Tailwind makes form styling easy. Here's a contact form with focus
+          states, placeholder styling, and layout.
+        </p>
+
+        <div class="max-w-lg mx-auto bg-white rounded-xl shadow-lg p-8">
+          <h3 class="text-2xl font-bold text-gray-800 mb-1">Get in Touch</h3>
+          <p class="text-gray-500 mb-6">
+            Fill in the form below and I'll get back to you.
+          </p>
+
+          <form class="space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1"
+                >Name</label
+              >
+              <input
+                type="text"
+                placeholder="Your name"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1"
+                >Email</label
+              >
+              <input
+                type="email"
+                placeholder="you@example.com"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+              />
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1"
+                >Message</label
+              >
+              <textarea
+                rows="4"
+                placeholder="Write your message..."
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-none"
+              ></textarea>
+            </div>
+            <button
+              type="submit"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition duration-300 shadow-md hover:shadow-lg"
+            >
+              Send Message
+            </button>
+          </form>
+        </div>
+        <p class="text-sm text-gray-500 text-center mt-4">
+          Key classes:
+          <code class="bg-gray-200 px-1 rounded"
+            >focus:ring-2 focus:ring-blue-500</code
+          >
+          for the blue focus ring,
+          <code class="bg-gray-200 px-1 rounded">space-y-4</code> for vertical
+          spacing
+        </p>
+      </section>
+
+      <hr class="border-gray-300 my-8" />
+
+      <!-- ============================== -->
+      <!-- DEMO 9: MINI PORTFOLIO         -->
+      <!-- ============================== -->
+      <section id="portfolio" class="mb-12">
+        <h2 class="text-3xl font-bold text-slate-700 mb-2">
+          9. Putting It All Together — Mini Portfolio
+        </h2>
+        <p class="text-gray-600 mb-6">
+          This is what your portfolio could look like using everything from this
+          lesson. All styled with Tailwind only.
+        </p>
+
+        <!-- Mini Portfolio Container -->
+        <div
+          class="border-2 border-gray-200 rounded-2xl overflow-hidden shadow-lg"
+        >
+          <!-- Portfolio Nav -->
+          <nav
+            class="flex flex-col md:flex-row justify-between items-center p-4 bg-gray-900 text-white"
+          >
+            <span class="text-xl font-bold mb-2 md:mb-0">Travis Wayne</span>
+            <div class="flex gap-4 md:gap-6 text-sm">
+              <a href="#" class="hover:text-blue-400 transition">Home</a>
+              <a href="#" class="hover:text-blue-400 transition">Projects</a>
+              <a href="#" class="hover:text-blue-400 transition">About</a>
+              <a href="#" class="hover:text-blue-400 transition">Contact</a>
+            </div>
+          </nav>
+
+          <!-- Portfolio Hero -->
+          <section
+            class="bg-gradient-to-br from-slate-800 via-blue-900 to-indigo-900 text-white py-16 px-6 text-center"
+          >
+            <h2 class="text-3xl md:text-4xl font-extrabold mb-3">
+              Hi, I'm Travis 👋
+            </h2>
+            <p class="text-lg text-blue-200 mb-6 max-w-xl mx-auto">
+              Aspiring web developer passionate about creating beautiful,
+              responsive websites.
+            </p>
+            <a
+              href="#"
+              class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-lg transition duration-300 shadow-lg hover:shadow-xl"
+            >
+              View My Work
+            </a>
+          </section>
+
+          <!-- Portfolio Projects -->
+          <section class="p-6 md:p-10 bg-gray-50">
+            <h3 class="text-2xl font-bold text-center text-gray-800 mb-2">
+              My Projects
+            </h3>
+            <p class="text-gray-500 text-center mb-8">
+              Here's what I've been building.
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div
+                class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden transform hover:-translate-y-1"
+              >
+                <div
+                  class="bg-gradient-to-r from-rose-500 to-orange-400 h-28"
+                ></div>
+                <div class="p-5">
+                  <h4 class="text-lg font-bold text-gray-800 mb-1">
+                    Weather App
+                  </h4>
+                  <p class="text-gray-600 text-sm mb-3">
+                    A live weather dashboard with API integration and responsive
+                    design.
+                  </p>
+                  <a
+                    href="#"
+                    class="text-rose-600 hover:text-rose-800 text-sm font-semibold transition"
+                    >View Project →</a
+                  >
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden transform hover:-translate-y-1"
+              >
+                <div
+                  class="bg-gradient-to-r from-blue-500 to-teal-400 h-28"
+                ></div>
+                <div class="p-5">
+                  <h4 class="text-lg font-bold text-gray-800 mb-1">
+                    Task Manager
+                  </h4>
+                  <p class="text-gray-600 text-sm mb-3">
+                    A productivity app with drag-and-drop, filters, and local
+                    storage.
+                  </p>
+                  <a
+                    href="#"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-semibold transition"
+                    >View Project →</a
+                  >
+                </div>
+              </div>
+              <div
+                class="bg-white rounded-xl shadow-md hover:shadow-xl transition duration-300 overflow-hidden transform hover:-translate-y-1"
+              >
+                <div
+                  class="bg-gradient-to-r from-violet-500 to-fuchsia-500 h-28"
+                ></div>
+                <div class="p-5">
+                  <h4 class="text-lg font-bold text-gray-800 mb-1">
+                    Portfolio Site
+                  </h4>
+                  <p class="text-gray-600 text-sm mb-3">
+                    This portfolio! Built with HTML and styled entirely with
+                    Tailwind CSS.
+                  </p>
+                  <a
+                    href="#"
+                    class="text-violet-600 hover:text-violet-800 text-sm font-semibold transition"
+                    >View Project →</a
+                  >
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Portfolio Footer -->
+          <footer
+            class="bg-gray-900 text-gray-400 py-4 px-6 flex flex-col md:flex-row justify-between items-center gap-2 text-sm"
+          >
+            <p>&copy; 2026 Travis Wayne</p>
+            <div class="flex gap-4">
+              <a href="#" class="hover:text-white transition">GitHub</a>
+              <a href="#" class="hover:text-white transition">LinkedIn</a>
+              <a href="#" class="hover:text-white transition">Email</a>
+            </div>
+          </footer>
+        </div>
+
+        <p class="text-sm text-gray-500 text-center mt-4">
+          ☝️ This entire mini-portfolio is built with
+          <strong>zero custom CSS</strong> — only Tailwind utility classes.
+        </p>
+      </section>
+    </main>
+
+    <!-- ============================== -->
+    <!-- FOOTER                         -->
+    <!-- ============================== -->
+    <footer class="bg-slate-800 text-gray-400 py-6">
+      <div
+        class="max-w-6xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-2"
+      >
+        <p>&copy; 2026 Tailwind CSS Demo – Lesson 6</p>
+        <p class="text-sm">
+          Built with <span class="text-blue-400">Tailwind CSS</span>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

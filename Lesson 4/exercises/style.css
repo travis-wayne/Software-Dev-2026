@@ -1,0 +1,206 @@
+/* ===================================
+   CSS Exercises – Lesson 4
+   External Stylesheet
+   =================================== */
+
+/* ===== RESET & BASE ===== */
+/* EXERCISE: Try adding a universal selector to reset margin and padding */
+/* Hint: * { margin: 0; padding: 0; } */
+* {
+    margin: 0;
+    padding: 0;
+}
+
+
+/* ===== BODY ===== */
+/* EXERCISE: Set a font-family, background-color, and text color for the body */
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+}
+
+
+/* ===== HEADER ===== */
+/* EXERCISE: Style the header (background color, text color, padding) */
+header {
+    background-color: #f9f9f9;
+    color: #333;
+    padding: 20px;
+}
+
+header h1 {
+    text-align: center;
+}
+
+/* EXERCISE: Style the nav links */
+nav a {
+    /* Add your styles here */
+    /* Hint: color, text-decoration, margin-right, padding */
+    color: #333;
+    text-decoration: none;
+    margin-right: 20px;
+    padding: 10px;
+}
+
+
+/* ===== SECTIONS ===== */
+/* EXERCISE: Add padding and margin to sections */
+section {
+    /* Add your styles here */
+    padding: 20px;
+    margin: 20px;
+}
+
+section h2 {
+    /* Add your styles here */
+    background-color: #3999e2;
+}
+
+
+/* ===== TYPE SELECTOR ===== */
+/* EXERCISE: Style all <p> elements with a type selector */
+/* p { } */
+p {
+    color: #333;
+    font-size: 16px;
+    padding: 10px;
+}
+
+
+/* ===== CLASS SELECTOR ===== */
+/* EXERCISE: Style elements with class="my-class" */
+/* .my-class { } */
+.my-class {
+    color: #333;
+    font-size: 20px;
+    padding: 10px;
+    background-color: aqua;
+}
+
+
+
+/* ===== ID SELECTOR ===== */
+/* EXERCISE: Style the element with id="my-id" */
+/* #my-id { } */
+#my-id {
+    color: #333;
+    font-size: 20px;
+    padding: 10px;
+    background-color: #a139e2;
+}
+
+
+
+/* ===== ATTRIBUTE SELECTOR ===== */
+/* EXERCISE: Style text inputs differently from email inputs */
+/* input[type="text"] { } */
+/* input[type="email"] { } */
+input[type="text"] {
+    color: #333;
+    font-size: 20px;
+    padding: 10px;
+    background-color: #d4e239;
+}
+
+input[type="email"] {
+    color: #333;
+    font-size: 20px;
+    padding: 10px;
+    background-color: #e23947;
+}
+
+input {
+    color: #333;
+    font-size: 20px;
+    padding: 10px;
+}
+
+
+/* ===== BOX MODEL EXERCISE ===== */
+/* EXERCISE: Add padding, border, and margin to this class */
+.box-model-exercise {
+
+    padding: 20px;
+    border: 2px solid #333;
+    margin: 15px 0;
+    background-color: #f9f9f9;
+
+}
+
+
+/* ===== HOVER EFFECTS ===== */
+/* EXERCISE: Add hover styles to links */
+.practice-link {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+    text-decoration: none;
+}
+
+.practice-link:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+
+/* ===== FOCUS STYLES ===== */
+/* EXERCISE: Add focus styles to the input */
+.practice-input {
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    /* cursor: pointer; */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+    text-decoration: none;
+}
+
+.practice-input:focus {
+    /* Styles when clicked/focused */
+    /* Hint: border-color, outline, box-shadow */
+    border-color: #2980b9;
+    outline: none;
+    box-shadow: 0 0 5px #2980b9;
+}
+
+
+/* ===== BUTTON STYLES ===== */
+/* EXERCISE: Style the button with a hover effect */
+.practice-button {
+    /* Base styles */
+    /* Hint: padding, background-color, color, border, border-radius, cursor */
+    display: inline-block;
+    background-color: #3498db;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 5px;
+    /* cursor: pointer; */
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    margin-top: 10px;
+    text-decoration: none;
+}
+
+.practice-button:focus {
+    /* Hover styles */
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+
+/* ===== FOOTER ===== */
+/* EXERCISE: Style the footer */
+footer p{
+    /* Add your styles here */
+    background-color: #333;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}

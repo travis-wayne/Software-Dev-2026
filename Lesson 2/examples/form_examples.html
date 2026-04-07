@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Input Types – Reference Examples</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 0 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        h1 { color: #2c3e50; }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 5px;
+        }
+        .example-box {
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 10px 0 25px;
+        }
+        label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="checkbox"],
+        input[type="radio"] {
+            width: auto;
+            margin-right: 6px;
+        }
+        .inline-group label {
+            display: inline;
+            font-weight: normal;
+            margin-right: 15px;
+        }
+        button {
+            background: #2c3e50;
+            color: white;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 15px;
+        }
+        button:hover { background: #34495e; }
+        code {
+            background: #eef;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📋 HTML Form Input Types – Reference</h1>
+    <p>This page demonstrates the most common HTML form elements and input types.
+       Try filling them in and clicking "Submit" to see browser validation in action.</p>
+
+    <form action="/submit" method="POST">
+
+        <!-- TEXT INPUT -->
+        <h2>1. Text Input</h2>
+        <p>Use <code>&lt;input type="text"&gt;</code> for general text.</p>
+        <div class="example-box">
+            <label for="fullname">Full Name:</label>
+            <input type="text" id="fullname" name="fullname" placeholder="e.g. John Doe" required>
+        </div>
+
+        <!-- EMAIL INPUT -->
+        <h2>2. Email Input</h2>
+        <p>Use <code>&lt;input type="email"&gt;</code> — the browser validates the format.</p>
+        <div class="example-box">
+            <label for="email">Email Address:</label>
+            <input type="email" id="email" name="email" placeholder="e.g. john@example.com" required>
+        </div>
+
+        <!-- PASSWORD INPUT -->
+        <h2>3. Password Input</h2>
+        <p>Use <code>&lt;input type="password"&gt;</code> — text is hidden as you type.</p>
+        <div class="example-box">
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" placeholder="Minimum 8 characters" minlength="8" required>
+        </div>
+
+        <!-- NUMBER INPUT -->
+        <h2>4. Number Input</h2>
+        <p>Use <code>&lt;input type="number"&gt;</code> with <code>min</code> and <code>max</code>.</p>
+        <div class="example-box">
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" min="1" max="120" placeholder="e.g. 25">
+        </div>
+
+        <!-- DATE INPUT -->
+        <h2>5. Date Input</h2>
+        <p>Use <code>&lt;input type="date"&gt;</code> to show a date picker.</p>
+        <div class="example-box">
+            <label for="birthday">Date of Birth:</label>
+            <input type="date" id="birthday" name="birthday">
+        </div>
+
+        <!-- RADIO BUTTONS -->
+        <h2>6. Radio Buttons</h2>
+        <p>Use <code>&lt;input type="radio"&gt;</code> — select one option from a group.</p>
+        <div class="example-box">
+            <p><strong>Preferred Contact Method:</strong></p>
+            <div class="inline-group">
+                <input type="radio" id="contact-email" name="contact" value="email">
+                <label for="contact-email">Email</label>
+
+                <input type="radio" id="contact-phone" name="contact" value="phone">
+                <label for="contact-phone">Phone</label>
+
+                <input type="radio" id="contact-text" name="contact" value="text">
+                <label for="contact-text">Text Message</label>
+            </div>
+        </div>
+
+        <!-- CHECKBOXES -->
+        <h2>7. Checkboxes</h2>
+        <p>Use <code>&lt;input type="checkbox"&gt;</code> — select multiple options.</p>
+        <div class="example-box">
+            <p><strong>Interests:</strong></p>
+            <div class="inline-group">
+                <input type="checkbox" id="sports" name="interests" value="sports">
+                <label for="sports">Sports</label>
+
+                <input type="checkbox" id="music" name="interests" value="music">
+                <label for="music">Music</label>
+
+                <input type="checkbox" id="tech" name="interests" value="technology">
+                <label for="tech">Technology</label>
+
+                <input type="checkbox" id="art" name="interests" value="art">
+                <label for="art">Art</label>
+            </div>
+        </div>
+
+        <!-- SELECT DROPDOWN -->
+        <h2>8. Select Dropdown</h2>
+        <p>Use <code>&lt;select&gt;</code> with <code>&lt;option&gt;</code> elements.</p>
+        <div class="example-box">
+            <label for="country">Country:</label>
+            <select id="country" name="country">
+                <option value="" disabled selected>-- Choose a country --</option>
+                <option value="za">South Africa</option>
+                <option value="ng">Nigeria</option>
+                <option value="ke">Kenya</option>
+                <option value="gh">Ghana</option>
+                <option value="other">Other</option>
+            </select>
+        </div>
+
+        <!-- TEXTAREA -->
+        <h2>9. Textarea</h2>
+        <p>Use <code>&lt;textarea&gt;</code> for multi-line text input.</p>
+        <div class="example-box">
+            <label for="bio">Tell us about yourself:</label>
+            <textarea id="bio" name="bio" rows="4" placeholder="Write a short bio..."></textarea>
+        </div>
+
+        <!-- SUBMIT BUTTON -->
+        <h2>10. Submit Button</h2>
+        <p>Use <code>&lt;button type="submit"&gt;</code> to submit the form.</p>
+        <div class="example-box">
+            <button type="submit">Submit Form</button>
+        </div>
+
+    </form>
+
+</body>
+</html>

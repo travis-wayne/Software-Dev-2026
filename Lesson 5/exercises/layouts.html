@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Exercises – Lesson 5</title>
+
+    <!-- EXERCISE: Link the external stylesheet -->
+    <link rel="stylesheet" href="layouts.css">
+</head>
+<body>
+
+    <header>
+        <h1>Layout Exercises</h1>
+        <nav>
+            <a href="#flexbox">Flexbox</a>
+            <a href="#grid">CSS Grid</a>
+            <a href="#responsive">Responsive</a>
+            <a href="#challenge">Challenge</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ============================== -->
+        <!-- SECTION 1: Flexbox Practice    -->
+        <!-- ============================== -->
+        <section id="flexbox">
+            <h2>1. Flexbox Practice</h2>
+            <p>Style the containers below using Flexbox in <code>layouts.css</code>.</p>
+
+            <!-- EXERCISE: Make this a flex container with items in a row -->
+            <h3>1a. Flex Row</h3>
+            <p>Make these items sit side by side using <code>display: flex</code>.</p>
+            <div class="flex-row-exercise">
+                <div class="item">Item 1</div>
+                <div class="item">Item 2</div>
+                <div class="item">Item 3</div>
+            </div>
+
+            <!-- EXERCISE: Change flex-direction to column -->
+            <h3>1b. Flex Column</h3>
+            <p>Stack these items vertically using <code>flex-direction: column</code>.</p>
+            <div class="flex-column-exercise">
+                <div class="item">Top</div>
+                <div class="item">Middle</div>
+                <div class="item">Bottom</div>
+            </div>
+
+            <!-- EXERCISE: Use justify-content and align-items -->
+            <h3>1c. Centering with Flexbox</h3>
+            <p>Center the item both horizontally and vertically inside the box.</p>
+            <div class="flex-center-exercise">
+                <div class="item">Center Me!</div>
+            </div>
+
+            <!-- EXERCISE: Use justify-content: space-between -->
+            <h3>1d. Space Between</h3>
+            <p>Spread these items evenly with space between them.</p>
+            <div class="flex-space-exercise">
+                <div class="item">Left</div>
+                <div class="item">Center</div>
+                <div class="item">Right</div>
+            </div>
+
+            <!-- EXERCISE: Use flex-wrap -->
+            <h3>1e. Flex Wrap</h3>
+            <p>Allow these items to wrap to the next line when the screen is narrow.</p>
+            <div class="flex-wrap-exercise">
+                <div class="item">Card A</div>
+                <div class="item">Card B</div>
+                <div class="item">Card C</div>
+                <div class="item">Card D</div>
+                <div class="item">Card E</div>
+                <div class="item">Card F</div>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 2: CSS Grid Practice   -->
+        <!-- ============================== -->
+        <section id="grid">
+            <h2>2. CSS Grid Practice</h2>
+            <p>Style the containers below using CSS Grid in <code>layouts.css</code>.</p>
+
+            <!-- EXERCISE: Create a 3-column grid -->
+            <h3>2a. Three-Column Grid</h3>
+            <p>Create a 3-column layout using <code>grid-template-columns: 1fr 1fr 1fr</code>.</p>
+            <div class="grid-three-exercise">
+                <div class="item">1</div>
+                <div class="item">2</div>
+                <div class="item">3</div>
+                <div class="item">4</div>
+                <div class="item">5</div>
+                <div class="item">6</div>
+            </div>
+
+            <!-- EXERCISE: Create a grid with mixed column sizes -->
+            <h3>2b. Sidebar + Main Layout</h3>
+            <p>Create a layout with a <code>250px</code> sidebar and a flexible main area.</p>
+            <div class="grid-sidebar-exercise">
+                <div class="item">Sidebar</div>
+                <div class="item">Main Content</div>
+            </div>
+
+            <!-- EXERCISE: Use grid-column to span items -->
+            <h3>2c. Spanning Columns</h3>
+            <p>Make the first item span all 3 columns using <code>grid-column: 1 / -1</code>.</p>
+            <div class="grid-span-exercise">
+                <div class="item item-full-width">Full Width Header</div>
+                <div class="item">Col 1</div>
+                <div class="item">Col 2</div>
+                <div class="item">Col 3</div>
+            </div>
+
+            <!-- EXERCISE: Create a full page layout with Grid -->
+            <h3>2d. Page Layout</h3>
+            <p>Build a page layout with a header, sidebar, main area, and footer.</p>
+            <div class="grid-page-exercise">
+                <div class="item page-header">Header</div>
+                <div class="item page-sidebar">Sidebar</div>
+                <div class="item page-main">Main Content</div>
+                <div class="item page-footer">Footer</div>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 3: Responsive Design   -->
+        <!-- ============================== -->
+        <section id="responsive">
+            <h2>3. Responsive Design Practice</h2>
+            <p>Add media queries in <code>layouts.css</code> to make these layouts responsive.</p>
+
+            <!-- EXERCISE: Add a media query to stack items vertically on small screens -->
+            <h3>3a. Responsive Flex Row</h3>
+            <p>This row should become a column below <code>768px</code>.</p>
+            <div class="responsive-flex-exercise">
+                <div class="item">Nav Item 1</div>
+                <div class="item">Nav Item 2</div>
+                <div class="item">Nav Item 3</div>
+                <div class="item">Nav Item 4</div>
+            </div>
+
+            <!-- EXERCISE: Add a media query to go from 3 columns to 1 column -->
+            <h3>3b. Responsive Grid</h3>
+            <p>This 3-column grid should become 1 column below <code>768px</code>.</p>
+            <div class="responsive-grid-exercise">
+                <div class="item">Card 1</div>
+                <div class="item">Card 2</div>
+                <div class="item">Card 3</div>
+                <div class="item">Card 4</div>
+                <div class="item">Card 5</div>
+                <div class="item">Card 6</div>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 4: Challenge           -->
+        <!-- ============================== -->
+        <section id="challenge">
+            <h2>4. Challenge — Build a Card Layout</h2>
+            <p>Combine Flexbox and Grid to build a responsive card gallery.</p>
+            <p>Requirements:</p>
+            <ul>
+                <li>Use Grid for the overall card layout (3 columns on desktop).</li>
+                <li>Use Flexbox inside each card to arrange the content vertically.</li>
+                <li>Add a media query: 2 columns on tablets, 1 column on phones.</li>
+            </ul>
+
+            <div class="card-gallery">
+                <div class="card">
+                    <h3>Project Alpha</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+                <div class="card">
+                    <h3>Project Beta</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+                <div class="card">
+                    <h3>Project Gamma</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+                <div class="card">
+                    <h3>Project Delta</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+                <div class="card">
+                    <h3>Project Epsilon</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+                <div class="card">
+                    <h3>Project Zeta</h3>
+                    <p>A brief description of this project and what it does.</p>
+                    <a href="#" class="card-link">View Project →</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Layout Exercises – Lesson 5</p>
+    </footer>
+
+</body>
+</html>

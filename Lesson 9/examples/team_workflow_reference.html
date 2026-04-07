@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Team Workflow & Collaboration – Lesson 9</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green: #238636;
+    --green-dim: #1a3a22;
+    --red: #da3633;
+    --blue: #2f81f7;
+    --blue-dim: #1a2a3a;
+    --purple: #8957e5;
+    --purple-dim: #2a1a3a;
+    --orange: #f0883e;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); font-size: 15px; line-height: 1.6; }
+
+  /* NAV */
+  nav { position: sticky; top: 0; z-index: 100; background: rgba(13,17,23,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; height: 56px; overflow-x: auto; }
+  nav .brand { font-weight: 800; font-size: 1rem; color: var(--blue); white-space: nowrap; margin-right: 2rem; }
+  nav a { color: var(--text-muted); text-decoration: none; font-size: 0.82rem; font-weight: 500; padding: 0 0.9rem; height: 56px; display: inline-flex; align-items: center; border-bottom: 2px solid transparent; white-space: nowrap; transition: 0.15s; }
+  nav a:hover { color: var(--text); border-bottom-color: var(--border); }
+  nav a.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* LAYOUT */
+  .page { max-width: 980px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  /* SECTION HEADERS */
+  .section-header { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 2rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); }
+  .section-num { width: 2rem; height: 2rem; background: var(--blue); color: #fff; border-radius: 50%; font-weight: 800; font-size: 0.85rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .section-header h2 { font-size: 1.35rem; font-weight: 700; }
+  .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.15rem; }
+  section { margin-bottom: 4rem; }
+
+  /* CARDS & BADGES */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem; }
+  .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem; }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(47,129,247,0.3); }
+  .badge-green { background: var(--green-dim); color: var(--green); border: 1px solid rgba(35,134,54,0.3); }
+  .badge-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(137,87,229,0.3); }
+
+  /* GITHUB FLOW ANIMATION */
+  .flow-container { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem 1.5rem; margin: 2rem 0; position: relative; overflow: hidden; }
+  .flow-step { text-align: center; z-index: 2; width: 140px; }
+  .flow-icon { font-size: 2rem; width: 3.5rem; height: 3.5rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem; color: var(--text); }
+  .flow-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .flow-cmd { font-family: var(--mono); font-size: 0.7rem; color: var(--text-muted); background: #010409; padding: 0.15rem 0.4rem; border-radius: 4px; border: 1px solid var(--border); }
+  .flow-line { position: absolute; top: 50%; left: 10%; right: 10%; height: 2px; background: var(--border); transform: translateY(-50%); z-index: 1; }
+  .flow-dot { position: absolute; top: -3px; left: 0; width: 8px; height: 8px; background: var(--blue); border-radius: 50%; box-shadow: 0 0 10px var(--blue); animation: moveDot 4s infinite linear; }
+  
+  @keyframes moveDot { 0% { left: 0; } 100% { left: 100%; } }
+  @media (max-width: 768px) { .flow-container { flex-direction: column; gap: 2rem; } .flow-line { display: none; } .flow-step { width: 100%; } }
+
+  /* WIREFRAME BREAKDOWN */
+  .browser-mock { border: 1px solid var(--border); border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; margin: 2rem 0; }
+  .browser-bar { background: var(--surface2); padding: 0.5rem 1rem; display: flex; gap: 0.4rem; border-bottom: 1px solid var(--border); }
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .browser-body { background: #fff; padding: 0; display: flex; flex-direction: column; }
+  
+  .wire-section { padding: 1.5rem; border-bottom: 2px dashed rgba(0,0,0,0.1); position: relative; transition: 0.2s; cursor: crosshair; }
+  .wire-section:hover { background: rgba(47,129,247,0.05); }
+  .wire-nav { display: flex; justify-content: space-between; align-items: center; }
+  .wire-box { background: #e1e4e8; border-radius: 4px; height: 20px; }
+  .wire-hero { text-align: center; padding: 3rem 1rem; }
+  .wire-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+  .wire-card { background: #f6f8fa; border: 1px solid #e1e4e8; height: 80px; border-radius: 4px; }
+  
+  .ticket-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(13,17,23,0.9); color: #fff; padding: 0.5rem 1rem; border-radius: 20px; font-weight: 600; font-size: 0.8rem; border: 1px solid var(--border); opacity: 0; transition: 0.2s; pointer-events: none; }
+  .wire-section:hover .ticket-overlay { opacity: 1; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+
+  /* KANBAN BOARD */
+  .kanban { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin: 2rem 0; overflow-x: auto; padding-bottom: 1rem;}
+  .kp-col { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 1rem; min-width: 200px; }
+  .kp-title { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1rem; display: flex; justify-content: space-between; }
+  .kp-count { background: var(--surface2); padding: 0.1rem 0.4rem; border-radius: 10px; font-size: 0.7rem; }
+  .kp-card { background: var(--bg); border: 1px solid var(--border); border-left: 3px solid var(--blue); padding: 0.75rem; border-radius: 6px; font-size: 0.85rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+  .kp-card.done { border-left-color: var(--green); opacity: 0.7; text-decoration: line-through; }
+  .kp-card.review { border-left-color: var(--purple); }
+  .assignee { display: inline-block; background: var(--surface2); border-radius: 50%; width: 20px; height: 20px; text-align: center; line-height: 20px; font-size: 0.6rem; font-weight: bold; margin-top: 0.5rem; float: right; border: 1px solid var(--border); }
+
+  /* CODE REVIEW DOs/DONTs */
+  .cr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .cr-grid { grid-template-columns: 1fr; } }
+  .cr-box { border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; background: var(--surface); }
+  .cr-good { border-top: 4px solid var(--green); }
+  .cr-bad { border-top: 4px solid var(--red); }
+  .cr-list { list-style: none; margin-top: 1rem; }
+  .cr-list li { margin-bottom: 0.75rem; font-size: 0.9rem; display: flex; gap: 0.5rem; }
+  
+  /* HERO */
+  .hero-banner { background: linear-gradient(135deg, #0d1117 0%, #0a1a2e 50%, #1a0a2e 100%); border: 1px solid var(--border); border-radius: 14px; padding: 3rem 2rem; text-align: center; margin-bottom: 3rem; }
+  .hero-banner h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .hero-banner p { color: var(--text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto; }
+  .hero-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--blue); margin-bottom: 1rem; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">⬡ Team Workflow</div>
+  <a href="#deconstruction" class="active">Project Deconstruction</a>
+  <a href="#kanban">Kanban Boards</a>
+  <a href="#flow">The GitHub Flow</a>
+  <a href="#review">Code Review</a>
+</nav>
+
+<div class="page">
+  <div class="hero-banner">
+    <div class="hero-tag">Lesson 9 — Interactive Reference</div>
+    <h1>Collaborative Development Workflow</h1>
+    <p>How teams plan, divide, construct, and review software together without breaking the main codebase.</p>
+  </div>
+
+  <!-- ═══ SECTION 1: DECONSTRUCTION ═══ -->
+  <section id="deconstruction">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>Project Deconstruction</h2>
+        <p>Hover over the wireframe to see how a team divides one page into parallel, claimable tickets.</p>
+      </div>
+    </div>
+
+    <div class="browser-mock">
+      <div class="browser-bar">
+        <div class="dot" style="background:#ff5f57"></div>
+        <div class="dot" style="background:#ffbd2e"></div>
+        <div class="dot" style="background:#28c840"></div>
+      </div>
+      <div class="browser-body">
+        
+        <!-- Navbar -->
+        <div class="wire-section">
+          <div class="ticket-overlay">🎫 TICKET #1: Global Navigation</div>
+          <div class="wire-nav">
+            <div class="wire-box" style="width: 100px;"></div>
+            <div style="display:flex; gap:10px;">
+              <div class="wire-box" style="width: 40px;"></div>
+              <div class="wire-box" style="width: 40px;"></div>
+              <div class="wire-box" style="width: 60px; background:#2f81f7;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero -->
+        <div class="wire-section wire-hero">
+          <div class="ticket-overlay" style="border-color: #8957e5; color: #e6edf3;">🎫 TICKET #2: Hero Section</div>
+          <div class="wire-box" style="width: 60%; height: 40px; margin: 0 auto 1rem; background: #c6cbd1;"></div>
+          <div class="wire-box" style="width: 40%; height: 15px; margin: 0 auto 2rem;"></div>
+          <div style="display:flex; justify-content:center; gap:10px;">
+            <div class="wire-box" style="width: 120px; height: 35px; background:#2f81f7;"></div>
+            <div class="wire-box" style="width: 120px; height: 35px;"></div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="wire-section">
+          <div class="ticket-overlay">🎫 TICKET #3: Features Grid</div>
+          <div class="wire-box" style="width: 200px; margin: 0 auto;"></div>
+          <div class="wire-grid">
+            <div class="wire-card"></div>
+            <div class="wire-card"></div>
+            <div class="wire-card"></div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="wire-section" style="padding: 2rem 1.5rem;">
+          <div class="ticket-overlay">🎫 TICKET #4: Footer</div>
+          <div class="wire-box" style="width: 100%; height: 10px; margin-bottom: 10px;"></div>
+          <div class="wire-box" style="width: 40%; height: 10px; margin: 0 auto;"></div>
+        </div>
+
+      </div>
+    </div>
+    
+    <div style="background:var(--surface2); padding: 1rem; border-radius: 8px; font-size: 0.9rem; color: var(--text-muted);">
+      <strong style="color:var(--text);">Golden Rule of Components:</strong> Once you claim "Ticket #2: Hero", you must only write HTML between the designated <code>&lt;!-- Hero Section --&gt;</code> comments in the shared template file. Do not touch the Navbar!
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 2: KANBAN ═══ -->
+  <section id="kanban">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>The Kanban Board</h2>
+        <p>How teams decide who works on what. Tickets move strictly left-to-right.</p>
+      </div>
+    </div>
+
+    <div class="kanban">
+      <div class="kp-col">
+        <div class="kp-title">To Do <span class="kp-count">2</span></div>
+        <div class="kp-card" style="border-left-color: var(--border);">Add user testimonials</div>
+        <div class="kp-card" style="border-left-color: var(--border);">Build pricing table</div>
+      </div>
+      <div class="kp-col">
+        <div class="kp-title">In Progress <span class="kp-count">1</span></div>
+        <div class="kp-card">
+          Build Hero Section
+          <div class="assignee" title="Assigned to Alex" style="background:#58a6ff; color:#000;">A</div>
+        </div>
+      </div>
+      <div class="kp-col">
+        <div class="kp-title">In Review <span class="kp-count">1</span></div>
+        <div class="kp-card review">
+          Create Navbar layout
+          <div class="assignee" title="Assigned to Sarah" style="background:#8957e5; color:#fff;">S</div>
+          <div style="font-size:0.65rem; color:var(--purple); margin-top:0.25rem;">⏳ PR Open</div>
+        </div>
+      </div>
+      <div class="kp-col">
+        <div class="kp-title">Done <span class="kp-count">2</span></div>
+        <div class="kp-card done">Setup Repo Template</div>
+        <div class="kp-card done">Add Tailwind script</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══ SECTION 3: GITHUB FLOW ═══ -->
+  <section id="flow">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>The GitHub Collaboration Flow</h2>
+        <p>The daily operational loop you repeat for every ticket you pull from the board.</p>
+      </div>
+    </div>
+
+    <div class="flow-container">
+      <div class="flow-line"><div class="flow-dot"></div></div>
+      
+      <div class="flow-step">
+        <div class="flow-icon">⬇️</div>
+        <div class="flow-title">1. Sync Main</div>
+        <div class="flow-cmd">git pull origin main</div>
+      </div>
+      
+      <div class="flow-step">
+        <div class="flow-icon">🌿</div>
+        <div class="flow-title">2. Branch Out</div>
+        <div class="flow-cmd">checkout -b hero-feature</div>
+      </div>
+      
+      <div class="flow-step">
+        <div class="flow-icon">💻</div>
+        <div class="flow-title">3. Code &amp; Commit</div>
+        <div class="flow-cmd">git commit -m "..."</div>
+      </div>
+      
+      <div class="flow-step">
+        <div class="flow-icon">📫</div>
+        <div class="flow-title">4. Open PR</div>
+        <div class="flow-cmd">git push origin...</div>
+      </div>
+
+      <div class="flow-step">
+        <div class="flow-icon">🤝</div>
+        <div class="flow-title">5. Code Review</div>
+        <div class="flow-cmd" style="border:none; background:transparent; padding:0;">on github.com</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 4: CODE REVIEW ═══ -->
+  <section id="review">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Code Review Etiquette</h2>
+        <p>Reviewing a teammate's Pull Request requires technical precision and human empathy.</p>
+      </div>
+    </div>
+
+    <div class="cr-grid">
+      <div class="cr-box cr-good">
+        <h3 style="color:var(--green); font-size:1.1rem;">✅ The Dos</h3>
+        <ul class="cr-list">
+          <li><span>👍</span> Critique the code, not the person.</li>
+          <li><span>📝</span> Explain *why* a change is needed: <br><span style="font-family:var(--mono); font-size:0.8rem; color:var(--text-muted); background:var(--surface2); padding:0.2rem; border-radius:4px; display:inline-block; margin-top:0.3rem;">"Using flex-col here prevents the squishing bug on mobile."</span></li>
+          <li><span>🔎</span> Check the exact scope. Did they only touch the Hero section like the ticket asked?</li>
+          <li><span>🎉</span> Praise good code! "This CSS solution is really clever!"</li>
+        </ul>
+      </div>
+
+      <div class="cr-box cr-bad">
+        <h3 style="color:var(--red); font-size:1.1rem;">❌ The Don'ts</h3>
+        <ul class="cr-list">
+          <li><span>👎</span> "You did this wrong" or "This is bad."</li>
+          <li><span>🛑</span> Merging a PR blindly without reading the 'Files Changed' tab.</li>
+          <li><span>👻</span> Ignoring PRs. The longer a PR sits open, the higher the chance of merge conflicts.</li>
+          <li><span>🔧</span> Scope creep: "While you're here, can you also fix the footer font?" (No! That is a separate ticket/branch!)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  // Highlight active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

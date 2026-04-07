@@ -1,0 +1,14 @@
+/* css/style.css — DevSync Landing Page */
+
+/* 
+   NOTE TO TEAM:
+   We are using Tailwind CSS for this overarching build. 
+   Do NOT write custom CSS in this file unless it is absolutely necessary 
+   (e.g., custom keyframe animations, highly specific hover logic, or resetting base elements).
+   
+   Rely on Tailwind's utility classes in the HTML as much as possible to ensure consistency!
+*/
+
+html {
+  scroll-behavior: smooth;
+}

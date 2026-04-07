@@ -1,0 +1,42 @@
+/* =========================================================
+   Tailwind Practice – Lesson 6
+   Custom CSS file (mostly unused since we use Tailwind CDN)
+   =========================================================
+
+   This file exists to demonstrate that you CAN use custom CSS
+   alongside Tailwind. In Exercise 7 (Challenge), you may
+   optionally add custom styles here if needed.
+
+   For most exercises, you won't need this file — Tailwind
+   utility classes applied directly in the HTML are sufficient.
+   ========================================================= */
+
+/* Reset — good practice even when using Tailwind */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* -------------------------------------------------------
+   OPTIONAL: Add custom styles below for Exercise 7
+   (the Challenge section) if you want to mix approaches.
+   ------------------------------------------------------- */
+
+/* Example: a custom animation you can't easily do with Tailwind */
+/*
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out;
+}
+*/

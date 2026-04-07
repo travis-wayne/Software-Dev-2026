@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio – Contact</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --color-primary: #2c3e50;
+            --color-primary-light: #34495e;
+            --color-accent: #1abc9c;
+            --color-accent-hover: #16a085;
+            --color-text: #333;
+            --color-text-light: #777;
+            --color-bg: #f8f9fa;
+            --color-white: #fff;
+            --color-border: #e0e0e0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+        }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+        header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.5px; }
+        header h1 span { color: var(--color-accent); }
+        nav a {
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+        }
+        nav a:hover, nav a.active { color: white; border-bottom-color: var(--color-accent); }
+
+        /* ── Page Banner ── */
+        .page-banner {
+            background: linear-gradient(135deg, var(--color-primary) 0%, #1a252f 100%);
+            color: white;
+            text-align: center;
+            padding: 50px 20px;
+        }
+        .page-banner h2 { font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; }
+        .page-banner p { color: rgba(255,255,255,0.7); font-size: 1.05rem; }
+
+        /* ── Main ── */
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        /* ── Contact Layout ── */
+        .contact-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 30px;
+        }
+
+        /* ── Contact Info Cards ── */
+        .contact-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .info-card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+            transition: var(--transition);
+        }
+        .info-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-accent);
+        }
+        .info-card .icon {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+        .info-card h3 {
+            font-size: 1rem;
+            color: var(--color-primary);
+            margin-bottom: 5px;
+        }
+        .info-card p {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+        }
+        .info-card a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .info-card a:hover {
+            color: var(--color-accent-hover);
+        }
+
+        /* ── Contact Form ── */
+        .contact-form-wrapper {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            padding: 35px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--color-border);
+        }
+        .contact-form-wrapper h3 {
+            font-size: 1.3rem;
+            color: var(--color-primary);
+            margin-bottom: 5px;
+        }
+        .contact-form-wrapper > p {
+            color: var(--color-text-light);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--color-primary);
+        }
+        .form-group label .required {
+            color: #e74c3c;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid var(--color-border);
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            color: var(--color-text);
+            transition: var(--transition);
+            background: var(--color-bg);
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            background: var(--color-white);
+            box-shadow: 0 0 0 3px rgba(26,188,156,0.15);
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+            color: white;
+            padding: 12px 35px;
+            border: none;
+            border-radius: 50px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(26,188,156,0.3);
+            width: 100%;
+        }
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,188,156,0.4);
+        }
+
+        /* ── Footer ── */
+        footer {
+            background: linear-gradient(135deg, var(--color-primary), #1a252f);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 30px 20px;
+            margin-top: 50px;
+        }
+        footer .footer-links { margin-bottom: 15px; }
+        footer .footer-links a {
+            color: var(--color-accent);
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        footer .footer-links a:hover { color: white; }
+        footer p { font-size: 0.85rem; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .contact-layout {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            header {
+                flex-direction: column;
+                gap: 10px;
+                text-align: center;
+            }
+            nav a { margin: 0 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>&lt;/&gt; My<span>Portfolio</span></h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html" class="active">Contact</a>
+        </nav>
+    </header>
+
+    <section class="page-banner">
+        <h2>Get In Touch</h2>
+        <p>Have a question or want to work together? I'd love to hear from you!</p>
+    </section>
+
+    <main>
+
+        <div class="contact-layout">
+
+            <!-- Left: Contact Info Cards -->
+            <aside class="contact-info">
+                <div class="info-card">
+                    <div class="icon">📧</div>
+                    <h3>Email</h3>
+                    <p><a href="mailto:your.email@example.com">your.email@example.com</a></p>
+                </div>
+                <div class="info-card">
+                    <div class="icon">📍</div>
+                    <h3>Location</h3>
+                    <p>[Your City, Country]</p>
+                </div>
+                <div class="info-card">
+                    <div class="icon">🔗</div>
+                    <h3>Social Media</h3>
+                    <p>
+                        <a href="#">GitHub</a> ·
+                        <a href="#">LinkedIn</a> ·
+                        <a href="#">Twitter</a>
+                    </p>
+                </div>
+                <div class="info-card">
+                    <div class="icon">⏰</div>
+                    <h3>Availability</h3>
+                    <p>Mon – Fri, 9:00 AM – 5:00 PM</p>
+                </div>
+            </aside>
+
+            <!-- Right: Contact Form -->
+            <div class="contact-form-wrapper">
+                <h3>Send Me a Message</h3>
+                <p>Fill in the form below and I'll get back to you as soon as possible.</p>
+
+                <form action="#" method="POST">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="name">Name <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" placeholder="Your full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email <span class="required">*</span></label>
+                            <input type="email" id="email" name="email" placeholder="your.email@example.com" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject <span class="required">*</span></label>
+                        <select id="subject" name="subject" required>
+                            <option value="" disabled selected>-- Choose a subject --</option>
+                            <option value="general">General Inquiry</option>
+                            <option value="collaboration">Collaboration</option>
+                            <option value="feedback">Feedback</option>
+                            <option value="job">Job Opportunity</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message <span class="required">*</span></label>
+                        <textarea id="message" name="message" placeholder="Write your message here..." required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Send Message →</button>
+                </form>
+            </div>
+
+        </div>
+
+    </main>
+
+    <footer>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
+        </div>
+        <p>&copy; 2026 [Your Name]. Built with HTML5 &amp; CSS3.</p>
+    </footer>
+
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Branching Visual Reference – Lesson 8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --green: #3fb950;
+    --green-dim: #1a3a22;
+    --red: #f85149;
+    --red-dim: #3a1a1a;
+    --blue: #58a6ff;
+    --blue-dim: #1a2a3a;
+    --purple: #bc8cff;
+    --purple-dim: #2a1a3a;
+    --orange: #f0883e;
+    --yellow: #e3b341;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  /* NAV */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(13,17,23,0.95);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    height: 56px;
+    overflow-x: auto;
+  }
+  nav .brand {
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--purple);
+    white-space: nowrap;
+    margin-right: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  nav a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 500;
+    padding: 0 0.9rem;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  nav a:hover { color: var(--text); border-bottom-color: var(--border); }
+  nav a.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* LAYOUT */
+  .page { max-width: 980px; margin: 0 auto; padding: 3rem 2rem 6rem; }
+
+  /* SECTION HEADERS */
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 2rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-num {
+    width: 2rem; height: 2rem;
+    background: var(--purple);
+    color: #000;
+    border-radius: 50%;
+    font-weight: 800;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .section-header h2 { font-size: 1.35rem; font-weight: 700; }
+  .section-header p { color: var(--text-muted); font-size: 0.875rem; margin-top: 0.15rem; }
+
+  section { margin-bottom: 4rem; }
+
+  /* CODE BLOCKS */
+  .terminal {
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin: 1rem 0;
+  }
+  .terminal-bar {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 0.5rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #ffbd2e; }
+  .dot-g { background: #28c840; }
+  .terminal-label { margin-left: auto; font-size: 0.72rem; color: var(--text-muted); font-family: var(--mono); }
+  .terminal-body { padding: 1.25rem 1.5rem; font-family: var(--mono); font-size: 0.82rem; line-height: 1.9; }
+  
+  .t-prompt { color: var(--green); }
+  .t-out { color: var(--text-muted); }
+  .t-green { color: var(--green); }
+  .t-red { color: var(--red); }
+  .t-blue { color: var(--blue); }
+  .t-yellow { color: var(--yellow); }
+  .t-purple { color: var(--purple); }
+
+  /* COPY BUTTON */
+  .cmd-block {
+    position: relative;
+    background: #010409;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1.25rem;
+    padding-right: 3.5rem;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    color: var(--green);
+    margin: 0.6rem 0;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .cmd-block:hover { border-color: var(--blue); }
+  .copy-btn {
+    position: absolute; right: 0.75rem; top: 50%;
+    transform: translateY(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: 5px;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    font-family: var(--sans);
+    transition: background 0.15s, color 0.15s;
+  }
+  .copy-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .copy-btn.copied { background: var(--green); color: #000; border-color: var(--green); }
+
+  /* VISUAL MERGES */
+  .merge-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    margin: 1rem 0;
+  }
+  .md-title { font-weight: 700; margin-bottom: 0.75rem; color: var(--blue); font-size: 0.95rem; }
+  .md-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+  .commit-line { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; font-family: var(--mono); font-size: 0.8rem; }
+  .circle { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+  .c-main { background: var(--blue); }
+  .c-feat { background: var(--green); }
+  .c-merge { background: var(--purple); }
+  .line-h { height: 2px; width: 30px; background: var(--border); display: inline-block; }
+
+  /* COMMAND GRID */
+  .cmd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 640px) { .cmd-grid { grid-template-columns: 1fr; } }
+  
+  .cmd-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .cmd-card:hover { border-color: var(--blue); transform: translateY(-2px); }
+  .cmd-card .cmd-name { font-family: var(--mono); font-size: 0.95rem; font-weight: 600; color: var(--green); margin-bottom: 0.4rem; }
+  .cmd-card .cmd-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+  .cmd-example { background: #010409; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem 0.8rem; font-family: var(--mono); font-size: 0.78rem; color: var(--text-muted); line-height: 1.7; }
+
+  /* BADGE */
+  .badge { display: inline-block; padding: 0.15rem 0.55rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem; }
+  .badge-purple { background: var(--purple-dim); color: var(--purple); }
+  .badge-blue { background: var(--blue-dim); color: var(--blue); }
+  .badge-green { background: var(--green-dim); color: var(--green); }
+
+  /* TABLE */
+  table { width: 100%; border-collapse: collapse; font-size: 0.875rem; margin: 1rem 0; }
+  th { background: var(--surface2); color: var(--text-muted); font-weight: 600; text-align: left; padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); font-size: 0.78rem; letter-spacing: 0.05em; text-transform: uppercase; }
+  td { padding: 0.65rem 1rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--surface); }
+  td code { font-family: var(--mono); color: var(--orange); font-size: 0.82rem; background: var(--surface2); padding: 0.1rem 0.35rem; border-radius: 3px; }
+
+  /* CHEAT SHEET */
+  .cheat-section { margin-bottom: 1.5rem; }
+  .cheat-section h4 { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--purple); margin-bottom: 0.75rem; }
+  .cheat-row { display: flex; gap: 1rem; align-items: baseline; padding: 0.35rem 0; border-bottom: 1px solid rgba(48,54,61,0.5); }
+  .cheat-row:last-child { border-bottom: none; }
+  .cheat-cmd { font-family: var(--mono); font-size: 0.82rem; color: var(--green); min-width: 260px; flex-shrink: 0; }
+  .cheat-desc { font-size: 0.82rem; color: var(--text-muted); }
+
+  /* CALLOUTS */
+  .tip { display: flex; gap: 0.75rem; background: #1a2a1a; border: 1px solid #2a3a2a; border-left: 4px solid var(--green); border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0; font-size: 0.875rem; }
+  .warn { display: flex; gap: 0.75rem; background: #2a1a1a; border: 1px solid #3a2020; border-left: 4px solid var(--red); border-radius: 8px; padding: 1rem 1.25rem; margin: 0.75rem 0; font-size: 0.875rem; }
+  
+  /* HERO */
+  .hero-banner {
+    background: linear-gradient(135deg, #0d1117 0%, #1a0a2e 50%, #0a1a2e 100%);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 3rem 2rem;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+  .hero-banner h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; }
+  .hero-banner p { color: var(--text-muted); font-size: 0.95rem; max-width: 500px; margin: 0 auto; }
+  .hero-tag { display: inline-block; background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; padding: 0.3rem 1rem; font-size: 0.78rem; font-weight: 600; color: var(--purple); margin-bottom: 1rem; }
+
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="brand">⬡ Git Branching Reference</div>
+  <a href="#workflow" class="active">Workflow</a>
+  <a href="#commands">Commands</a>
+  <a href="#merging">Merging</a>
+  <a href="#conflicts">Conflicts</a>
+  <a href="#pr">Pull Requests</a>
+  <a href="#cheatsheet">Cheat Sheet</a>
+</nav>
+
+<div class="page">
+
+  <div class="hero-banner">
+    <div class="hero-tag">Lesson 8 — Interactive Reference</div>
+    <h1>Branching, Merging &amp; PRs</h1>
+    <p>A visual guide covering parallel development, resolving merge conflicts, and professional GitHub workflows.</p>
+  </div>
+
+  <!-- ═══ SECTION 1: WORKFLOW ═══ -->
+  <section id="workflow">
+    <div class="section-header">
+      <div class="section-num">1</div>
+      <div>
+        <h2>The Branching Concept</h2>
+        <p>Why do we use branches? To work parallel without breaking the main codebase.</p>
+      </div>
+    </div>
+
+    <div class="tip">
+      <span class="tip-icon">💡</span>
+      <div><strong>The Golden Rule:</strong> The <code>main</code> branch should always be stable and deployable. All direct development happens on Feature Branches. Once a feature is complete and verified, it is merged back into `main`.</div>
+    </div>
+
+  </section>
+
+  <!-- ═══ SECTION 2: COMMANDS ═══ -->
+  <section id="commands">
+    <div class="section-header">
+      <div class="section-num">2</div>
+      <div>
+        <h2>Core Branching Commands</h2>
+      </div>
+    </div>
+
+    <div class="cmd-grid">
+
+      <div class="cmd-card">
+        <div class="cmd-name">git branch</div>
+        <div class="cmd-desc">List all local branches. The active one is marked with an asterisk (*).</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git branch<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git branch</div>
+          <div class="out">  feature/about-page</div>
+          <div class="t-green">* main</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git checkout -b</div>
+        <div class="cmd-desc">Shortcut: Create a new branch AND switch to it immediately. Often use `git switch -c` in modern Git.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git checkout -b feature/login<button class="copy-btn">Copy</button></div>
+        <div class="cmd-example">
+          <div><span class="prompt">$ </span>git checkout -b feature/login</div>
+          <div class="out">Switched to a new branch 'feature/login'</div>
+        </div>
+      </div>
+
+      <div class="cmd-card">
+        <div class="cmd-name">git checkout</div>
+        <div class="cmd-desc">Switch between existing branches. Your working files will update immediately to match the chosen branch.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git checkout main<button class="copy-btn">Copy</button></div>
+      </div>
+      
+      <div class="cmd-card">
+        <div class="cmd-name">git branch -d</div>
+        <div class="cmd-desc">Delete a local branch. Use this when the feature is merged into `main`.</div>
+        <div class="cmd-block" onclick="copyCmd(this)">git branch -d feature/login<button class="copy-btn">Copy</button></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═══ SECTION 3: MERGING ═══ -->
+  <section id="merging">
+    <div class="section-header">
+      <div class="section-num">3</div>
+      <div>
+        <h2>Merge Types</h2>
+        <p>Combining the history of two branches.</p>
+      </div>
+    </div>
+
+    <div class="merge-diagram">
+      <div class="md-title">A. Fast-Forward Merge</div>
+      <div class="md-desc">If `main` hasn't had any new commits since the feature branch diverged, Git simply moves the `main` pointer forward.</div>
+      
+      <div class="terminal">
+        <div class="terminal-body" style="background:#0d1117">
+          <div class="t-out"># 1. Be on main</div>
+          <div class="t-green">git checkout main</div>
+          <div class="t-out"># 2. Merge feature branch</div>
+          <div class="t-green">git merge feature/add-footer</div>
+          <div class="t-out">Updating a1e8f23..c92a1b5</div>
+          <div class="t-out">Fast-forward</div>
+          <div class="t-out"> index.html | 2 ++</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="merge-diagram">
+      <div class="md-title">B. Default (3-Way) Merge</div>
+      <div class="md-desc">If `main` HAS moved forward (e.g., someone else merged a feature), Git combines them via a "Merge Commit".</div>
+      <div class="terminal">
+        <div class="terminal-body" style="background:#0d1117">
+          <div class="t-out">Merge made by the 'ort' strategy.</div>
+          <div class="t-out"> style.css | 4 +++...</div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══ SECTION 4: CONFLICTS ═══ -->
+  <section id="conflicts">
+    <div class="section-header">
+      <div class="section-num">4</div>
+      <div>
+        <h2>Resolving Merge Conflicts</h2>
+        <p>Conflicts happen when you and a teammate edit the exact same lines.</p>
+      </div>
+    </div>
+    
+    <div class="warn">
+      Don't panic! It's normal. Git is just asking you to make a decision.
+    </div>
+
+    <div class="terminal">
+      <div class="terminal-bar"><div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div><span class="terminal-label">index.html (Conflict Markers)</span></div>
+      <div class="terminal-body" style="font-size:0.9rem">
+        <div class="t-out">Some surrounding code...</div><br>
+        <div class="t-blue">&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD <span style="font-size:0.7em; color:var(--text-muted)">(Your current branch)</span></div>
+        <div class="t-green">&lt;h1&gt;Alex Chen | Web Developer&lt;/h1&gt;</div>
+        <div class="t-yellow">======= <span style="font-size:0.7em; color:var(--text-muted)">(Separator)</span></div>
+        <div class="t-purple">&lt;h1&gt;Alex Chen — Portfolio&lt;/h1&gt;</div>
+        <div class="t-blue">&gt;&gt;&gt;&gt;&gt;&gt;&gt; feature/new-heading <span style="font-size:0.7em; color:var(--text-muted)">(Incoming branch)</span></div><br>
+        <div class="t-out">More surrounding code...</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>How to Fix:</h3>
+      <ol style="margin-left:1.5rem; margin-top:0.5rem; color:var(--text-muted); font-size:0.9rem;">
+        <li style="margin-bottom:0.25rem;">Open the conflicting file in your editor (VS Code).</li>
+        <li style="margin-bottom:0.25rem;">Find the conflict markers (search `<<<<`).</li>
+        <li style="margin-bottom:0.25rem;">Decide which version to keep, or manually combine them.</li>
+        <li style="margin-bottom:0.25rem;">Delete all line markers (`<<<<`, `====`, `>>>>`).</li>
+        <li style="margin-bottom:0.25rem;">Save the file.</li>
+        <li style="margin-bottom:0.25rem;">Run `git add <file>` and `git commit` to finalize.</li>
+      </ol>
+    </div>
+
+  </section>
+
+  <!-- ═══ SECTION 5: PRs ═══ -->
+  <section id="pr">
+    <div class="section-header">
+      <div class="section-num">5</div>
+      <div>
+        <h2>Pull Requests (GitHub Workflow)</h2>
+        <p>The standard way professional teams review and combine code.</p>
+      </div>
+    </div>
+
+    <table>
+      <thead>
+        <tr><th>#</th><th>Step</th><th>Command / Action</th><th>Notes</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-purple">1</span></td>
+          <td>Create Feature Branch</td>
+          <td><code>git checkout -b feat/new-page</code></td>
+          <td>Isolate your work locally.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-purple">2</span></td>
+          <td>Commit Work</td>
+          <td><code>git add .</code> <br> <code>git commit -m "..."</code></td>
+          <td>Make small, logical commits.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-blue">3</span></td>
+          <td>Push Branch</td>
+          <td><code>git push origin feat/new-page</code></td>
+          <td>Uploads the branch to GitHub.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">4</span></td>
+          <td>Open PR</td>
+          <td>github.com → "Compare & pull request"</td>
+          <td>Base: `main` ← Compare: `feat/new-page`</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-orange">5</span></td>
+          <td>Code Review</td>
+          <td>Discuss on GitHub</td>
+          <td>Teammates approve or request changes.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-green">6</span></td>
+          <td>Merge</td>
+          <td>"Merge pull request" button</td>
+          <td>Happens entirely on the GitHub server.</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-purple">7</span></td>
+          <td>Sync Local repo</td>
+          <td><code>git checkout main</code><br><code>git pull</code></td>
+          <td>Crucial! Get the newly merged code locally.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- ═══ SECTION 6: CHEAT SHEET ═══ -->
+  <section id="cheatsheet">
+    <div class="section-header">
+      <div class="section-num">6</div>
+      <div>
+        <h2>Branching Cheat Sheet</h2>
+      </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+      <div>
+        <div class="cheat-section">
+          <h4>🌲 Local Branches</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git branch</div><div class="cheat-desc">List branches</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git checkout -b &lt;name&gt;</div><div class="cheat-desc">Create &amp; switch instantly</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git checkout &lt;name&gt;</div><div class="cheat-desc">Switch to branch</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git branch -d &lt;name&gt;</div><div class="cheat-desc">Delete a merged branch</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git branch -D &lt;name&gt;</div><div class="cheat-desc">Force delete branch</div></div>
+        </div>
+      </div>
+      <div>
+        <div class="cheat-section">
+          <h4>🔀 Merging &amp; Remote</h4>
+          <div class="cheat-row"><div class="cheat-cmd">git merge &lt;name&gt;</div><div class="cheat-desc">Merge &lt;name&gt; into current branch</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git push origin &lt;name&gt;</div><div class="cheat-desc">Push branch to GitHub</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git push origin --delete &lt;...&gt;</div><div class="cheat-desc">Delete branch on GitHub</div></div>
+          <div class="cheat-row"><div class="cheat-cmd">git fetch --prune</div><div class="cheat-desc">Clear stale remote branches locally</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+  function copyCmd(el) {
+    const btn = el.querySelector('.copy-btn');
+    const text = el.childNodes[0].textContent.trim().replace(/\n\s*/g, '\n');
+    navigator.clipboard.writeText(text).then(() => {
+      btn.textContent = 'Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav a');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id);
+        });
+      }
+    });
+  }, { threshold: 0.3 });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

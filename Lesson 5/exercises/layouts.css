@@ -1,0 +1,320 @@
+/* ===================================
+   Layout Exercises – Lesson 5
+   External Stylesheet
+   =================================== */
+
+/* ===== RESET & BASE ===== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    line-height: 1.6;
+}
+
+
+/* ===== HEADER ===== */
+header {
+    background-color: #2c3e50;
+    color: white;
+    padding: 20px;
+    text-align: center;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+/* EXERCISE: Make the nav links sit in a row using Flexbox */
+/* Hint: display: flex; justify-content: center; gap: 15px; */
+nav {
+    /* Add your Flexbox styles here */
+}
+
+nav a {
+    color: #ecf0f1;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+nav a:hover {
+    background-color: #34495e;
+}
+
+
+/* ===== SECTIONS ===== */
+section {
+    padding: 25px;
+    margin: 20px;
+}
+
+section h2 {
+    color: #2c3e50;
+    margin-bottom: 10px;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 5px;
+}
+
+section h3 {
+    color: #2980b9;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+section p {
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: #555;
+}
+
+section code {
+    background: #ecf0f1;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 13px;
+}
+
+
+/* ===== GENERIC ITEM STYLING ===== */
+/* These are the colored boxes inside your layout containers */
+.item {
+    background-color: #3498db;
+    color: white;
+    padding: 15px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
+
+/* ===================================================
+   SECTION 1: FLEXBOX EXERCISES
+   =================================================== */
+
+/* EXERCISE 1a: Make this a flex container — items in a row */
+/* Hint: display: flex; gap: 10px; */
+.flex-row-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 1b: Make this a flex container — items in a column */
+/* Hint: display: flex; flex-direction: column; gap: 10px; */
+.flex-column-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 1c: Center the item both horizontally and vertically */
+/* Hint: display: flex; justify-content: center; align-items: center; */
+/* Also set a min-height so there's space to center in, e.g. min-height: 200px; */
+.flex-center-exercise {
+    /* Add your styles here */
+    background: #ecf0f1;
+    border-radius: 6px;
+}
+
+/* EXERCISE 1d: Space items evenly apart */
+/* Hint: display: flex; justify-content: space-between; */
+.flex-space-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 1e: Allow items to wrap to the next line */
+/* Hint: display: flex; flex-wrap: wrap; gap: 10px; */
+/* Also try: .flex-wrap-exercise .item { flex: 1 1 150px; } */
+.flex-wrap-exercise {
+    /* Add your styles here */
+}
+
+
+/* ===================================================
+   SECTION 2: CSS GRID EXERCISES
+   =================================================== */
+
+/* EXERCISE 2a: Create a 3-column grid */
+/* Hint: display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; */
+.grid-three-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 2b: Create a sidebar + main content layout */
+/* Hint: display: grid; grid-template-columns: 250px 1fr; gap: 10px; */
+.grid-sidebar-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 2c: Make the first item span all 3 columns */
+/* Hint: .item-full-width { grid-column: 1 / -1; } */
+.grid-span-exercise {
+    /* Add your grid styles here */
+}
+
+.item-full-width {
+    /* Add your span style here */
+}
+
+/* EXERCISE 2d: Build a page layout with Grid */
+/* Hint:
+   display: grid;
+   grid-template-columns: 200px 1fr;
+   grid-template-rows: auto 1fr auto;
+   gap: 10px;
+   min-height: 300px;
+*/
+.grid-page-exercise {
+    /* Add your styles here */
+}
+
+/* Make the header span full width */
+.page-header {
+    /* Hint: grid-column: 1 / -1; */
+    background-color: #2c3e50 !important;
+}
+
+/* Make the footer span full width */
+.page-footer {
+    /* Hint: grid-column: 1 / -1; */
+    background-color: #2c3e50 !important;
+}
+
+.page-sidebar {
+    background-color: #34495e !important;
+}
+
+.page-main {
+    background-color: #27ae60 !important;
+}
+
+
+/* ===================================================
+   SECTION 3: RESPONSIVE DESIGN EXERCISES
+   =================================================== */
+
+/* EXERCISE 3a: Make this a flex row, then add a media query to stack on small screens */
+/* Step 1: Add display: flex; gap: 10px; here */
+/* Step 2: Add @media (max-width: 768px) below to change flex-direction to column */
+.responsive-flex-exercise {
+    /* Add your styles here */
+}
+
+/* EXERCISE 3b: Make this a 3-column grid, then add a media query for 1 column */
+/* Step 1: Add display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; */
+/* Step 2: Add @media (max-width: 768px) below to change to 1fr */
+.responsive-grid-exercise {
+    /* Add your styles here */
+}
+
+
+/* ===================================================
+   MEDIA QUERIES — ADD YOUR RESPONSIVE STYLES HERE
+   =================================================== */
+
+/* EXERCISE: Add your media queries below */
+/* Example:
+@media (max-width: 768px) {
+    .responsive-flex-exercise {
+        flex-direction: column;
+    }
+    .responsive-grid-exercise {
+        grid-template-columns: 1fr;
+    }
+}
+*/
+
+
+/* ===================================================
+   SECTION 4: CHALLENGE — CARD GALLERY
+   =================================================== */
+
+/* EXERCISE: Style the card gallery */
+/* Use Grid for the overall layout: 3 columns on desktop */
+/* Hint: display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; */
+.card-gallery {
+    /* Add your styles here */
+}
+
+/* EXERCISE: Style each card */
+/* Use Flexbox to arrange card content vertically */
+/* Hint: display: flex; flex-direction: column; */
+.card {
+    /* Add your styles here */
+    /* Suggestion: background, padding, border-radius, box-shadow */
+}
+
+.card h3 {
+    /* Style the card title */
+}
+
+.card p {
+    /* Style the card description */
+    /* Hint: flex-grow: 1; pushes the link to the bottom */
+}
+
+.card-link {
+    /* Style the card link */
+    /* Hint: color, text-decoration, font-weight */
+}
+
+.card-link:hover {
+    /* Hover effect for the link */
+}
+
+/* CHALLENGE: Add media queries for the card gallery */
+/* Tablet (768px): 2 columns */
+@media (max-width: 768px) {
+    .card-gallery {
+        /* Hint: grid-template-columns: 1fr 1fr; */
+    }
+}
+
+/* Phone (480px): 1 column */
+@media (max-width: 480px) {
+    .card-gallery {
+        /* Hint: grid-template-columns: 1fr; */
+    }
+}
+
+
+/* ===================================================
+   CHALLENGE STARTER CODE — FOR REFERENCE
+   =================================================== */
+
+/* 
+   If you get stuck, try using these patterns:
+
+   .card-gallery {
+       display: grid;
+       grid-template-columns: repeat(3, 1fr);
+       gap: 20px;
+   }
+
+   .card {
+       display: flex;
+       flex-direction: column;
+       background: white;
+       padding: 20px;
+       border-radius: 8px;
+       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+   }
+
+   .card p {
+       flex-grow: 1;  <-- This pushes the link to the bottom!
+       margin-bottom: 15px;
+   }
+*/
+
+
+/* ===== FOOTER ===== */
+footer {
+    background-color: #2c3e50;
+    color: white;
+    text-align: center;
+    padding: 15px;
+    margin-top: 30px;
+}

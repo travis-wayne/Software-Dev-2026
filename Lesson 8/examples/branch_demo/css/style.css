@@ -1,0 +1,36 @@
+/* css/style.css — Branch Workflow Demo */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0f172a;
+  --surface: #1e293b;
+  --border: #334155;
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --accent: #bc8cff;
+}
+
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+.container { max-width: 800px; margin: 0 auto; padding: 0 2rem; }
+
+/* NAV */
+#navbar { position: sticky; top: 0; background: rgba(15,23,42,0.95); border-bottom: 1px solid var(--border); padding: 0 2rem; }
+.nav-inner { max-width: 800px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 60px; }
+.logo { font-weight: 800; font-size: 1.1rem; color: var(--accent); text-decoration: none; }
+#navbar ul { list-style: none; display: flex; gap: 0.5rem; }
+#navbar ul a { color: var(--text-muted); text-decoration: none; padding: 0.4rem 0.9rem; border-radius: 6px; font-weight: 500; }
+#navbar ul a:hover { color: var(--text); background: var(--surface); }
+#navbar ul a.active { color: var(--accent); background: rgba(188,140,255,0.1); }
+
+/* HERO */
+.hero { padding: 6rem 0; text-align: center; border-bottom: 1px solid var(--border); }
+.pre-title { color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
+.hero h1 { font-size: 3rem; font-weight: 800; margin-bottom: 0.5rem; }
+.subtitle { font-size: 1.5rem; color: var(--text-muted); margin-bottom: 1.5rem; }
+.hero-desc { color: var(--text-muted); max-width: 480px; margin: 0 auto; }
+
+/* PAGES */
+.about-section, .contact-section { padding: 4rem 0; }
+.about-section h1, .contact-section h1 { font-size: 2rem; margin-bottom: 1rem; }
+.about-section p, .contact-section p { color: var(--text-muted); }

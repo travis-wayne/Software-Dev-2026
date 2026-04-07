@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Portfolio – Home</title>
+    <style>
+        /* ══════════════════════════════════════════
+           DESIGN SYSTEM
+           ══════════════════════════════════════════ */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --color-primary: #2c3e50;
+            --color-primary-light: #34495e;
+            --color-accent: #1abc9c;
+            --color-accent-hover: #16a085;
+            --color-text: #333;
+            --color-text-light: #777;
+            --color-bg: #f8f9fa;
+            --color-white: #fff;
+            --color-border: #e0e0e0;
+            --shadow-sm: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+            --shadow-lg: 0 8px 32px rgba(0,0,0,0.15);
+            --radius: 8px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            line-height: 1.7;
+            color: var(--color-text);
+            background-color: var(--color-bg);
+        }
+
+        /* ── Header ── */
+        header {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+            color: white;
+            padding: 15px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+        }
+        header h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        header h1 span {
+            color: var(--color-accent);
+        }
+
+        /* ── Navigation ── */
+        nav a {
+            color: rgba(255, 255, 255, 0.85);
+            text-decoration: none;
+            margin-left: 25px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: var(--transition);
+            padding: 5px 0;
+            border-bottom: 2px solid transparent;
+        }
+        nav a:hover,
+        nav a.active {
+            color: white;
+            border-bottom-color: var(--color-accent);
+        }
+
+        /* ── Hero Section ── */
+        .hero {
+            position: relative;
+            background: linear-gradient(135deg, var(--color-primary) 0%, #1a252f 100%);
+            color: white;
+            text-align: center;
+            padding: 80px 20px;
+            overflow: hidden;
+        }
+        .hero img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.25;
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        .hero h2 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -1px;
+        }
+        .hero .tagline {
+            font-size: 1.25rem;
+            color: var(--color-accent);
+            font-weight: 500;
+            margin-bottom: 15px;
+        }
+        .hero p {
+            font-size: 1.05rem;
+            color: rgba(255,255,255,0.8);
+            max-width: 550px;
+            margin: 0 auto 25px;
+        }
+        .hero .btn {
+            display: inline-block;
+            background: var(--color-accent);
+            color: white;
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(26,188,156,0.4);
+        }
+        .hero .btn:hover {
+            background: var(--color-accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(26,188,156,0.5);
+        }
+
+        /* ── Main ── */
+        main {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 50px 20px;
+        }
+
+        /* ── Section Titles ── */
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--color-primary);
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .section-subtitle {
+            color: var(--color-text-light);
+            margin-bottom: 30px;
+            font-size: 1.05rem;
+        }
+
+        /* ── Skills Grid ── */
+        .skills-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 50px;
+        }
+        .skill-card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            padding: 25px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid var(--color-border);
+        }
+        .skill-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--color-accent);
+        }
+        .skill-card .icon {
+            font-size: 2.2rem;
+            margin-bottom: 12px;
+        }
+        .skill-card h3 {
+            font-size: 1.1rem;
+            color: var(--color-primary);
+            margin-bottom: 6px;
+        }
+        .skill-card p {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+        }
+
+        /* ── Featured Projects ── */
+        .projects-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .project-card {
+            background: var(--color-white);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            border: 1px solid var(--color-border);
+        }
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+        .project-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+        .project-card .card-body {
+            padding: 20px;
+        }
+        .project-card h3 {
+            font-size: 1.1rem;
+            color: var(--color-primary);
+            margin-bottom: 8px;
+        }
+        .project-card p {
+            font-size: 0.9rem;
+            color: var(--color-text-light);
+        }
+        .project-card .tag {
+            display: inline-block;
+            background: #248170;
+            color: var(--color-accent);
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            margin-top: 10px;
+            margin-right: 5px;
+        }
+
+        /* ── View All Link ── */
+        .view-all {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .view-all a {
+            color: var(--color-accent);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+        .view-all a:hover {
+            color: var(--color-accent-hover);
+        }
+
+        /* ── Footer ── */
+        footer {
+            background: linear-gradient(135deg, var(--color-primary), #1a252f);
+            color: rgba(255,255,255,0.7);
+            text-align: center;
+            padding: 30px 20px;
+        }
+        footer .footer-links {
+            margin-bottom: 15px;
+        }
+        footer .footer-links a {
+            color: var(--color-accent);
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        footer .footer-links a:hover {
+            color: white;
+        }
+        footer p {
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER: Sticky navigation bar -->
+    <header>
+        <h1>&lt;/&gt; My<span>Portfolio</span></h1>
+        <nav>
+            <a href="index.html" class="active">Home</a>
+            <a href="about.html">About</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
+        </nav>
+    </header>
+
+    <!-- HERO: Full-width banner with call to action -->
+    <section class="hero">
+        <img src="images/hero-banner.png" alt="Abstract tech background">
+        <div class="hero-content">
+            <h2>Hi, I'm Travis Wayne 👋😂</h2>
+            <p class="tagline">Aspiring Web Developer</p>
+            <p>I build clean, functional websites with a passion for learning
+               modern web technologies. Welcome to my portfolio!</p>
+            <a href="projects.html" class="btn">View My Projects →</a>
+        </div>
+    </section>
+
+    <!-- MAIN CONTENT -->
+    <main>
+
+        <!-- Skills Section -->
+        <section>
+            <h2 class="section-title">What I'm Learning</h2>
+            <p class="section-subtitle">Technologies and skills I'm currently building.</p>
+
+            <div class="skills-grid">
+                <div class="skill-card">
+                    <div class="icon">🌐</div>
+                    <h3>HTML5</h3>
+                    <p>Semantic markup & page structure</p>
+                </div>
+                <div class="skill-card">
+                    <div class="icon">🎨</div>
+                    <h3>CSS3</h3>
+                    <p>Styling, layouts & responsive design</p>
+                </div>
+                <div class="skill-card">
+                    <div class="icon">⚡</div>
+                    <h3>JavaScript</h3>
+                    <p>Interactivity & dynamic content</p>
+                </div>
+                <div class="skill-card">
+                    <div class="icon">🛠️</div>
+                    <h3>VS Code</h3>
+                    <p>Code editor & dev tools</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Featured Projects Section -->
+        <section>
+            <h2 class="section-title">Featured Projects</h2>
+            <p class="section-subtitle">A preview of what I've been working on.</p>
+
+            <div class="projects-preview">
+                <article class="project-card">
+                    <img src="images/project-website.png" alt="Personal Website screenshot">
+                    <div class="card-body">
+                        <h3>Personal Website</h3>
+                        <p>My first HTML website — a simple page built from scratch to learn the fundamentals.</p>
+                        <span class="tag">HTML5</span>
+                        <span class="tag">CSS</span>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <img src="images/project-calculator.png" alt="Calculator App screenshot">
+                    <div class="card-body">
+                        <h3>Calculator App</h3>
+                        <p>A functional calculator with a sleek dark theme, built to practise JavaScript logic.</p>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">CSS</span>
+                    </div>
+                </article>
+
+                <article class="project-card">
+                    <img src="images/project-game.png" alt="Tic-Tac-Toe Game screenshot">
+                    <div class="card-body">
+                        <h3>Tic-Tac-Toe Game</h3>
+                        <p>A classic game with score tracking and a clean modern UI.</p>
+                        <span class="tag">JavaScript</span>
+                        <span class="tag">HTML5</span>
+                    </div>
+                </article>
+            </div>
+
+            <div class="view-all">
+                <a href="projects.html">See all projects →</a>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-links">
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="projects.html">Projects</a>
+            <a href="contact.html">Contact</a>
+        </div>
+        <p>&copy; 2026 [Your Name]. Built with HTML5 &amp; CSS3.</p>
+    </footer>
+
+</body>
+</html>

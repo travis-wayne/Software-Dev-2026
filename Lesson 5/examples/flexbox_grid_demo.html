@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flexbox & Grid Demo – Lesson 5</title>
+    <style>
+        /* ===== Reset & Base Styles ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            padding: 30px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* ===== Example Card Styling ===== */
+        .example {
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .example h2 {
+            color: #2980b9;
+            margin-bottom: 10px;
+            font-size: 20px;
+        }
+
+        .example p {
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 14px;
+        }
+
+        .example code {
+            background: #ecf0f1;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+
+        .code-block {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            white-space: pre;
+        }
+
+        /* ===== Generic Flex/Grid Item Styling ===== */
+        .demo-item {
+            background-color: #3498db;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 6px;
+            font-weight: bold;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .demo-item:nth-child(2) { background-color: #2ecc71; }
+        .demo-item:nth-child(3) { background-color: #e74c3c; }
+        .demo-item:nth-child(4) { background-color: #f39c12; }
+        .demo-item:nth-child(5) { background-color: #9b59b6; }
+        .demo-item:nth-child(6) { background-color: #1abc9c; }
+
+        /* ===== Section Divider ===== */
+        .section-divider {
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin: 40px 0 20px;
+            padding: 10px;
+            border-top: 3px solid #ecf0f1;
+            border-bottom: 3px solid #ecf0f1;
+        }
+
+        /* ===========================
+           FLEXBOX DEMOS
+           =========================== */
+
+        /* Demo 1: Basic Flex Row */
+        .flex-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        /* Demo 2: Flex Direction Column */
+        .flex-column {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Demo 3: Justify Content */
+        .flex-justify-between {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .flex-justify-center {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .flex-justify-evenly {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 10px;
+        }
+
+        /* Demo 4: Align Items */
+        .flex-align {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 120px;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .flex-align .demo-item:nth-child(1) { padding: 10px 20px; }
+        .flex-align .demo-item:nth-child(2) { padding: 30px 20px; }
+        .flex-align .demo-item:nth-child(3) { padding: 20px 20px; }
+
+        /* Demo 5: Flex Wrap */
+        .flex-wrap-demo {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .flex-wrap-demo .demo-item {
+            flex: 1 1 150px;
+        }
+
+        /* Demo A: Flex Item Properties (Grow/Shrink) */
+        .flex-items-props {
+            display: flex;
+            gap: 10px;
+            background: #ecf0f1;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .grow-1 { flex-grow: 1; }
+        .grow-2 { flex-grow: 2; }
+        .no-shrink { flex-shrink: 0; width: 150px; }
+
+        /* ===========================
+           GRID DEMOS
+           =========================== */
+
+        /* Demo 6: Basic Grid */
+        .grid-basic {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Demo 7: Mixed Column Sizes */
+        .grid-mixed {
+            display: grid;
+            grid-template-columns: 200px 1fr 1fr;
+            gap: 10px;
+        }
+
+        /* Demo 8: Grid with Spanning */
+        .grid-span {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .grid-span .span-two {
+            grid-column: span 2;
+        }
+
+        .grid-span .span-full {
+            grid-column: 1 / -1;
+        }
+
+        /* Demo 9: Page Layout with Grid */
+        .grid-page-layout {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            grid-template-rows: auto 1fr auto;
+            gap: 10px;
+            min-height: 300px;
+        }
+
+        .grid-page-layout .page-header {
+            grid-column: 1 / -1;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .grid-page-layout .page-sidebar {
+            background: #34495e;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .grid-page-layout .page-main {
+            background: #3498db;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+
+        .grid-page-layout .page-footer {
+            grid-column: 1 / -1;
+            background: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* Demo B: Grid Auto-Fit (Magic Responsive) */
+        .grid-auto-fit {
+            display: grid;
+            /* Magic line: at least 200px, but fill available space */
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        /* ===========================
+           RESPONSIVE DEMO
+           =========================== */
+
+        .responsive-demo {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        /* Media query — changes to 1 column on small screens */
+        @media (max-width: 768px) {
+            .responsive-demo {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-page-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .grid-page-layout .page-sidebar {
+                order: 2;
+            }
+        }
+
+        /* ===== Tip Box ===== */
+        .tip {
+            background: #dfe6e9;
+            border-left: 4px solid #2980b9;
+            padding: 15px;
+            margin-top: 30px;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .tip strong {
+            color: #2980b9;
+        }
+
+        /* ===== Label ===== */
+        .label {
+            display: inline-block;
+            background: #2980b9;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>📐 Flexbox & Grid Demo</h1>
+    <p class="subtitle">Resize your browser window to see responsive layout changes!</p>
+
+    <div class="demo-container">
+
+        <!-- ============================= -->
+        <!-- FLEXBOX SECTION                -->
+        <!-- ============================= -->
+        <div class="section-divider">🔲 Flexbox — One-Dimensional Layout</div>
+
+        <!-- DEMO 1: Flex Row -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>1. Basic Flex Row</h2>
+            <p>Items arranged in a <strong>horizontal row</strong> with <code>display: flex</code>.</p>
+            <div class="code-block">display: flex;
+gap: 10px;</div>
+            <div class="flex-row">
+                <div class="demo-item">Item 1</div>
+                <div class="demo-item">Item 2</div>
+                <div class="demo-item">Item 3</div>
+            </div>
+        </div>
+
+        <!-- DEMO 2: Flex Direction Column -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>2. Flex Direction: Column</h2>
+            <p>Items stacked <strong>vertically</strong> with <code>flex-direction: column</code>.</p>
+            <div class="code-block">display: flex;
+flex-direction: column;
+gap: 10px;</div>
+            <div class="flex-column">
+                <div class="demo-item">Item 1</div>
+                <div class="demo-item">Item 2</div>
+                <div class="demo-item">Item 3</div>
+            </div>
+        </div>
+
+        <!-- DEMO 3: Justify Content -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>3. Justify Content</h2>
+            <p>Controls how items are spaced on the <strong>main axis</strong>.</p>
+
+            <p><code>justify-content: space-between</code></p>
+            <div class="flex-justify-between" style="margin-bottom: 15px;">
+                <div class="demo-item">A</div>
+                <div class="demo-item">B</div>
+                <div class="demo-item">C</div>
+            </div>
+
+            <p><code>justify-content: center</code></p>
+            <div class="flex-justify-center" style="margin-bottom: 15px;">
+                <div class="demo-item">A</div>
+                <div class="demo-item">B</div>
+                <div class="demo-item">C</div>
+            </div>
+
+            <p><code>justify-content: space-evenly</code></p>
+            <div class="flex-justify-evenly">
+                <div class="demo-item">A</div>
+                <div class="demo-item">B</div>
+                <div class="demo-item">C</div>
+            </div>
+        </div>
+
+        <!-- DEMO 4: Align Items -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>4. Align Items (Cross Axis)</h2>
+            <p>Items with different heights are <strong>vertically centered</strong> with <code>align-items: center</code>.</p>
+            <div class="code-block">display: flex;
+align-items: center;</div>
+            <div class="flex-align">
+                <div class="demo-item">Short</div>
+                <div class="demo-item">Tall<br>Item</div>
+                <div class="demo-item">Medium</div>
+            </div>
+        </div>
+
+        <!-- DEMO 5: Flex Wrap -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>5. Flex Wrap</h2>
+            <p>Items <strong>wrap to the next line</strong> when the container is too narrow. Resize your browser!</p>
+            <div class="code-block">display: flex;
+flex-wrap: wrap;
+gap: 10px;</div>
+            <div class="flex-wrap-demo">
+                <div class="demo-item">Card 1</div>
+                <div class="demo-item">Card 2</div>
+                <div class="demo-item">Card 3</div>
+                <div class="demo-item">Card 4</div>
+                <div class="demo-item">Card 5</div>
+                <div class="demo-item">Card 6</div>
+            </div>
+        </div>
+
+        <!-- DEMO 5.5: Flex Item Properties -->
+        <div class="example">
+            <span class="label">Flexbox</span>
+            <h2>5.5 Flex Item Properties (Grow)</h2>
+            <p>Use <code>flex-grow</code> on the <strong>children</strong> to control how they fill space.</p>
+            <div class="code-block">.item-2 { flex-grow: 2; } /* gets 2x the extra space */
+.item-1, .item-3 { flex-grow: 1; }</div>
+            <div class="flex-items-props">
+                <div class="demo-item grow-1">Grow: 1</div>
+                <div class="demo-item grow-2" style="background: #e67e22;">Grow: 2</div>
+                <div class="demo-item grow-1">Grow: 1</div>
+            </div>
+        </div>
+
+
+        <!-- ============================= -->
+        <!-- GRID SECTION                   -->
+        <!-- ============================= -->
+        <div class="section-divider">🔳 CSS Grid — Two-Dimensional Layout</div>
+
+        <!-- DEMO 6: Basic Grid -->
+        <div class="example">
+            <span class="label">Grid</span>
+            <h2>6. Basic 3-Column Grid</h2>
+            <p>Three equal columns using <code>grid-template-columns: 1fr 1fr 1fr</code>.</p>
+            <div class="code-block">display: grid;
+grid-template-columns: 1fr 1fr 1fr;
+gap: 10px;</div>
+            <div class="grid-basic">
+                <div class="demo-item">1</div>
+                <div class="demo-item">2</div>
+                <div class="demo-item">3</div>
+                <div class="demo-item">4</div>
+                <div class="demo-item">5</div>
+                <div class="demo-item">6</div>
+            </div>
+        </div>
+
+        <!-- DEMO 7: Mixed Column Sizes -->
+        <div class="example">
+            <span class="label">Grid</span>
+            <h2>7. Mixed Column Sizes</h2>
+            <p>A fixed-width first column with flexible remaining columns: <code>200px 1fr 1fr</code>.</p>
+            <div class="code-block">display: grid;
+grid-template-columns: 200px 1fr 1fr;
+gap: 10px;</div>
+            <div class="grid-mixed">
+                <div class="demo-item">Fixed 200px</div>
+                <div class="demo-item">Flexible</div>
+                <div class="demo-item">Flexible</div>
+            </div>
+        </div>
+
+        <!-- DEMO 8: Grid Spanning -->
+        <div class="example">
+            <span class="label">Grid</span>
+            <h2>8. Grid Spanning</h2>
+            <p>Items can <strong>span multiple columns</strong> with <code>grid-column: span 2</code>.</p>
+            <div class="code-block">grid-column: span 2;   /* spans 2 columns */
+grid-column: 1 / -1;   /* spans the full width */</div>
+            <div class="grid-span">
+                <div class="demo-item">1</div>
+                <div class="demo-item">2</div>
+                <div class="demo-item">3</div>
+                <div class="demo-item span-two" style="background: #e67e22;">Span 2 Columns</div>
+                <div class="demo-item">5</div>
+                <div class="demo-item span-full" style="background: #8e44ad;">Full Width (1 / -1)</div>
+            </div>
+        </div>
+
+        <!-- DEMO 9: Page Layout -->
+        <div class="example">
+            <span class="label">Grid</span>
+            <h2>9. Classic Page Layout</h2>
+            <p>A full page layout with header, sidebar, main content, and footer — all with Grid!</p>
+            <div class="code-block">display: grid;
+grid-template-columns: 200px 1fr;
+grid-template-rows: auto 1fr auto;</div>
+            <div class="grid-page-layout">
+                <div class="page-header">📌 Header (full width)</div>
+                <div class="page-sidebar">📂 Sidebar</div>
+                <div class="page-main">📄 Main Content Area</div>
+                <div class="page-footer">📎 Footer (full width)</div>
+            </div>
+        </div>
+
+        <!-- DEMO 9.5: Grid Auto-Fit (Magic Responsive) -->
+        <div class="example">
+            <span class="label">Grid</span>
+            <h2>9.5 Auto-Fit (The "Magic" Grid)</h2>
+            <p>Automatically creates as many columns as will fit. **No media queries needed!** Resize your browser to see them snap.</p>
+            <div class="code-block">grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));</div>
+            <div class="grid-auto-fit">
+                <div class="demo-item">Item (min 200px)</div>
+                <div class="demo-item">Item (min 200px)</div>
+                <div class="demo-item">Item (min 200px)</div>
+                <div class="demo-item">Item (min 200px)</div>
+            </div>
+        </div>
+
+
+        <!-- ============================= -->
+        <!-- RESPONSIVE SECTION             -->
+        <!-- ============================= -->
+        <div class="section-divider">📱 Responsive Design</div>
+
+        <!-- DEMO 10: Responsive Grid -->
+        <div class="example">
+            <span class="label">Responsive</span>
+            <h2>10. Responsive Grid with Media Query</h2>
+            <p>This 3-column grid becomes a <strong>single column below 768px</strong>. Resize your browser to see!</p>
+            <div class="code-block">/* Default: 3 columns */
+grid-template-columns: repeat(3, 1fr);
+
+/* Below 768px: single column */
+@media (max-width: 768px) {
+    grid-template-columns: 1fr;
+}</div>
+            <div class="responsive-demo">
+                <div class="demo-item">Card 1</div>
+                <div class="demo-item">Card 2</div>
+                <div class="demo-item">Card 3</div>
+                <div class="demo-item">Card 4</div>
+                <div class="demo-item">Card 5</div>
+                <div class="demo-item">Card 6</div>
+            </div>
+        </div>
+
+        <!-- TIP -->
+        <div class="tip">
+            <strong>💡 Tip:</strong> Open Chrome DevTools (F12), then click the "Toggle device toolbar"
+            icon (top-left of DevTools panel) to simulate different screen sizes. Try switching between
+            phone, tablet, and desktop views to see how the responsive layouts adapt!
+        </div>
+
+    </div>
+
+</body>
+</html>

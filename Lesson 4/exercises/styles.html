@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Exercises – Lesson 4</title>
+
+    <!-- EXERCISE: Link the external stylesheet -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- EXERCISE: Try adding internal CSS here -->
+    <style>
+        /* Internal CSS — add styles here to practice */
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CSS Exercises</h1>
+        <nav>
+            <a href="#inline">Inline CSS</a>
+            <a href="#selectors">Selectors</a>
+            <a href="#box-model">Box Model</a>
+            <a href="#hover">Hover Effects</a>
+        </nav>
+    </header>
+
+    <main>
+
+        <!-- ============================== -->
+        <!-- SECTION 1: Inline CSS Practice -->
+        <!-- ============================== -->
+        <section id="inline">
+            <h2>1. Inline CSS Practice</h2>
+            <p>Try adding <code>style=""</code> attributes to the elements below:</p>
+
+            <!-- EXERCISE: Add inline styles to change the color and font-size -->
+            <p>Make this text red and 20px.</p>
+
+            <!-- EXERCISE: Add an inline background-color -->
+            <p>Give this paragraph a yellow background.</p>
+
+            <!-- EXERCISE: Add inline styles for font-weight and text-decoration -->
+            <p>Make this text bold and underlined.</p>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 2: CSS Selectors       -->
+        <!-- ============================== -->
+        <section id="selectors">
+            <h2>2. CSS Selectors Practice</h2>
+            <p>Style these elements using the <strong>external stylesheet</strong> (<code>style.css</code>).</p>
+
+            <!-- EXERCISE: Style all <p> tags using a type selector -->
+            <p>This is a regular paragraph. Style me with a type selector!</p>
+
+            <!-- EXERCISE: Style this with a class selector -->
+            <p class="my-class">I have the class <code>my-class</code>. Style me with a class selector!</p>
+
+            <!-- EXERCISE: Style this with an ID selector -->
+            <p id="my-id">I have the ID <code>my-id</code>. Style me with an ID selector!</p>
+
+            <!-- EXERCISE: Style this using an attribute selector -->
+            <input type="text" placeholder="Text input — style me with input[type='text']">
+
+            <!-- EXERCISE: Style this differently with an attribute selector -->
+            <input type="email" placeholder="Email input — style me with input[type='email']">
+
+            <input>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 3: Box Model           -->
+        <!-- ============================== -->
+        <section id="box-model">
+            <h2>3. Box Model Practice</h2>
+            <p>Add <code>padding</code>, <code>border</code>, and <code>margin</code> to the box below in <code>style.css</code>.</p>
+
+            <div class="box-model-exercise">
+                <p>I'm inside a div! Add padding, border, and margin to me using the class <code>.box-model-exercise</code> in <code>style.css</code>.</p>
+                <p>Then right-click → Inspect to see the Box Model in DevTools!</p>
+            </div>
+
+            <div class="box-model-exercise">
+                <p>I'm a second div with the same class. Notice how margin creates space between us!</p>
+            </div>
+        </section>
+
+        <!-- ============================== -->
+        <!-- SECTION 4: Hover & Pseudo      -->
+        <!-- ============================== -->
+        <section id="hover">
+            <h2>4. Hover & Pseudo-class Practice</h2>
+            <p>Add <code>:hover</code> and <code>:focus</code> styles in <code>style.css</code>.</p>
+
+            <a href="#" class="practice-link">Hover over me! Change my color on hover.</a>
+
+            <br><br>
+
+            <a href="#" class="practice-link">Another link to practice on.</a>
+
+            <br><br>
+
+            <input type="text" class="practice-input" placeholder="Click me — add a :focus style!">
+
+            <br><br>
+
+            <button class="practice-button">Hover over this button!</button>
+        </section>
+
+    </main>
+    
+    <footer>
+        <p>&copy; 2026 CSS Exercises – Lesson 4</p>
+    </footer>
+
+</body>
+</html>

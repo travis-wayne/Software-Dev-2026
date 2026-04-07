@@ -1,0 +1,127 @@
+# Wireframe & Content Outline – Personal Portfolio
+
+This is an example of how to plan your portfolio before writing any code.
+
+## Site Map
+
+```
+index.html (Home)
+├── about.html (About Me)
+├── projects.html (Projects)
+└── contact.html (Contact)
+```
+
+## Page Wireframes
+
+### Home Page (`index.html`)
+
+```
+┌──────────────────────────────────────────┐
+│  HEADER                                  │
+│  ┌────────────────────────────────────┐  │
+│  │  My Portfolio                      │  │
+│  │  [Home] [About] [Projects] [Contact]│  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  MAIN                                    │
+│  ┌────────────────────────────────────┐  │
+│  │  Welcome Section                   │  │
+│  │  "Hi, I'm [Name]!"                │  │
+│  │  A short introduction about you    │  │
+│  │                                    │  │
+│  │  ┌─────────┐  ┌─────────┐        │  │
+│  │  │ Skill 1 │  │ Skill 2 │  ...   │  │
+│  │  └─────────┘  └─────────┘        │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  FOOTER                                  │
+│  ┌────────────────────────────────────┐  │
+│  │  © 2026 — Social links             │  │
+│  └────────────────────────────────────┘  │
+└──────────────────────────────────────────┘
+```
+
+### About Page (`about.html`)
+
+```
+┌──────────────────────────────────────────┐
+│  HEADER + NAV  (same as Home)            │
+│                                          │
+│  MAIN                                    │
+│  ┌────────────────────────────────────┐  │
+│  │  About Me                          │  │
+│  │  ┌──────┐                          │  │
+│  │  │ Photo│  Bio paragraph           │  │
+│  │  └──────┘                          │  │
+│  │                                    │  │
+│  │  Education / Background            │  │
+│  │  - School / Course                 │  │
+│  │  - Skills learned                  │  │
+│  │                                    │  │
+│  │  Hobbies & Interests              │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  FOOTER (same as Home)                   │
+└──────────────────────────────────────────┘
+```
+
+### Projects Page (`projects.html`)
+
+```
+┌──────────────────────────────────────────┐
+│  HEADER + NAV  (same as Home)            │
+│                                          │
+│  MAIN                                    │
+│  ┌────────────────────────────────────┐  │
+│  │  My Projects                       │  │
+│  │                                    │  │
+│  │  ┌──────────────┐ ┌──────────────┐│  │
+│  │  │  Project 1   │ │  Project 2   ││  │
+│  │  │  Title       │ │  Title       ││  │
+│  │  │  Description │ │  Description ││  │
+│  │  └──────────────┘ └──────────────┘│  │
+│  │                                    │  │
+│  │  ┌──────────────┐                 │  │
+│  │  │  Project 3   │                 │  │
+│  │  │  Title       │                 │  │
+│  │  │  Description │                 │  │
+│  │  └──────────────┘                 │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  FOOTER (same as Home)                   │
+└──────────────────────────────────────────┘
+```
+
+### Contact Page (`contact.html`)
+
+```
+┌──────────────────────────────────────────┐
+│  HEADER + NAV  (same as Home)            │
+│                                          │
+│  MAIN                                    │
+│  ┌────────────────────────────────────┐  │
+│  │  Contact Me                        │  │
+│  │                                    │  │
+│  │  Name:     [____________]          │  │
+│  │  Email:    [____________]          │  │
+│  │  Subject:  [▼ dropdown  ]          │  │
+│  │  Message:  [____________]          │  │
+│  │            [            ]          │  │
+│  │            [____________]          │  │
+│  │  [  Send Message  ]               │  │
+│  └────────────────────────────────────┘  │
+│                                          │
+│  FOOTER (same as Home)                   │
+└──────────────────────────────────────────┘
+```
+
+## Content Checklist
+
+Before coding, answer these questions:
+
+- [ ] What is your full name or brand name?
+- [ ] What tagline or short intro do you want on the home page?
+- [ ] What skills or technologies do you want to highlight?
+- [ ] What do you want to say about yourself on the About page?
+- [ ] What projects will you showcase? (even placeholders are fine for now)
+- [ ] What contact information do you want to share?
