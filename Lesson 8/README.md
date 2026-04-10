@@ -11,7 +11,7 @@ By the end of this session, you will be able to:
 5. Push a branch to GitHub and create a Pull Request.
 6. Review and merge a Pull Request on GitHub.
 
-## 🗂️ Folder Structure
+## 🗂️ Folder Structure (fix)
 
 ```
 Lesson 8/
