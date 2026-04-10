@@ -98,7 +98,7 @@ It mathematically combines the changes and automatically creates a new **"Merge 
 
 ---
 
-## 5. Merge Conflicts 😱
+## 5. Merge Conflicts 😱 (wow)
 
 Sometimes, Git isn't smart enough to merge automatically. If you edited line 10, and your teammate *also* edited line 10 on their branch, Git doesn't know which one is right. It stops the merge and says there is a **Conflict**.
 
