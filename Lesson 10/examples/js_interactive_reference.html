@@ -1,0 +1,1388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Fundamentals I — Interactive Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS RESET & VARIABLES
+           ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary: #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary: #242842;
+            --bg-card: #1e2235;
+            --bg-code: #151825;
+            --border: #2d3154;
+            --border-hover: #4f5899;
+
+            --text-primary: #e8eaf0;
+            --text-secondary: #9da3b4;
+            --text-muted: #6b7280;
+
+            --accent-blue: #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-green: #34d399;
+            --accent-orange: #fb923c;
+            --accent-red: #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-cyan: #22d3ee;
+            --accent-pink: #f472b6;
+
+            --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #d946ef 100%);
+            --gradient-card: linear-gradient(145deg, rgba(96,165,250,0.08), rgba(167,139,250,0.05));
+
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-code: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 30px rgba(96,165,250,0.15);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           HERO SECTION
+           ============================================================ */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 60px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(96,165,250,0.12) 0%, transparent 60%);
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--gradient-hero);
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(96,165,250,0.12);
+            color: var(--accent-blue);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(96,165,250,0.2);
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.15rem;
+            max-width: 680px;
+            margin: 0 auto 32px;
+        }
+
+        /* ============================================================
+           NAVIGATION TABS
+           ============================================================ */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 24px 48px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .nav-tab:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+        .nav-tab.active {
+            background: rgba(96,165,250,0.15);
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           CONTENT CONTAINER
+           ============================================================ */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+
+        .section {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           CARDS
+           ============================================================ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+        .card h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h3 .emoji { font-size: 1.5rem; }
+        .card p, .card li {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        .card ul { padding-left: 20px; }
+        .card ul li { margin-bottom: 6px; }
+
+        /* ============================================================
+           INFO CALLOUTS
+           ============================================================ */
+        .callout {
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 16px 0;
+            font-size: 0.92rem;
+        }
+        .callout.tip { background: rgba(52,211,153,0.08); border-color: var(--accent-green); }
+        .callout.tip strong { color: var(--accent-green); }
+        .callout.warn { background: rgba(251,191,36,0.08); border-color: var(--accent-yellow); }
+        .callout.warn strong { color: var(--accent-yellow); }
+        .callout.danger { background: rgba(248,113,113,0.08); border-color: var(--accent-red); }
+        .callout.danger strong { color: var(--accent-red); }
+
+        /* ============================================================
+           CODE BLOCKS
+           ============================================================ */
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+            position: relative;
+        }
+        code {
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.8;
+        }
+        pre code { color: var(--text-primary); }
+
+        /* Inline code */
+        p code, li code, td code, .callout code {
+            background: var(--bg-tertiary);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Syntax colours */
+        .kw { color: var(--accent-purple); }   /* keywords */
+        .str { color: var(--accent-green); }    /* strings */
+        .num { color: var(--accent-orange); }   /* numbers */
+        .cm { color: var(--text-muted); font-style: italic; }  /* comments */
+        .fn { color: var(--accent-blue); }      /* functions */
+        .op { color: var(--accent-pink); }      /* operators */
+        .bool { color: var(--accent-orange); }  /* booleans */
+
+        /* ============================================================
+           INTERACTIVE PLAYGROUND
+           ============================================================ */
+        .playground {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .playground-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+        .playground-header span {
+            font-family: var(--font-code);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .playground-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .playground-dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+        .playground-dots span:nth-child(1) { background: #ff5f57; }
+        .playground-dots span:nth-child(2) { background: #febc2e; }
+        .playground-dots span:nth-child(3) { background: #28c840; }
+
+        .playground-body {
+            display: flex;
+            flex-direction: column;
+        }
+        @media (min-width: 640px) {
+            .playground-body { flex-direction: row; }
+        }
+        .playground-code {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            min-height: 160px;
+        }
+        .playground-code textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 140px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.8;
+            resize: vertical;
+            outline: none;
+        }
+        .playground-output {
+            flex: 1;
+            padding: 20px;
+            min-height: 160px;
+        }
+        .playground-output-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .playground-output pre {
+            background: transparent;
+            border: none;
+            padding: 0;
+            margin: 0;
+        }
+        .playground-output code {
+            color: var(--accent-green);
+            white-space: pre-wrap;
+        }
+        .playground-output code.error {
+            color: var(--accent-red);
+        }
+
+        .btn-run {
+            padding: 8px 20px;
+            background: var(--accent-blue);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-run:hover {
+            background: #4f8eea;
+            transform: translateY(-1px);
+        }
+        .btn-run:active { transform: translateY(0); }
+
+        .btn-reset {
+            padding: 8px 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+        .btn-reset:hover {
+            border-color: var(--border-hover);
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           COMPARISON TABLE
+           ============================================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.92rem;
+        }
+        th {
+            background: var(--bg-tertiary);
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        tr:hover td { background: rgba(96,165,250,0.04); }
+
+        /* ============================================================
+           WEB TRINITY DIAGRAM
+           ============================================================ */
+        .trinity-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+        .trinity-col {
+            text-align: center;
+            padding: 28px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            transition: all 0.3s;
+        }
+        .trinity-col:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+        }
+        .trinity-col.html { background: linear-gradient(145deg, rgba(248,113,113,0.1), transparent); border-color: rgba(248,113,113,0.3); }
+        .trinity-col.css { background: linear-gradient(145deg, rgba(96,165,250,0.1), transparent); border-color: rgba(96,165,250,0.3); }
+        .trinity-col.js { background: linear-gradient(145deg, rgba(251,191,36,0.1), transparent); border-color: rgba(251,191,36,0.3); }
+        .trinity-col .icon { font-size: 2.4rem; margin-bottom: 12px; }
+        .trinity-col h4 { font-size: 1rem; margin-bottom: 6px; }
+        .trinity-col p { font-size: 0.85rem; color: var(--text-muted); }
+
+        /* ============================================================
+           TYPE BADGE LABELS
+           ============================================================ */
+        .type-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-family: var(--font-code);
+            font-size: 0.78rem;
+            font-weight: 600;
+        }
+        .type-badge.string { background: rgba(52,211,153,0.15); color: var(--accent-green); }
+        .type-badge.number { background: rgba(251,146,60,0.15); color: var(--accent-orange); }
+        .type-badge.boolean { background: rgba(96,165,250,0.15); color: var(--accent-blue); }
+        .type-badge.undefined { background: rgba(156,163,175,0.15); color: var(--text-muted); }
+        .type-badge.null { background: rgba(248,113,113,0.15); color: var(--accent-red); }
+        .type-badge.symbol { background: rgba(167,139,250,0.15); color: var(--accent-purple); }
+
+        /* ============================================================
+           VARIABLE BOX VISUAL
+           ============================================================ */
+        .var-boxes {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin: 24px 0;
+        }
+        .var-box {
+            background: var(--bg-tertiary);
+            border: 2px dashed var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            text-align: center;
+            min-width: 140px;
+            transition: all 0.3s;
+        }
+        .var-box:hover {
+            border-color: var(--accent-blue);
+            border-style: solid;
+            transform: scale(1.05);
+        }
+        .var-box .label {
+            font-family: var(--font-code);
+            font-size: 0.8rem;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+        .var-box .value {
+            font-family: var(--font-code);
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: 6px 12px;
+            background: var(--bg-code);
+            border-radius: 4px;
+            margin-bottom: 6px;
+        }
+        .var-box .type-label {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============================================================
+           QUIZ SECTION
+           ============================================================ */
+        .quiz-question {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 16px 0;
+        }
+        .quiz-question h4 {
+            font-size: 1rem;
+            margin-bottom: 12px;
+            color: var(--accent-cyan);
+        }
+        .quiz-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 12px;
+        }
+        .quiz-option {
+            padding: 12px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+        .quiz-option:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+        .quiz-option.correct {
+            border-color: var(--accent-green);
+            background: rgba(52,211,153,0.1);
+            color: var(--accent-green);
+        }
+        .quiz-option.wrong {
+            border-color: var(--accent-red);
+            background: rgba(248,113,113,0.1);
+            color: var(--accent-red);
+        }
+        .quiz-option.disabled { pointer-events: none; }
+        .quiz-feedback {
+            margin-top: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            display: none;
+        }
+        .quiz-feedback.show { display: block; }
+        .quiz-feedback.correct { background: rgba(52,211,153,0.1); color: var(--accent-green); }
+        .quiz-feedback.wrong { background: rgba(248,113,113,0.1); color: var(--accent-red); }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================
+         HERO
+         ============================================================ -->
+    <header class="hero">
+        <div class="hero-badge">Lesson 10 — Interactive Reference</div>
+        <h1>JavaScript Fundamentals I</h1>
+        <p>Variables, Data Types, and Operators — the building blocks of every JavaScript program. Explore each concept interactively below.</p>
+    </header>
+
+    <!-- ============================================================
+         NAVIGATION TABS
+         ============================================================ -->
+    <nav class="nav-tabs" id="navTabs">
+        <div class="nav-tab active" data-section="web-trinity">🌐 The Web Trinity</div>
+        <div class="nav-tab" data-section="variables">📦 Variables</div>
+        <div class="nav-tab" data-section="data-types">🏷️ Data Types</div>
+        <div class="nav-tab" data-section="type-coercion">⚡ Type Coercion</div>
+        <div class="nav-tab" data-section="operators">🧮 Operators</div>
+        <div class="nav-tab" data-section="playground">🎮 Playground</div>
+        <div class="nav-tab" data-section="quiz">📝 Quiz</div>
+    </nav>
+
+    <!-- ============================================================
+         CONTENT
+         ============================================================ -->
+    <main class="container">
+
+        <!-- ============================
+             SECTION: THE WEB TRINITY
+             ============================ -->
+        <div class="section active" id="web-trinity">
+            <div class="card">
+                <h3><span class="emoji">🌐</span> The Three Pillars of the Web</h3>
+                <p>Every website you've ever used is built from three technologies working together. You've already mastered two of them — now we add the third.</p>
+
+                <div class="trinity-grid">
+                    <div class="trinity-col html">
+                        <div class="icon">🦴</div>
+                        <h4>HTML</h4>
+                        <p>Structure &amp; Content<br><em>"The skeleton"</em></p>
+                    </div>
+                    <div class="trinity-col css">
+                        <div class="icon">🎨</div>
+                        <h4>CSS</h4>
+                        <p>Appearance &amp; Layout<br><em>"The clothes &amp; makeup"</em></p>
+                    </div>
+                    <div class="trinity-col js">
+                        <div class="icon">🧠</div>
+                        <h4>JavaScript</h4>
+                        <p>Behaviour &amp; Interactivity<br><em>"The brain &amp; muscles"</em></p>
+                    </div>
+                </div>
+
+                <div class="callout tip">
+                    <strong>💡 Think of it this way:</strong> HTML builds the house. CSS paints the walls and arranges the furniture. JavaScript is the electricity — it makes the lights switch on, the doors open, and the TV play.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔗</span> Linking JavaScript to HTML</h3>
+                <p>Just like CSS uses <code>&lt;link&gt;</code>, JavaScript uses the <code>&lt;script&gt;</code> tag. Place it at the <strong>bottom of <code>&lt;body&gt;</code></strong> so the HTML loads first.</p>
+
+                <pre><code><span class="kw">&lt;!DOCTYPE html&gt;</span>
+<span class="kw">&lt;html</span> <span class="str">lang="en"</span><span class="kw">&gt;</span>
+<span class="kw">&lt;head&gt;</span>
+    <span class="kw">&lt;meta</span> <span class="str">charset="UTF-8"</span><span class="kw">&gt;</span>
+    <span class="kw">&lt;title&gt;</span>My Page<span class="kw">&lt;/title&gt;</span>
+<span class="kw">&lt;/head&gt;</span>
+<span class="kw">&lt;body&gt;</span>
+    <span class="kw">&lt;h1&gt;</span>Hello World<span class="kw">&lt;/h1&gt;</span>
+
+    <span class="cm">&lt;!-- JS goes at the BOTTOM of body --&gt;</span>
+    <span class="kw">&lt;script</span> <span class="str">src="script.js"</span><span class="kw">&gt;&lt;/script&gt;</span>
+<span class="kw">&lt;/body&gt;</span>
+<span class="kw">&lt;/html&gt;</span></code></pre>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: VARIABLES
+             ============================ -->
+        <div class="section" id="variables">
+            <div class="card">
+                <h3><span class="emoji">📦</span> What is a Variable?</h3>
+                <p>A variable is a <strong>labelled box</strong> that stores a value. You give it a name, put something inside, and use the name later to retrieve or change its contents.</p>
+
+                <div class="var-boxes">
+                    <div class="var-box">
+                        <div class="label">studentName</div>
+                        <div class="value">"Alice"</div>
+                        <div class="type-label">String</div>
+                    </div>
+                    <div class="var-box">
+                        <div class="label">age</div>
+                        <div class="value">22</div>
+                        <div class="type-label">Number</div>
+                    </div>
+                    <div class="var-box">
+                        <div class="label">isEnrolled</div>
+                        <div class="value">true</div>
+                        <div class="type-label">Boolean</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">⚔️</span> var vs let vs const</h3>
+                <p>JavaScript has three keywords for declaring variables. In modern JS, you should only use two of them.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Keyword</th>
+                            <th>Re-assignable?</th>
+                            <th>Re-declarable?</th>
+                            <th>When to Use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code style="color: var(--accent-green);">const</code></td>
+                            <td>❌ No</td>
+                            <td>❌ No</td>
+                            <td>Default choice — value won't change</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--accent-blue);">let</code></td>
+                            <td>✅ Yes</td>
+                            <td>❌ No</td>
+                            <td>Value will be updated later</td>
+                        </tr>
+                        <tr>
+                            <td><code style="color: var(--accent-red);">var</code></td>
+                            <td>✅ Yes</td>
+                            <td>✅ Yes</td>
+                            <td>❌ Never — legacy only</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code><span class="cm">// const — value is LOCKED</span>
+<span class="kw">const</span> courseName <span class="op">=</span> <span class="str">"Software Dev 2026"</span>;
+courseName <span class="op">=</span> <span class="str">"Something else"</span>;  <span class="cm">// ❌ TypeError!</span>
+
+<span class="cm">// let — value CAN change</span>
+<span class="kw">let</span> score <span class="op">=</span> <span class="num">100</span>;
+score <span class="op">=</span> <span class="num">150</span>;  <span class="cm">// ✅ No problem</span>
+
+<span class="cm">// var — allows accidental re-declaration (DANGEROUS)</span>
+<span class="kw">var</span> name <span class="op">=</span> <span class="str">"Alice"</span>;
+<span class="kw">var</span> name <span class="op">=</span> <span class="str">"Bob"</span>;  <span class="cm">// ⚠️ No error — silently overwrites!</span></code></pre>
+
+                <div class="callout warn">
+                    <strong>⚠️ The Rule:</strong> Use <code>const</code> by default. Only use <code>let</code> when the value needs to change. <strong>Never use <code>var</code></strong> in modern JavaScript.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">✏️</span> Naming Rules</h3>
+                <table>
+                    <thead><tr><th>Rule</th><th>✅ Valid</th><th>❌ Invalid</th></tr></thead>
+                    <tbody>
+                        <tr><td>Start with letter, <code>_</code>, or <code>$</code></td><td><code>myName</code>, <code>_count</code>, <code>$price</code></td><td><code>1stPlace</code>, <code>-name</code></td></tr>
+                        <tr><td>No reserved words</td><td><code>myClass</code>, <code>totalScore</code></td><td><code>class</code>, <code>return</code></td></tr>
+                        <tr><td>Case-sensitive</td><td><code>myAge</code> ≠ <code>myage</code></td><td>—</td></tr>
+                        <tr><td>Use <strong>camelCase</strong></td><td><code>firstName</code>, <code>isLoggedIn</code></td><td><code>first_name</code> (works but not convention)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: DATA TYPES
+             ============================ -->
+        <div class="section" id="data-types">
+            <div class="card">
+                <h3><span class="emoji">🏷️</span> JavaScript Data Types</h3>
+                <p>Every value in JavaScript has a type. Here are the <strong>primitive types</strong> — the basic building blocks:</p>
+
+                <table>
+                    <thead><tr><th>Type</th><th>Example</th><th><code>typeof</code> Result</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="type-badge string">string</span></td>
+                            <td><code>"Hello"</code></td>
+                            <td><code>"string"</code></td>
+                            <td>Text — always in quotes</td>
+                        </tr>
+                        <tr>
+                            <td><span class="type-badge number">number</span></td>
+                            <td><code>42</code>, <code>3.14</code></td>
+                            <td><code>"number"</code></td>
+                            <td>Integers and decimals</td>
+                        </tr>
+                        <tr>
+                            <td><span class="type-badge boolean">boolean</span></td>
+                            <td><code>true</code>, <code>false</code></td>
+                            <td><code>"boolean"</code></td>
+                            <td>Logical — only two values</td>
+                        </tr>
+                        <tr>
+                            <td><span class="type-badge undefined">undefined</span></td>
+                            <td><code>undefined</code></td>
+                            <td><code>"undefined"</code></td>
+                            <td>Declared but never assigned</td>
+                        </tr>
+                        <tr>
+                            <td><span class="type-badge null">null</span></td>
+                            <td><code>null</code></td>
+                            <td><code>"object"</code> ⚠️</td>
+                            <td>Intentionally empty</td>
+                        </tr>
+                        <tr>
+                            <td><span class="type-badge symbol">symbol</span></td>
+                            <td><code>Symbol("id")</code></td>
+                            <td><code>"symbol"</code></td>
+                            <td>Unique identifier (advanced)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔍</span> Using <code>typeof</code> to Inspect Types</h3>
+                <p>The <code>typeof</code> operator tells you what type a value is. Try clicking <strong>Run</strong> on each example:</p>
+
+                <div class="playground" id="pg-typeof">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>typeof-explorer.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-typeof" spellcheck="false">console.log(typeof "Hello");
+console.log(typeof 42);
+console.log(typeof true);
+console.log(typeof undefined);
+console.log(typeof null);
+console.log(typeof Symbol("x"));</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-typeof"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-typeof', 'output-typeof')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPlayground('code-typeof', this.dataset.original)" data-original='console.log(typeof "Hello");
+console.log(typeof 42);
+console.log(typeof true);
+console.log(typeof undefined);
+console.log(typeof null);
+console.log(typeof Symbol("x"));'>Reset</button>
+                    </div>
+                </div>
+
+                <div class="callout danger">
+                    <strong>🐛 Famous Bug:</strong> <code>typeof null</code> returns <code>"object"</code> instead of <code>"null"</code>. This is a mistake from 1995 that was never fixed. To check for null, use <code>value === null</code> instead.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🤔</span> <code>undefined</code> vs <code>null</code></h3>
+                <p>These two are easy to confuse:</p>
+                <ul>
+                    <li><strong><code>undefined</code></strong> = <em>"JavaScript says: you never gave this a value."</em></li>
+                    <li><strong><code>null</code></strong> = <em>"The developer says: I intentionally set this to nothing."</em></li>
+                </ul>
+                <pre><code><span class="kw">let</span> middleName;                <span class="cm">// undefined — never assigned</span>
+<span class="kw">let</span> selectedItem <span class="op">=</span> <span class="kw">null</span>;      <span class="cm">// null — deliberately empty</span></code></pre>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: TYPE COERCION
+             ============================ -->
+        <div class="section" id="type-coercion">
+            <div class="card">
+                <h3><span class="emoji">⚡</span> Type Coercion — JavaScript's Quirkiest Feature</h3>
+                <p><strong>Type coercion</strong> is when JavaScript automatically converts one type to another. This is the single biggest source of beginner bugs. Try each example:</p>
+
+                <div class="playground" id="pg-coercion">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>coercion-experiments.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-coercion" spellcheck="false">// The + operator has TWO jobs:
+// 1. Addition (numbers)
+// 2. Concatenation (strings)
+
+console.log("5" + 3);     // string wins!
+console.log("5" - 3);     // forced to number
+console.log("5" * 2);     // forced to number
+console.log(true + 1);    // true becomes 1
+console.log("hello" - 1); // NaN!</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-coercion"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-coercion', 'output-coercion')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPlayground('code-coercion', this.dataset.original)" data-original='// The + operator has TWO jobs:
+// 1. Addition (numbers)
+// 2. Concatenation (strings)
+
+console.log("5" + 3);     // string wins!
+console.log("5" - 3);     // forced to number
+console.log("5" * 2);     // forced to number
+console.log(true + 1);    // true becomes 1
+console.log("hello" - 1); // NaN!'>Reset</button>
+                    </div>
+                </div>
+
+                <div class="callout warn">
+                    <strong>⚠️ Why <code>"5" + 3</code> = <code>"53"</code> but <code>"5" - 3</code> = <code>2</code>?</strong><br>
+                    The <code>+</code> operator has two jobs: addition AND concatenation. If <em>either</em> side is a string, it concatenates. The <code>-</code>, <code>*</code>, <code>/</code> operators only do math, so they force the string to become a number.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔧</span> The Fix: Explicit Conversion</h3>
+                <p>Don't rely on coercion. Convert types yourself:</p>
+
+                <div class="playground" id="pg-convert">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>explicit-conversion.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-convert" spellcheck="false">// String to Number
+console.log(Number("42") + 8);
+console.log(parseInt("100px"));
+
+// Number to String
+console.log(String(42));
+console.log((42).toString());
+
+// To Boolean
+console.log(Boolean(0));     // falsy
+console.log(Boolean("hi"));  // truthy</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-convert"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-convert', 'output-convert')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPlayground('code-convert', this.dataset.original)" data-original='// String to Number
+console.log(Number("42") + 8);
+console.log(parseInt("100px"));
+
+// Number to String
+console.log(String(42));
+console.log((42).toString());
+
+// To Boolean
+console.log(Boolean(0));     // falsy
+console.log(Boolean("hi"));  // truthy'>Reset</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: OPERATORS
+             ============================ -->
+        <div class="section" id="operators">
+            <div class="card">
+                <h3><span class="emoji">➕</span> Arithmetic Operators</h3>
+                <table>
+                    <thead><tr><th>Operator</th><th>Name</th><th>Example</th><th>Result</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>+</code></td><td>Addition</td><td><code>10 + 3</code></td><td><code>13</code></td></tr>
+                        <tr><td><code>-</code></td><td>Subtraction</td><td><code>10 - 3</code></td><td><code>7</code></td></tr>
+                        <tr><td><code>*</code></td><td>Multiplication</td><td><code>10 * 3</code></td><td><code>30</code></td></tr>
+                        <tr><td><code>/</code></td><td>Division</td><td><code>10 / 3</code></td><td><code>3.33…</code></td></tr>
+                        <tr><td><code>%</code></td><td>Modulus (remainder)</td><td><code>10 % 3</code></td><td><code>1</code></td></tr>
+                        <tr><td><code>**</code></td><td>Exponentiation</td><td><code>10 ** 3</code></td><td><code>1000</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="callout tip">
+                    <strong>💡 Modulus Trick:</strong> <code>number % 2 === 0</code> tells you if a number is even. This is incredibly useful in programming!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">⚖️</span> Comparison Operators — <code>==</code> vs <code>===</code></h3>
+                <p>This is the most important distinction in this section. Try the playground:</p>
+
+                <div class="playground" id="pg-compare">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>equality-test.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-compare" spellcheck="false">// Strict (===) checks VALUE and TYPE
+console.log(5 === 5);       // true
+console.log(5 === "5");     // false
+
+// Loose (==) checks VALUE only — AVOID!
+console.log(5 == "5");      // true (!)
+console.log(0 == false);    // true (!!)
+console.log("" == false);   // true (!!!)
+console.log(null == undefined); // true
+
+// Always use ===
+console.log(0 === false);   // false ✅</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-compare"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-compare', 'output-compare')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPlayground('code-compare', this.dataset.original)" data-original='// Strict (===) checks VALUE and TYPE
+console.log(5 === 5);       // true
+console.log(5 === "5");     // false
+
+// Loose (==) checks VALUE only — AVOID!
+console.log(5 == "5");      // true (!)
+console.log(0 == false);    // true (!!)
+console.log("" == false);   // true (!!!)
+console.log(null == undefined); // true
+
+// Always use ===
+console.log(0 === false);   // false ✅'>Reset</button>
+                    </div>
+                </div>
+
+                <div class="callout danger">
+                    <strong>🛑 Critical Rule:</strong> <strong>ALWAYS use <code>===</code> and <code>!==</code></strong>. Forget <code>==</code> exists. Loose equality has too many bizarre edge cases that will cause bugs.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔗</span> Logical Operators</h3>
+                <table>
+                    <thead><tr><th>Operator</th><th>Name</th><th>Meaning</th><th>Analogy</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>&&</code></td><td>AND</td><td>Both must be true</td><td>Two guards — both must agree</td></tr>
+                        <tr><td><code>||</code></td><td>OR</td><td>At least one true</td><td>Two doors — only need one open</td></tr>
+                        <tr><td><code>!</code></td><td>NOT</td><td>Flips true↔false</td><td>A light switch — on becomes off</td></tr>
+                    </tbody>
+                </table>
+
+                <div class="playground" id="pg-logic">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>logic-gates.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-logic" spellcheck="false">let age = 25;
+let isCitizen = true;
+let hasID = false;
+
+// AND — both must be true
+console.log("Can vote?", age >= 18 && isCitizen);
+
+// OR — at least one must be true
+console.log("Has valid ID?", hasID || age >= 18);
+
+// NOT — flips the value
+console.log("Blocked?", !isCitizen);
+
+// Try changing the values above!</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-logic"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-logic', 'output-logic')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPlayground('code-logic', this.dataset.original)" data-original='let age = 25;
+let isCitizen = true;
+let hasID = false;
+
+// AND — both must be true
+console.log("Can vote?", age >= 18 && isCitizen);
+
+// OR — at least one must be true
+console.log("Has valid ID?", hasID || age >= 18);
+
+// NOT — flips the value
+console.log("Blocked?", !isCitizen);
+
+// Try changing the values above!'>Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">📝</span> Assignment Operators (Shorthand)</h3>
+                <table>
+                    <thead><tr><th>Shorthand</th><th>Equivalent To</th><th>Example</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>x += 5</code></td><td><code>x = x + 5</code></td><td><code>10 → 15</code></td></tr>
+                        <tr><td><code>x -= 3</code></td><td><code>x = x - 3</code></td><td><code>15 → 12</code></td></tr>
+                        <tr><td><code>x *= 2</code></td><td><code>x = x * 2</code></td><td><code>12 → 24</code></td></tr>
+                        <tr><td><code>x /= 4</code></td><td><code>x = x / 4</code></td><td><code>24 → 6</code></td></tr>
+                        <tr><td><code>x++</code></td><td><code>x = x + 1</code></td><td><code>6 → 7</code></td></tr>
+                        <tr><td><code>x--</code></td><td><code>x = x - 1</code></td><td><code>7 → 6</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: PLAYGROUND
+             ============================ -->
+        <div class="section" id="playground">
+            <div class="card">
+                <h3><span class="emoji">🎮</span> Free Playground</h3>
+                <p>Write any JavaScript code and see the output instantly. This is your sandbox — experiment freely!</p>
+
+                <div class="playground" id="pg-free">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>sandbox.js</span>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-free" spellcheck="false" style="min-height: 220px;">// 🎮 Welcome to the Free Playground!
+// Write any JavaScript here and click Run.
+
+const myName = "Your Name Here";
+const myAge = 20;
+const isStudent = true;
+
+console.log(`Hello! My name is ${myName}.`);
+console.log(`I am ${myAge} years old.`);
+console.log(`Am I a student? ${isStudent}`);
+
+// Try your own experiments below:
+console.log(myAge * 2);
+console.log(typeof myName);</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-free" style="min-height: 180px;"></code></pre>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center;">
+                        <button class="btn-run" onclick="runPlayground('code-free', 'output-free')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="document.getElementById('code-free').value='// Start fresh!\nconsole.log(\"Hello, World!\");'; document.getElementById('output-free').textContent='';">Clear</button>
+                    </div>
+                </div>
+
+                <div class="callout tip">
+                    <strong>💡 Challenges to try:</strong>
+                    <ul style="margin-top: 8px; padding-left: 20px;">
+                        <li>Calculate the area of a circle: <code>const area = Math.PI * radius ** 2;</code></li>
+                        <li>Check if a number is even: <code>console.log(42 % 2 === 0);</code></li>
+                        <li>Concatenate a string and number: <code>console.log("Age: " + 25);</code></li>
+                        <li>Use template literals: <code>console.log(`2 + 2 = ${2 + 2}`);</code></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================
+             SECTION: QUIZ
+             ============================ -->
+        <div class="section" id="quiz">
+            <div class="card">
+                <h3><span class="emoji">📝</span> Test Your Knowledge</h3>
+                <p>Answer these questions to check your understanding. Click an option to see if you're right!</p>
+            </div>
+
+            <!-- Q1 -->
+            <div class="quiz-question" id="q1">
+                <h4>Question 1: What keyword should you use by default for variables?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q1')"><code>var</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q1')"><code>let</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q1')"><code>const</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q1')">They're all the same</div>
+                </div>
+                <div class="quiz-feedback" id="q1-feedback"></div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="quiz-question" id="q2">
+                <h4>Question 2: What does <code>"5" + 3</code> evaluate to?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q2')"><code>8</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q2')"><code>"53"</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q2')"><code>NaN</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q2')"><code>Error</code></div>
+                </div>
+                <div class="quiz-feedback" id="q2-feedback"></div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="quiz-question" id="q3">
+                <h4>Question 3: What is the result of <code>5 === "5"</code>?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q3')"><code>true</code> — they have the same value</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q3')"><code>false</code> — different types (number vs string)</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q3')"><code>undefined</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q3')"><code>Error</code></div>
+                </div>
+                <div class="quiz-feedback" id="q3-feedback"></div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="quiz-question" id="q4">
+                <h4>Question 4: What does <code>typeof null</code> return?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q4')"><code>"null"</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q4')"><code>"undefined"</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q4')"><code>"object"</code> — it's a famous bug!</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q4')"><code>"boolean"</code></div>
+                </div>
+                <div class="quiz-feedback" id="q4-feedback"></div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="quiz-question" id="q5">
+                <h4>Question 5: What does <code>10 % 3</code> return?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q5')"><code>3.33</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q5')"><code>3</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q5')"><code>1</code> — the remainder of 10 ÷ 3</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q5')"><code>0.3</code></div>
+                </div>
+                <div class="quiz-feedback" id="q5-feedback"></div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="quiz-question" id="q6">
+                <h4>Question 6: Which expression checks if a person can vote AND is a citizen?</h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q6')"><code>age >= 18 || isCitizen</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q6')"><code>age >= 18 && isCitizen</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q6')"><code>age >= 18 ! isCitizen</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q6')"><code>age >= 18 = isCitizen</code></div>
+                </div>
+                <div class="quiz-feedback" id="q6-feedback"></div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="quiz-question" id="q7">
+                <h4>Question 7: What is wrong with this code? <code>const score = 100; score = 200;</code></h4>
+                <div class="quiz-options">
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q7')">Nothing — it updates the score to 200</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, true, 'q7')"><code>TypeError</code> — you can't reassign a <code>const</code></div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q7')"><code>SyntaxError</code> — missing semicolons</div>
+                    <div class="quiz-option" onclick="checkAnswer(this, false, 'q7')">The score becomes <code>undefined</code></div>
+                </div>
+                <div class="quiz-feedback" id="q7-feedback"></div>
+            </div>
+
+            <div class="card" id="quiz-score-card" style="display: none; text-align: center;">
+                <h3><span class="emoji">🏆</span> Your Score: <span id="quiz-score">0</span> / 7</h3>
+                <p id="quiz-message"></p>
+                <button class="btn-run" onclick="resetQuiz()" style="margin-top: 16px;">🔄 Try Again</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- ============================================================
+         FOOTER
+         ============================================================ -->
+    <footer class="footer">
+        <p>Lesson 10 — JavaScript Fundamentals I | Software Development 2026</p>
+        <p style="margin-top: 4px; font-size: 0.78rem;">Open <code>examples/script.js</code> in VS Code to see all examples in code form.</p>
+    </footer>
+
+    <!-- ============================================================
+         JAVASCRIPT
+         ============================================================ -->
+    <script>
+        // ============================
+        // TAB NAVIGATION
+        // ============================
+        const tabs = document.querySelectorAll('.nav-tab');
+        const sections = document.querySelectorAll('.section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const target = tab.dataset.section;
+
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+
+                sections.forEach(s => {
+                    s.classList.remove('active');
+                    if (s.id === target) s.classList.add('active');
+                });
+
+                window.scrollTo({ top: document.querySelector('.nav-tabs').offsetTop - 20, behavior: 'smooth' });
+            });
+        });
+
+        // ============================
+        // CODE PLAYGROUND ENGINE
+        // ============================
+        function runPlayground(codeId, outputId) {
+            const code = document.getElementById(codeId).value;
+            const outputEl = document.getElementById(outputId);
+            const logs = [];
+
+            // Capture console.log output
+            const originalLog = console.log;
+            console.log = function(...args) {
+                logs.push(args.map(a => {
+                    if (typeof a === 'object' && a !== null) return JSON.stringify(a);
+                    if (typeof a === 'symbol') return a.toString();
+                    return String(a);
+                }).join(' '));
+                originalLog.apply(console, args);
+            };
+
+            try {
+                // Use Function() to execute in a semi-isolated scope
+                const fn = new Function(code);
+                fn();
+                outputEl.className = '';
+                outputEl.textContent = logs.length ? logs.join('\n') : '(no output)';
+            } catch (err) {
+                outputEl.className = 'error';
+                outputEl.textContent = '❌ ' + err.name + ': ' + err.message;
+            }
+
+            // Restore original console.log
+            console.log = originalLog;
+        }
+
+        function resetPlayground(codeId, original) {
+            if (original) {
+                document.getElementById(codeId).value = original;
+            }
+            // Clear output by getting the sibling
+            const codeEl = document.getElementById(codeId);
+            const playground = codeEl.closest('.playground');
+            const outputCode = playground.querySelector('.playground-output code');
+            if (outputCode) outputCode.textContent = '';
+        }
+
+        // ============================
+        // QUIZ ENGINE
+        // ============================
+        let quizScore = 0;
+        let quizAnswered = 0;
+        const totalQuestions = 7;
+
+        const feedbackMessages = {
+            q1: { correct: "✅ Correct! Use const by default. Only use let when the value needs to change.", wrong: "❌ Not quite. The modern best practice is to use const by default — it prevents accidental reassignment." },
+            q2: { correct: '✅ Correct! The + operator concatenates when either side is a string, so "5" + 3 becomes "53".', wrong: '❌ Remember: when + sees a string on either side, it concatenates instead of adding. "5" + 3 = "53".' },
+            q3: { correct: "✅ Correct! Strict equality (===) checks both value AND type. 5 is a number, \"5\" is a string — different types!", wrong: "❌ Remember: === checks both value AND type. The number 5 and the string \"5\" have different types, so === returns false." },
+            q4: { correct: "✅ Correct! This is a famous bug from 1995 that was never fixed. typeof null returns \"object\" instead of \"null\".", wrong: "❌ Trick question! typeof null returns \"object\" — it's a well-known bug from JavaScript's creation in 1995." },
+            q5: { correct: "✅ Correct! The modulus operator (%) returns the remainder. 10 ÷ 3 = 3 remainder 1.", wrong: "❌ The % operator is modulus (remainder), not division. 10 ÷ 3 = 3 remainder 1, so 10 % 3 = 1." },
+            q6: { correct: "✅ Correct! && (AND) requires BOTH conditions to be true — perfect for checking multiple requirements.", wrong: "❌ To check that BOTH conditions are true, use && (AND). || (OR) only requires one to be true." },
+            q7: { correct: "✅ Correct! const creates a constant binding — you cannot reassign it after declaration.", wrong: "❌ const variables cannot be reassigned. Trying to do so throws a TypeError. Use let if the value needs to change." }
+        };
+
+        function checkAnswer(el, isCorrect, qId) {
+            const question = document.getElementById(qId);
+            const options = question.querySelectorAll('.quiz-option');
+            const feedback = document.getElementById(qId + '-feedback');
+
+            // Prevent re-answering
+            if (feedback.classList.contains('show')) return;
+
+            quizAnswered++;
+
+            options.forEach(opt => {
+                opt.classList.add('disabled');
+            });
+
+            if (isCorrect) {
+                el.classList.add('correct');
+                feedback.className = 'quiz-feedback show correct';
+                feedback.textContent = feedbackMessages[qId].correct;
+                quizScore++;
+            } else {
+                el.classList.add('wrong');
+                feedback.className = 'quiz-feedback show wrong';
+                feedback.textContent = feedbackMessages[qId].wrong;
+                // Highlight the correct answer
+                options.forEach(opt => {
+                    // Find the correct one by re-checking
+                });
+            }
+
+            // Check if quiz is complete
+            if (quizAnswered >= totalQuestions) {
+                setTimeout(() => {
+                    const scoreCard = document.getElementById('quiz-score-card');
+                    scoreCard.style.display = 'block';
+                    document.getElementById('quiz-score').textContent = quizScore;
+                    const msg = document.getElementById('quiz-message');
+                    if (quizScore === 7) msg.textContent = "🎉 Perfect score! You've nailed JavaScript fundamentals!";
+                    else if (quizScore >= 5) msg.textContent = "👏 Great job! You've got a solid understanding. Review the ones you missed.";
+                    else if (quizScore >= 3) msg.textContent = "📚 Good start! Review the interactive sections above and try again.";
+                    else msg.textContent = "💪 Don't worry — go through each section again and come back. Practice makes perfect!";
+                    scoreCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 800);
+            }
+        }
+
+        function resetQuiz() {
+            quizScore = 0;
+            quizAnswered = 0;
+            document.getElementById('quiz-score-card').style.display = 'none';
+            for (let i = 1; i <= totalQuestions; i++) {
+                const q = document.getElementById('q' + i);
+                q.querySelectorAll('.quiz-option').forEach(opt => {
+                    opt.classList.remove('correct', 'wrong', 'disabled');
+                });
+                const fb = document.getElementById('q' + i + '-feedback');
+                fb.className = 'quiz-feedback';
+                fb.textContent = '';
+            }
+            document.getElementById('q1').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
