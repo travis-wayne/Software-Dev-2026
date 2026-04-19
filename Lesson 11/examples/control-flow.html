@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Control Flow & Functions — Interactive Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS RESET & VARIABLES
+           ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary:   #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary:  #242842;
+            --bg-card:      #1e2235;
+            --bg-code:      #151825;
+            --border:       #2d3154;
+            --border-hover: #4f5899;
+
+            --text-primary:   #e8eaf0;
+            --text-secondary: #9da3b4;
+            --text-muted:     #6b7280;
+
+            --accent-blue:   #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-green:  #34d399;
+            --accent-orange: #fb923c;
+            --accent-red:    #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-cyan:   #22d3ee;
+            --accent-pink:   #f472b6;
+
+            --gradient-hero: linear-gradient(135deg, #f59e0b 0%, #ef4444 40%, #a855f7 100%);
+            --gradient-card: linear-gradient(145deg, rgba(245,158,11,0.08), rgba(168,85,247,0.05));
+
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-code: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+
+            --radius:    12px;
+            --radius-sm: 8px;
+            --shadow:    0 4px 24px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 30px rgba(245,158,11,0.12);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           HERO
+           ============================================================ */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 60px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(245,158,11,0.1) 0%, transparent 60%);
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--gradient-hero);
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(245,158,11,0.12);
+            color: var(--accent-yellow);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(245,158,11,0.25);
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 680px;
+            margin: 0 auto 32px;
+        }
+        .hero-pills {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hero-pill {
+            padding: 6px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           NAVIGATION TABS
+           ============================================================ */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 24px 48px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .nav-tab:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+        .nav-tab.active {
+            background: rgba(245,158,11,0.15);
+            border-color: var(--accent-yellow);
+            color: var(--accent-yellow);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           CONTENT CONTAINER
+           ============================================================ */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           CARDS
+           ============================================================ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+        .card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h3 .emoji { font-size: 1.4rem; }
+        .card p, .card li {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        .card ul { padding-left: 20px; margin-top: 8px; }
+        .card ul li { margin-bottom: 6px; }
+        .card h4 { font-size: 1rem; margin: 16px 0 8px; color: var(--text-primary); }
+
+        /* ============================================================
+           CALLOUTS
+           ============================================================ */
+        .callout {
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 16px 0;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+        .callout.tip    { background: rgba(52,211,153,0.08);  border-color: var(--accent-green);  }
+        .callout.tip    strong { color: var(--accent-green);  }
+        .callout.warn   { background: rgba(251,191,36,0.08);  border-color: var(--accent-yellow); }
+        .callout.warn   strong { color: var(--accent-yellow); }
+        .callout.danger { background: rgba(248,113,113,0.08); border-color: var(--accent-red);    }
+        .callout.danger strong { color: var(--accent-red);    }
+        .callout.info   { background: rgba(96,165,250,0.08);  border-color: var(--accent-blue);   }
+        .callout.info   strong { color: var(--accent-blue);   }
+
+        /* ============================================================
+           CODE BLOCKS
+           ============================================================ */
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        code {
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.9;
+        }
+        pre code { color: var(--text-primary); }
+        p code, li code, td code, .callout code, h4 code {
+            background: var(--bg-tertiary);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Syntax colours */
+        .kw   { color: var(--accent-purple); }
+        .str  { color: var(--accent-green);  }
+        .num  { color: var(--accent-orange); }
+        .cm   { color: var(--text-muted); font-style: italic; }
+        .fn   { color: var(--accent-blue);   }
+        .op   { color: var(--accent-pink);   }
+        .bool { color: var(--accent-orange); }
+        .out  { color: var(--accent-green);  }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.92rem;
+        }
+        th {
+            background: var(--bg-tertiary);
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        tr:hover td { background: rgba(245,158,11,0.03); }
+
+        /* ============================================================
+           INTERACTIVE PLAYGROUND
+           ============================================================ */
+        .playground {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .playground-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+        .playground-header span {
+            font-family: var(--font-code);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .playground-dots { display: flex; gap: 6px; }
+        .playground-dots span { width: 12px; height: 12px; border-radius: 50%; }
+        .playground-dots span:nth-child(1) { background: #ff5f57; }
+        .playground-dots span:nth-child(2) { background: #febc2e; }
+        .playground-dots span:nth-child(3) { background: #28c840; }
+
+        .playground-body { display: flex; flex-direction: column; }
+        @media (min-width: 640px) { .playground-body { flex-direction: row; } }
+
+        .playground-code {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            min-height: 180px;
+        }
+        .playground-code textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 160px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.9;
+            resize: vertical;
+            outline: none;
+            tab-size: 4;
+        }
+        .playground-output { flex: 1; padding: 20px; min-height: 180px; }
+        .playground-output-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .playground-output pre { background: transparent; border: none; padding: 0; margin: 0; }
+        .playground-output code { color: var(--accent-green); white-space: pre-wrap; }
+        .playground-output code.error { color: var(--accent-red); }
+
+        .btn-run {
+            padding: 8px 20px;
+            background: var(--accent-yellow);
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-run:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-run:active { transform: translateY(0); }
+
+        .btn-reset {
+            padding: 8px 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+        .btn-reset:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+
+        /* ============================================================
+           VISUAL DIAGRAMS
+           ============================================================ */
+        .flow-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 24px auto;
+            max-width: 480px;
+        }
+        .flow-box {
+            padding: 12px 28px;
+            border-radius: var(--radius-sm);
+            border: 2px solid;
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            text-align: center;
+            width: 100%;
+        }
+        .flow-box.condition { border-color: var(--accent-yellow); background: rgba(251,191,36,0.08); color: var(--accent-yellow); }
+        .flow-box.true-path { border-color: var(--accent-green);  background: rgba(52,211,153,0.08); color: var(--accent-green);  }
+        .flow-box.false-path{ border-color: var(--accent-red);    background: rgba(248,113,113,0.08); color: var(--accent-red);  }
+        .flow-box.end       { border-color: var(--border);        background: var(--bg-tertiary);    color: var(--text-secondary);}
+        .flow-arrow { color: var(--text-muted); font-size: 1.4rem; line-height: 1; padding: 4px 0; }
+        .flow-split {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+        }
+        .flow-split-col { display: flex; flex-direction: column; align-items: center; gap: 0; flex: 1; }
+        .flow-label { font-size: 0.72rem; font-weight: 600; letter-spacing: 1px; padding: 2px 0; color: var(--text-muted); }
+
+        .loop-diagram {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+            margin: 24px auto;
+            max-width: 400px;
+            position: relative;
+        }
+        .loop-box {
+            padding: 11px 24px;
+            border-radius: var(--radius-sm);
+            border: 2px solid;
+            font-family: var(--font-code);
+            font-size: 0.85rem;
+            text-align: center;
+            width: 100%;
+        }
+        .loop-box.init   { border-color: var(--accent-blue);   background: rgba(96,165,250,0.08);  color: var(--accent-blue); }
+        .loop-box.check  { border-color: var(--accent-yellow); background: rgba(251,191,36,0.08);  color: var(--accent-yellow); }
+        .loop-box.body   { border-color: var(--accent-purple); background: rgba(167,139,250,0.08); color: var(--accent-purple); }
+        .loop-box.inc    { border-color: var(--accent-cyan);   background: rgba(34,211,238,0.08);  color: var(--accent-cyan); }
+        .loop-box.exit   { border-color: var(--accent-red);    background: rgba(248,113,113,0.08); color: var(--accent-red); }
+        .loop-arrow { color: var(--text-muted); font-size: 1.3rem; line-height: 1; padding: 4px 0; }
+        .loop-back-label {
+            position: absolute;
+            right: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.75rem;
+            color: var(--accent-cyan);
+            text-align: center;
+            width: 72px;
+            font-family: var(--font-code);
+        }
+
+        /* Side-by-side blocks */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+        @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+        .two-col-item { background: var(--bg-code); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 16px; }
+        .two-col-item .label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .two-col-item.bad  .label { color: var(--accent-red);   }
+        .two-col-item.good .label { color: var(--accent-green); }
+        .two-col-item.bad  { border-color: rgba(248,113,113,0.3); }
+        .two-col-item.good { border-color: rgba(52,211,153,0.3);  }
+
+        /* Scope visualiser */
+        .scope-box {
+            border: 2px dashed var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin: 16px 0;
+            position: relative;
+        }
+        .scope-box .scope-label {
+            position: absolute;
+            top: -12px;
+            left: 16px;
+            background: var(--bg-card);
+            padding: 2px 10px;
+            font-size: 0.73rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 4px;
+        }
+        .scope-box.global { border-color: var(--accent-blue);   }
+        .scope-box.global .scope-label { color: var(--accent-blue); }
+        .scope-box.local  { border-color: var(--accent-purple); margin-top: 16px; }
+        .scope-box.local  .scope-label { color: var(--accent-purple); }
+        .scope-var { display: inline-flex; align-items: center; gap: 8px; background: var(--bg-tertiary); border-radius: 6px; padding: 6px 14px; margin: 4px; font-family: var(--font-code); font-size: 0.83rem; }
+        .scope-var .name  { color: var(--accent-cyan); }
+        .scope-var .value { color: var(--accent-green); }
+
+        /* ============================================================
+           QUIZ
+           ============================================================ */
+        .quiz-question {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 16px 0;
+        }
+        .quiz-question h4 { font-size: 1rem; margin-bottom: 14px; color: var(--accent-cyan); }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+        .quiz-option {
+            padding: 12px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .quiz-option:hover { border-color: var(--border-hover); color: var(--text-primary); }
+        .quiz-option.correct { border-color: var(--accent-green); background: rgba(52,211,153,0.1); color: var(--accent-green); }
+        .quiz-option.wrong   { border-color: var(--accent-red);   background: rgba(248,113,113,0.1); color: var(--accent-red); }
+        .quiz-option.disabled { pointer-events: none; }
+        .quiz-feedback { margin-top: 12px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 0.9rem; display: none; }
+        .quiz-feedback.show { display: block; }
+        .quiz-feedback.correct { background: rgba(52,211,153,0.1); color: var(--accent-green); }
+        .quiz-feedback.wrong   { background: rgba(248,113,113,0.1); color: var(--accent-red); }
+        .quiz-score { text-align: center; margin-top: 24px; padding: 20px; background: var(--bg-secondary); border-radius: var(--radius); border: 1px solid var(--border); display: none; }
+        .quiz-score.show { display: block; }
+        .quiz-score h3 { font-size: 2rem; color: var(--accent-yellow); margin-bottom: 8px; }
+        .quiz-score p  { color: var(--text-secondary); }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====================================================
+         HERO
+         ==================================================== -->
+    <header class="hero">
+        <div class="hero-badge">Lesson 11 — Interactive Reference</div>
+        <h1>Control Flow &amp; Functions</h1>
+        <p>Learn how to make your JavaScript programs think, repeat, and reuse — the three skills that turn a script into a real program.</p>
+        <div class="hero-pills">
+            <span class="hero-pill">🔀 If / Else Statements</span>
+            <span class="hero-pill">🔁 For Loops</span>
+            <span class="hero-pill">🔄 While Loops</span>
+            <span class="hero-pill">⚙️ Functions</span>
+            <span class="hero-pill">🔭 Scope</span>
+        </div>
+    </header>
+
+    <!-- ====================================================
+         NAVIGATION
+         ==================================================== -->
+    <nav class="nav-tabs" id="navTabs">
+        <div class="nav-tab active"  data-section="conditionals">🔀 Conditionals</div>
+        <div class="nav-tab"         data-section="for-loops">🔁 For Loops</div>
+        <div class="nav-tab"         data-section="while-loops">🔄 While Loops</div>
+        <div class="nav-tab"         data-section="functions">⚙️ Functions</div>
+        <div class="nav-tab"         data-section="scope">🔭 Scope</div>
+        <div class="nav-tab"         data-section="playground">🎮 Playground</div>
+        <div class="nav-tab"         data-section="quiz">📝 Quiz</div>
+    </nav>
+
+    <main class="container">
+
+        <!-- ====================================================
+             SECTION 1: CONDITIONALS
+             ==================================================== -->
+        <div class="section active" id="conditionals">
+            <div class="card">
+                <h3><span class="emoji">🔀</span> What is Control Flow?</h3>
+                <p>By default, JavaScript runs every line from top to bottom — one after another. <strong>Control flow</strong> lets us break that pattern. We can skip over code, or only run it when a condition is true.</p>
+                <div class="callout tip">
+                    <strong>💡 Real-world example:</strong> "If the user has entered their password correctly, log them in. Otherwise, show an error." That decision is control flow.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🗺️</span> How If / Else Works</h3>
+                <p>Think of it as a fork in the road:</p>
+                <div class="flow-diagram">
+                    <div class="flow-box condition">if (condition)</div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-split">
+                        <div class="flow-split-col">
+                            <div class="flow-label">TRUE ✅</div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box true-path">Run Block A</div>
+                        </div>
+                        <div class="flow-split-col">
+                            <div class="flow-label">FALSE ❌</div>
+                            <div class="flow-arrow">↓</div>
+                            <div class="flow-box false-path">Run Block B (else)</div>
+                        </div>
+                    </div>
+                    <div class="flow-arrow">↓</div>
+                    <div class="flow-box end">Continue program…</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🎓</span> Grading System Example</h3>
+                <p>Chains of <code>else if</code> let you handle multiple branches. <strong>Order matters — more specific conditions go first.</strong></p>
+
+                <div class="playground" id="pg-grade">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>grade-checker.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-grade')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-grade')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-grade" spellcheck="false">let score = 85;
+
+if (score >= 90) {
+    console.log("Grade: A – Excellent! 🏆");
+} else if (score >= 80) {
+    console.log("Grade: B – Great job!");
+} else if (score >= 70) {
+    console.log("Grade: C – You passed.");
+} else {
+    console.log("Grade: Needs improvement.");
+}
+
+// Try changing score to: 95, 73, 55
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-grade">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout warn">
+                    <strong>⚠️ Order matters!</strong> If you put <code>score >= 70</code> first, a score of 95 would match it and print "Grade: C" — because 95 is also >= 70! Always check the <em>most specific</em> condition first.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔗</span> Combining with Logical Operators</h3>
+                <p>Use <code>&&</code> (AND), <code>||</code> (OR), and <code>!</code> (NOT) to build complex conditions.</p>
+
+                <div class="playground" id="pg-logical">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>access-control.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-logical')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-logical')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-logical" spellcheck="false">let age = 17;
+let hasParentCode = true;
+
+if (age >= 18) {
+    console.log("Full access granted.");
+} else if (age >= 13 && hasParentCode) {
+    console.log("Teen access granted (parental approval).");
+} else {
+    console.log("Access denied.");
+}
+
+// Try: age=20, age=15 hasParentCode=false
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-logical">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <table>
+                    <thead><tr><th>Operator</th><th>Name</th><th>Returns true when…</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>&&</code></td><td>AND</td><td>Both sides are true</td></tr>
+                        <tr><td><code>||</code></td><td>OR</td><td>At least one side is true</td></tr>
+                        <tr><td><code>!</code></td><td>NOT</td><td>The condition is false</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 2: FOR LOOPS
+             ==================================================== -->
+        <div class="section" id="for-loops">
+            <div class="card">
+                <h3><span class="emoji">🔁</span> Why Do We Need Loops?</h3>
+                <p>Imagine printing every number from 1 to 100. Without a loop, you'd write 100 lines of code. With a loop, you write 3. Loops let you repeat a block of code efficiently.</p>
+                <div class="callout info">
+                    <strong>📌 Use a <code>for</code> loop</strong> when you know exactly how many times you need to repeat something.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔬</span> Anatomy of a For Loop</h3>
+                <p>Every <code>for</code> loop has three parts separated by semicolons:</p>
+                <div class="loop-diagram">
+                    <div class="loop-box init">① Initialization: let i = 1</div>
+                    <div class="loop-arrow">↓</div>
+                    <div class="loop-box check">② Condition: i &lt;= 5 ?</div>
+                    <div class="flow-split" style="width:100%; gap:20px; justify-content:center; margin:0;">
+                        <div class="flow-split-col">
+                            <div class="flow-label">TRUE</div>
+                            <div class="loop-arrow">↓</div>
+                            <div class="loop-box body">③ Body runs</div>
+                            <div class="loop-arrow">↓</div>
+                            <div class="loop-box inc">④ i++ (increment)</div>
+                            <div class="loop-arrow">↑ back to ②</div>
+                        </div>
+                        <div class="flow-split-col">
+                            <div class="flow-label">FALSE</div>
+                            <div class="loop-arrow">↓</div>
+                            <div class="loop-box exit">Loop exits ✓</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="playground" id="pg-for">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>for-loop.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-for')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-for')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-for" spellcheck="false">// Count from 1 to 5
+for (let i = 1; i <= 5; i++) {
+    console.log("Iteration: " + i);
+}
+
+// Task: Change i <= 5 to i <= 10
+// Task: Change i++ to i += 2 (even numbers only)
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-for">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🧮</span> Common For Loop Patterns</h3>
+
+                <div class="playground" id="pg-for-patterns">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>loop-patterns.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-for-patterns')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-for-patterns')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-for-patterns" spellcheck="false">// Pattern 1: Count backwards
+console.log("Countdown:");
+for (let i = 5; i >= 1; i--) {
+    console.log(i);
+}
+console.log("Go!");
+
+// Pattern 2: If inside a loop (very common!)
+console.log("\nEven numbers 1-10:");
+for (let i = 1; i <= 10; i++) {
+    if (i % 2 === 0) {
+        console.log(i + " is even ✅");
+    }
+}
+
+// Pattern 3: Accumulator
+let total = 0;
+for (let i = 1; i <= 5; i++) {
+    total += i;
+}
+console.log("\nSum of 1-5: " + total);
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-for-patterns">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 3: WHILE LOOPS
+             ==================================================== -->
+        <div class="section" id="while-loops">
+            <div class="card">
+                <h3><span class="emoji">🔄</span> The While Loop</h3>
+                <p>A <code>while</code> loop keeps running as long as a condition is <code>true</code>. Unlike a <code>for</code> loop, you don't specify a fixed number of iterations up front — it runs until the condition changes.</p>
+                <div class="callout info">
+                    <strong>📌 Use a <code>while</code> loop</strong> when you don't know how many times the loop needs to run — for example, "keep asking for input until the user enters a valid number."
+                </div>
+                <pre><code><span class="kw">while</span> (condition) {
+    <span class="cm">// Body runs as long as condition is true</span>
+    <span class="cm">// ⭐ Make sure something inside changes the condition!</span>
+}</code></pre>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🚀</span> Countdown Example</h3>
+
+                <div class="playground" id="pg-while">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>while-loop.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-while')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-while')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-while" spellcheck="false">let countdown = 5;
+
+while (countdown > 0) {
+    console.log("T-minus: " + countdown);
+    countdown--; // ⭐ NEVER forget this line!
+}
+
+console.log("🚀 Liftoff!");
+
+// What happens if you remove countdown--?
+// (Don't try it! It will cause an infinite loop)
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-while">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="callout danger">
+                    <strong>⚠️ Infinite Loop Warning!</strong> If your loop condition never becomes <code>false</code>, the loop runs forever and crashes the browser tab. Always make sure something inside the loop eventually makes the condition false.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">⚖️</span> For vs While — When to Use Which</h3>
+                <table>
+                    <thead><tr><th>Situation</th><th>Use</th></tr></thead>
+                    <tbody>
+                        <tr><td>You know exactly how many iterations</td><td><code>for</code></td></tr>
+                        <tr><td>You're counting up or down through a range</td><td><code>for</code></td></tr>
+                        <tr><td>You don't know how many iterations in advance</td><td><code>while</code></td></tr>
+                        <tr><td>Waiting for a user action or external event</td><td><code>while</code></td></tr>
+                        <tr><td>Running until a specific value is reached</td><td><code>while</code></td></tr>
+                    </tbody>
+                </table>
+
+                <div class="callout tip">
+                    <strong>💡 Analogy:</strong> A <code>for</code> loop is like a dishwasher set to run 3 cycles. A <code>while</code> loop is like washing dishes by hand — you keep going <em>until they're all clean</em>, however many cycles that takes.
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 4: FUNCTIONS
+             ==================================================== -->
+        <div class="section" id="functions">
+            <div class="card">
+                <h3><span class="emoji">📖</span> What is a Function?</h3>
+                <p>A function is a <strong>named, reusable block of code</strong> that performs a specific task. You define it once, and you can <em>call</em> (invoke) it as many times as you need.</p>
+                <div class="callout tip">
+                    <strong>💡 Analogy:</strong> A function is like a recipe in a cookbook. Writing the recipe doesn't cook the food — you have to actively decide to cook it (calling the function). And the same recipe can produce 10 different meals (calling the function with different arguments).
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🔬</span> Function Anatomy</h3>
+                <pre><code><span class="cm">// ↓ keyword  ↓ name      ↓ parameters</span>
+<span class="kw">function</span>   <span class="fn">greetUser</span>  (<span class="cm">firstName</span>, <span class="cm">lastName</span>) {
+    <span class="cm">// ← the function body</span>
+    console.<span class="fn">log</span>(<span class="str">`Welcome, ${firstName} ${lastName}!`</span>);
+}
+
+<span class="cm">// Calling the function with arguments:</span>
+<span class="fn">greetUser</span>(<span class="str">"Alice"</span>, <span class="str">"Johnson"</span>); <span class="cm">// → Welcome, Alice Johnson!</span>
+<span class="fn">greetUser</span>(<span class="str">"Bob"</span>,   <span class="str">"Smith"</span>);   <span class="cm">// → Welcome, Bob Smith!</span></code></pre>
+
+                <div class="playground" id="pg-fn-basic">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>functions-basic.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-fn-basic')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-fn-basic')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-fn-basic" spellcheck="false">// Step 1: No parameters
+function sayHello() {
+    console.log("Hello from a function!");
+}
+sayHello();
+sayHello(); // Call it again - same code, no retyping!
+
+// Step 2: With parameters
+function greetUser(name, role) {
+    console.log(`Welcome, ${name}! Role: ${role}`);
+}
+greetUser("Alice", "Developer");
+greetUser("Bob",   "Designer");
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-fn-basic">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">↩️</span> The Return Statement — Most Important Concept!</h3>
+                <p>There's a critical difference between a function that <em>shows</em> you something and one that <em>gives</em> you something back.</p>
+
+                <div class="two-col">
+                    <div class="two-col-item bad">
+                        <div class="label">❌ console.log inside (data is lost)</div>
+                        <pre style="background:transparent;border:none;padding:0;margin:0;"><code><span class="kw">function</span> <span class="fn">addWrong</span>(a, b) {
+  console.<span class="fn">log</span>(a + b); <span class="cm">// shows 8</span>
+}
+<span class="kw">let</span> result = <span class="fn">addWrong</span>(<span class="num">3</span>, <span class="num">5</span>);
+console.<span class="fn">log</span>(result); <span class="cm">// undefined!</span></code></pre>
+                    </div>
+                    <div class="two-col-item good">
+                        <div class="label">✅ return (data comes back)</div>
+                        <pre style="background:transparent;border:none;padding:0;margin:0;"><code><span class="kw">function</span> <span class="fn">addRight</span>(a, b) {
+  <span class="kw">return</span> a + b; <span class="cm">// sends 8 back</span>
+}
+<span class="kw">let</span> result = <span class="fn">addRight</span>(<span class="num">3</span>, <span class="num">5</span>);
+console.<span class="fn">log</span>(result * <span class="num">2</span>); <span class="cm">// 16 ✅</span></code></pre>
+                    </div>
+                </div>
+
+                <div class="playground" id="pg-return">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>return-vs-log.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-return')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-return')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-return" spellcheck="false">// ❌ Without return — data is gone
+function addAndLog(a, b) {
+    console.log(a + b); // Shows 8 but gives nothing back
+}
+let bad = addAndLog(3, 5);
+console.log("captured:", bad); // undefined!
+
+// ✅ With return — data comes back to caller
+function addAndReturn(a, b) {
+    return a + b;
+}
+let good = addAndReturn(3, 5); // good = 8
+console.log("captured:", good);        // 8
+console.log("can reuse:", good * 10);  // 80
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-return">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🤝</span> Functions + Loops Together</h3>
+                <p>Calling a function inside a loop is one of the most powerful patterns in programming. It keeps each piece of logic separate and reusable.</p>
+                <div class="playground" id="pg-fn-loop">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>functions-loops.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-fn-loop')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-fn-loop')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-fn-loop" spellcheck="false">function isEven(n) {
+    return n % 2 === 0; // returns true or false
+}
+
+// Call the function inside a loop
+for (let i = 1; i <= 10; i++) {
+    let label = isEven(i) ? "EVEN" : "odd";
+    console.log(`${i} → ${label}`);
+}
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-fn-loop">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 5: SCOPE
+             ==================================================== -->
+        <div class="section" id="scope">
+            <div class="card">
+                <h3><span class="emoji">🔭</span> What is Scope?</h3>
+                <p><strong>Scope</strong> determines where a variable is accessible. Variables declared inside a function are <em>local</em> — they only exist while the function is running, and cannot be accessed from outside it.</p>
+                <div class="callout tip">
+                    <strong>💡 Why is this good?</strong> Scope is a feature. It prevents different parts of your program from accidentally interfering with each other. Functions can have their own private variables without worrying about name clashes elsewhere.
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🗺️</span> Global vs Local Scope — Visual</h3>
+
+                <div class="scope-box global">
+                    <div class="scope-label">Global Scope</div>
+                    <div class="scope-var"><span class="name">playerName</span><span class="value">= "Alice"</span></div>
+                    <div class="scope-var"><span class="name">gameLevel</span><span class="value">= 5</span></div>
+                    <p style="font-size:0.82rem; color:var(--text-muted); margin-top:10px;">↑ Accessible everywhere in your script</p>
+
+                    <div class="scope-box local">
+                        <div class="scope-label">calculateBonus() — Local Scope</div>
+                        <div class="scope-var"><span class="name">bonus</span><span class="value">= 5000</span></div>
+                        <p style="font-size:0.82rem; color:var(--text-muted); margin-top:10px;">↑ Only accessible inside calculateBonus()</p>
+                        <p style="font-size:0.82rem; color:var(--accent-green); margin-top:4px;">✅ Can read <code>playerName</code> from global scope</p>
+                    </div>
+                </div>
+                <p style="color:var(--accent-red); margin-top:12px; font-size:0.9rem;">❌ Trying to access <code>bonus</code> outside the function → <strong>ReferenceError</strong></p>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🧪</span> Scope Explorer</h3>
+                <div class="playground" id="pg-scope">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>scope-demo.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-scope')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-scope')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-scope" spellcheck="false">let globalCity = "Lagos"; // Global
+
+function describeCity() {
+    let population = "22 million"; // Local
+    console.log("City: " + globalCity);       // ✅ reads global
+    console.log("Population: " + population); // ✅ local works
+}
+
+describeCity();
+console.log("City outside: " + globalCity);  // ✅ global still fine
+
+// Uncomment the line below to see the ReferenceError:
+// console.log(population);
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Console Output</div>
+                            <pre><code id="output-pg-scope">Click ▶ Run to see output…</code></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 6: FREE PLAYGROUND
+             ==================================================== -->
+        <div class="section" id="playground">
+            <div class="card">
+                <h3><span class="emoji">🎮</span> Free Practice Playground</h3>
+                <p>Use this open playground to experiment with anything from today's lesson. Try writing your own conditionals, loops, and functions from scratch.</p>
+                <div class="callout tip">
+                    <strong>💡 Try these:</strong> Write a FizzBuzz function. Create a function that returns the square of a number. Call it inside a loop for 1–10.
+                </div>
+            </div>
+
+            <div class="playground" id="pg-free">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>playground.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPlayground('pg-free')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPlayground('pg-free')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-free" spellcheck="false">// Your turn! Write any JS you like here.
+// Some ideas to try:
+//
+// 1. A function that checks if a number is prime
+// 2. A FizzBuzz function with a for loop inside
+// 3. A while loop that keeps "rolling a die" until it gets 6
+//
+// Start coding below ↓
+
+function greet(name) {
+    return `Hello, ${name}!`;
+}
+
+for (let i = 1; i <= 5; i++) {
+    console.log(greet("Friend " + i));
+}
+</textarea>
+                    </div>
+                    <div class="playground-output" style="min-height:300px;">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-free">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 7: QUIZ
+             ==================================================== -->
+        <div class="section" id="quiz">
+            <div class="card">
+                <h3><span class="emoji">📝</span> Test Your Understanding</h3>
+                <p>Answer all 7 questions. You'll get instant feedback on each answer.</p>
+            </div>
+
+            <!-- Q1 -->
+            <div class="quiz-question" id="q1">
+                <h4>Q1. What will this code print?<br><code>let x = 75; if (x >= 90) { console.log("A"); } else if (x >= 70) { console.log("C"); } else { console.log("F"); }</code></h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q1',false)">"A"</button>
+                    <button class="quiz-option" onclick="answer(this,'q1',true)">"C"</button>
+                    <button class="quiz-option" onclick="answer(this,'q1',false)">"F"</button>
+                    <button class="quiz-option" onclick="answer(this,'q1',false)">Nothing — no condition matched</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q1"></div>
+            </div>
+
+            <!-- Q2 -->
+            <div class="quiz-question" id="q2">
+                <h4>Q2. In a <code>for</code> loop written as <code>for (let i = 1; i &lt;= 5; i++)</code>, how many times does the loop body run?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q2',false)">4 times</button>
+                    <button class="quiz-option" onclick="answer(this,'q2',true)">5 times</button>
+                    <button class="quiz-option" onclick="answer(this,'q2',false)">6 times</button>
+                    <button class="quiz-option" onclick="answer(this,'q2',false)">Infinitely</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q2"></div>
+            </div>
+
+            <!-- Q3 -->
+            <div class="quiz-question" id="q3">
+                <h4>Q3. What causes an infinite loop?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q3',false)">Using <code>let</code> instead of <code>const</code></button>
+                    <button class="quiz-option" onclick="answer(this,'q3',false)">Having more than 10 iterations</button>
+                    <button class="quiz-option" onclick="answer(this,'q3',true)">The loop condition never becomes false</button>
+                    <button class="quiz-option" onclick="answer(this,'q3',false)">Using <code>i++</code> instead of <code>i--</code></button>
+                </div>
+                <div class="quiz-feedback" id="fb-q3"></div>
+            </div>
+
+            <!-- Q4 -->
+            <div class="quiz-question" id="q4">
+                <h4>Q4. When should you prefer a <code>while</code> loop over a <code>for</code> loop?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q4',false)">When you want to count from 1 to 10</button>
+                    <button class="quiz-option" onclick="answer(this,'q4',true)">When you don't know in advance how many iterations you need</button>
+                    <button class="quiz-option" onclick="answer(this,'q4',false)">When you want to loop through an array</button>
+                    <button class="quiz-option" onclick="answer(this,'q4',false)">While loops are always better than for loops</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q4"></div>
+            </div>
+
+            <!-- Q5 -->
+            <div class="quiz-question" id="q5">
+                <h4>Q5. What is the output of: <code>function add(a,b){ return a+b; } let r = add(3,5); console.log(r);</code></h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q5',false)">35</button>
+                    <button class="quiz-option" onclick="answer(this,'q5',true)">8</button>
+                    <button class="quiz-option" onclick="answer(this,'q5',false)">undefined</button>
+                    <button class="quiz-option" onclick="answer(this,'q5',false)">Nothing — <code>return</code> doesn't print</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q5"></div>
+            </div>
+
+            <!-- Q6 -->
+            <div class="quiz-question" id="q6">
+                <h4>Q6. You call a function without using <code>return</code> inside it. What value do you get back if you try to capture its output?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q6',false)">null</button>
+                    <button class="quiz-option" onclick="answer(this,'q6',false)">0</button>
+                    <button class="quiz-option" onclick="answer(this,'q6',true)">undefined</button>
+                    <button class="quiz-option" onclick="answer(this,'q6',false)">An error is thrown</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q6"></div>
+            </div>
+
+            <!-- Q7 -->
+            <div class="quiz-question" id="q7">
+                <h4>Q7. Why does this code throw a <code>ReferenceError</code>?<br><code>function run() { let secret = 42; } run(); console.log(secret);</code></h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="answer(this,'q7',false)"><code>secret</code> should use <code>const</code></button>
+                    <button class="quiz-option" onclick="answer(this,'q7',true)"><code>secret</code> is local to <code>run()</code> and cannot be accessed outside it</button>
+                    <button class="quiz-option" onclick="answer(this,'q7',false)">You can't declare variables inside a function</button>
+                    <button class="quiz-option" onclick="answer(this,'q7',false)">The function was never called</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q7"></div>
+            </div>
+
+            <div class="quiz-score" id="quizScore">
+                <h3 id="scoreDisplay">0/7</h3>
+                <p id="scoreMsg"></p>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p>Lesson 11 — Software Dev 2026 &nbsp;|&nbsp; Control Flow &amp; Functions &nbsp;|&nbsp; Open <code>examples/script.js</code> to follow along</p>
+    </footer>
+
+    <script>
+        /* ========================================================
+           TAB NAVIGATION
+           ======================================================== */
+        const tabs     = document.querySelectorAll('.nav-tab');
+        const sections = document.querySelectorAll('.section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        /* ========================================================
+           PLAYGROUND RUNNER
+           ======================================================== */
+        const defaults = {};
+
+        document.querySelectorAll('.playground').forEach(pg => {
+            const id   = pg.id;
+            const ta   = pg.querySelector('textarea');
+            const out  = pg.querySelector('code[id^="output"]');
+            defaults[id] = ta.value;
+        });
+
+        function runPlayground(id) {
+            const ta  = document.getElementById('code-' + id);
+            const out = document.getElementById('output-' + id);
+            const logs = [];
+
+            const origLog = console.log;
+            console.log = (...args) => {
+                logs.push(args.map(a => {
+                    if (typeof a === 'object' && a !== null) {
+                        try { return JSON.stringify(a); } catch { return String(a); }
+                    }
+                    return String(a);
+                }).join(' '));
+                origLog(...args);
+            };
+
+            try {
+                // eslint-disable-next-line no-new-func
+                new Function(ta.value)();
+                out.textContent = logs.length ? logs.join('\n') : '(no output)';
+                out.className   = '';
+            } catch (err) {
+                out.textContent = '❌ ' + err.toString();
+                out.className   = 'error';
+            } finally {
+                console.log = origLog;
+            }
+        }
+
+        function resetPlayground(id) {
+            const ta  = document.getElementById('code-' + id);
+            const out = document.getElementById('output-' + id);
+            ta.value        = defaults[id];
+            out.textContent = 'Click ▶ Run to see output…';
+            out.className   = '';
+        }
+
+        /* ========================================================
+           QUIZ ENGINE
+           ======================================================== */
+        const feedbacks = {
+            'q1': { correct: '✅ Correct! 75 >= 70 is true, so the second branch runs.', wrong: '❌ Not quite. JavaScript checks branches top to bottom and stops at the first true condition. 75 >= 90 is false, but 75 >= 70 is true.' },
+            'q2': { correct: '✅ Correct! i runs through 1, 2, 3, 4, 5 — that\'s 5 iterations.', wrong: '❌ Not quite. When i = 1 the loop starts. It runs while i <= 5, so it executes for i = 1, 2, 3, 4, 5 = 5 times.' },
+            'q3': { correct: '✅ Exactly! If the condition stays true forever, the loop never stops. Always update the variable you\'re checking.', wrong: '❌ Not quite. An infinite loop happens when the loop\'s stopping condition can never become false.' },
+            'q4': { correct: '✅ Correct! When the number of iterations is unknown upfront — like waiting for user input — a while loop is the right tool.', wrong: '❌ Not quite. For loops are better when you know the count. While loops shine when you loop until an unpredictable condition changes.' },
+            'q5': { correct: '✅ Correct! add(3, 5) returns 8, which is stored in r, then logged.', wrong: '❌ Not quite. return sends the value 8 back to the caller. r is set to 8, and console.log(r) prints 8.' },
+            'q6': { correct: '✅ Right! Functions that don\'t have a return statement automatically return undefined.', wrong: '❌ Not quite. When a function has no return statement (or just return; with no value), it gives back undefined.' },
+            'q7': { correct: '✅ Correct! secret was declared inside run() — local scope. It only exists while run() is executing. Once the function ends, secret is gone.', wrong: '❌ Not quite. This is a scope issue. secret is local to the run() function and cannot be accessed from outside it.' },
+        };
+
+        let answered  = {};
+        let correct   = 0;
+        const total   = 7;
+
+        function answer(btn, qId, isCorrect) {
+            if (answered[qId]) return;
+            answered[qId] = true;
+            correct += isCorrect ? 1 : 0;
+
+            const opts = btn.closest('.quiz-question').querySelectorAll('.quiz-option');
+            opts.forEach(o => o.classList.add('disabled'));
+            btn.classList.add(isCorrect ? 'correct' : 'wrong');
+
+            const fb = document.getElementById('fb-' + qId);
+            fb.textContent = feedbacks[qId][isCorrect ? 'correct' : 'wrong'];
+            fb.className   = `quiz-feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+            if (Object.keys(answered).length === total) {
+                const scoreEl = document.getElementById('quizScore');
+                scoreEl.classList.add('show');
+                document.getElementById('scoreDisplay').textContent = `${correct}/${total}`;
+                const pct = Math.round((correct / total) * 100);
+                let msg = '';
+                if (pct === 100) msg = '🏆 Perfect score! You have mastered Lesson 11.';
+                else if (pct >= 71) msg = '✅ Great work! Review any questions you missed and you\'re good to go.';
+                else msg = '📖 Good effort. Review the sections for the questions you missed and try again.';
+                document.getElementById('scoreMsg').textContent = msg;
+                scoreEl.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>

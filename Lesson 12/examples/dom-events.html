@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript DOM & Events — Interactive Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* ============================================================
+           CSS RESET & VARIABLES
+           ============================================================ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary:   #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary:  #242842;
+            --bg-card:      #1e2235;
+            --bg-code:      #151825;
+            --border:       #2d3154;
+            --border-hover: #4f5899;
+
+            --text-primary:   #e8eaf0;
+            --text-secondary: #9da3b4;
+            --text-muted:     #6b7280;
+
+            --accent-blue:   #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-green:  #34d399;
+            --accent-orange: #fb923c;
+            --accent-red:    #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-cyan:   #22d3ee;
+            --accent-pink:   #f472b6;
+
+            --gradient-hero: linear-gradient(135deg, #34d399 0%, #3b82f6 40%, #a855f7 100%);
+            --gradient-card: linear-gradient(145deg, rgba(52,211,153,0.08), rgba(59,130,246,0.05));
+
+            --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+            --font-code: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+
+            --radius:    12px;
+            --radius-sm: 8px;
+            --shadow:    0 4px 24px rgba(0,0,0,0.3);
+            --shadow-glow: 0 0 30px rgba(52,211,153,0.12);
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* ============================================================
+           HERO
+           ============================================================ */
+        .hero {
+            text-align: center;
+            padding: 80px 24px 60px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.1) 0%, transparent 60%);
+            position: relative;
+        }
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: var(--gradient-hero);
+        }
+        .hero-badge {
+            display: inline-block;
+            background: rgba(52,211,153,0.12);
+            color: var(--accent-green);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            margin-bottom: 16px;
+            border: 1px solid rgba(52,211,153,0.25);
+        }
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.2rem);
+            font-weight: 800;
+            background: var(--gradient-hero);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 680px;
+            margin: 0 auto 32px;
+        }
+        .hero-pills {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .hero-pill {
+            padding: 6px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+        }
+
+        /* ============================================================
+           NAVIGATION TABS
+           ============================================================ */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            padding: 0 24px 48px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+        .nav-tab {
+            padding: 10px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            user-select: none;
+        }
+        .nav-tab:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+        .nav-tab.active {
+            background: rgba(52,211,153,0.15);
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            font-weight: 600;
+        }
+
+        /* ============================================================
+           CONTENT CONTAINER
+           ============================================================ */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 24px 80px;
+        }
+        .section { display: none; animation: fadeIn 0.4s ease; }
+        .section.active { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ============================================================
+           CARDS
+           ============================================================ */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px;
+            margin-bottom: 24px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            border-color: var(--border-hover);
+            box-shadow: var(--shadow-glow);
+        }
+        .card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .card h3 .emoji { font-size: 1.4rem; }
+        .card p, .card li {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.8;
+        }
+        .card ul { padding-left: 20px; margin-top: 8px; }
+        .card ul li { margin-bottom: 6px; }
+        .card h4 { font-size: 1rem; margin: 16px 0 8px; color: var(--text-primary); }
+
+        /* ============================================================
+           CALLOUTS
+           ============================================================ */
+        .callout {
+            padding: 16px 20px;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid;
+            margin: 16px 0;
+            font-size: 0.92rem;
+            color: var(--text-secondary);
+        }
+        .callout.tip    { background: rgba(52,211,153,0.08);  border-color: var(--accent-green);  }
+        .callout.tip    strong { color: var(--accent-green);  }
+        .callout.warn   { background: rgba(251,191,36,0.08);  border-color: var(--accent-yellow); }
+        .callout.warn   strong { color: var(--accent-yellow); }
+        .callout.danger { background: rgba(248,113,113,0.08); border-color: var(--accent-red);    }
+        .callout.danger strong { color: var(--accent-red);    }
+        .callout.info   { background: rgba(96,165,250,0.08);  border-color: var(--accent-blue);   }
+        .callout.info   strong { color: var(--accent-blue);   }
+
+        /* ============================================================
+           CODE BLOCKS
+           ============================================================ */
+        pre {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 20px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+        code {
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.9;
+        }
+        pre code { color: var(--text-primary); }
+        p code, li code, td code, .callout code, h4 code {
+            background: var(--bg-tertiary);
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Syntax colours */
+        .kw   { color: var(--accent-purple); }
+        .str  { color: var(--accent-green);  }
+        .num  { color: var(--accent-orange); }
+        .cm   { color: var(--text-muted); font-style: italic; }
+        .fn   { color: var(--accent-blue);   }
+        .op   { color: var(--accent-pink);   }
+        .bool { color: var(--accent-orange); }
+        .out  { color: var(--accent-green);  }
+
+        /* ============================================================
+           TABLE
+           ============================================================ */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 0.92rem;
+        }
+        th {
+            background: var(--bg-tertiary);
+            text-align: left;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+        }
+        td {
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+        tr:hover td { background: rgba(52,211,153,0.03); }
+
+        /* ============================================================
+           INTERACTIVE PLAYGROUND
+           ============================================================ */
+        .playground {
+            background: var(--bg-code);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .playground-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 20px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border);
+        }
+        .playground-header span {
+            font-family: var(--font-code);
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+        .playground-dots { display: flex; gap: 6px; }
+        .playground-dots span { width: 12px; height: 12px; border-radius: 50%; }
+        .playground-dots span:nth-child(1) { background: #ff5f57; }
+        .playground-dots span:nth-child(2) { background: #febc2e; }
+        .playground-dots span:nth-child(3) { background: #28c840; }
+
+        .playground-body { display: flex; flex-direction: column; }
+        @media (min-width: 640px) { .playground-body { flex-direction: row; } }
+
+        .playground-code {
+            flex: 1;
+            padding: 20px;
+            border-right: 1px solid var(--border);
+            min-height: 180px;
+        }
+        .playground-code textarea {
+            width: 100%;
+            height: 100%;
+            min-height: 160px;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            line-height: 1.9;
+            resize: vertical;
+            outline: none;
+            tab-size: 4;
+        }
+        .playground-output { 
+            flex: 1; 
+            padding: 20px; 
+            min-height: 180px; 
+            display: flex;
+            flex-direction: column;
+        }
+        .playground-output-label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        
+        .playground-preview {
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            margin-bottom: 12px;
+            flex-grow: 1;
+            color: var(--text-primary);
+        }
+        /* Playground interior styles */
+        .demo-box {
+            padding: 16px;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            transition: all 0.3s ease;
+        }
+        .demo-highlight {
+            border-color: var(--accent-green) !important;
+            background: rgba(52,211,153,0.1) !important;
+        }
+        .demo-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .playground-log pre { background: transparent; border: none; padding: 0; margin: 0; }
+        .playground-log code { color: var(--accent-green); white-space: pre-wrap; font-size: 0.8rem; }
+        .playground-log code.error { color: var(--accent-red); }
+
+        .btn-run {
+            padding: 8px 20px;
+            background: var(--accent-green);
+            color: #111;
+            border: none;
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-run:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-run:active { transform: translateY(0); }
+
+        .btn-reset {
+            padding: 8px 14px;
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: var(--font-body);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-left: 8px;
+        }
+        .btn-reset:hover { border-color: var(--border-hover); color: var(--text-secondary); }
+
+        /* ============================================================
+           FOOTER
+           ============================================================ */
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ====================================================
+         HERO
+         ==================================================== -->
+    <header class="hero">
+        <div class="hero-badge">Lesson 12 — Interactive Reference</div>
+        <h1>DOM &amp; Basic Events</h1>
+        <p>Learn how to map HTML into JavaScript to manipulate elements, change styles, and respond to user interactions in real time.</p>
+        <div class="hero-pills">
+            <span class="hero-pill">🔍 Selection</span>
+            <span class="hero-pill">✏️ Manipulation</span>
+            <span class="hero-pill">🎨 Styling & Classes</span>
+            <span class="hero-pill">🖱️ Events</span>
+        </div>
+    </header>
+
+    <!-- ====================================================
+         NAVIGATION
+         ==================================================== -->
+    <nav class="nav-tabs" id="navTabs">
+        <div class="nav-tab active"  data-section="selection">🔍 Selection</div>
+        <div class="nav-tab"         data-section="manipulation">✏️ Manipulation</div>
+        <div class="nav-tab"         data-section="events">🖱️ Events</div>
+        <div class="nav-tab"         data-section="playground">🎮 Playground</div>
+    </nav>
+
+    <main class="container">
+
+        <!-- ====================================================
+             SECTION 1: SELECTION
+             ==================================================== -->
+        <div class="section active" id="selection">
+            <div class="card">
+                <h3><span class="emoji">🔍</span> Selecting Elements</h3>
+                <p>Before you can change an element, you need to grab it. JavaScript provides multiple ways to select nodes in the DOM tree.</p>
+                <div class="callout tip">
+                    <strong>💡 Pro tip:</strong> <code>querySelector</code> and <code>querySelectorAll</code> are the modern standard. They take any CSS selector (like <code>.class</code> or <code>#id</code>)!
+                </div>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🎯</span> Try Selection</h3>
+                <p>Use <code>document.getElementById()</code> or <code>document.querySelector()</code> to target elements in the preview box.</p>
+
+                <div class="playground" id="pg-select">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>select-elements.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-select')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-select')">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-select" spellcheck="false">// We have a box with ID 'target-box' in the preview.
+const box = document.getElementById('target-box');
+
+// Let's modify it!
+box.style.border = '2px solid #34d399';
+box.style.backgroundColor = 'rgba(52,211,153,0.1)';
+console.log('Selected box:', box);
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Live Preview</div>
+                            <div class="playground-preview">
+                                <div id="target-box" class="demo-box">I am `#target-box`.</div>
+                            </div>
+                            <div class="playground-log"><pre><code id="output-pg-select">Console Output...</code></pre></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 2: MANIPULATION
+             ==================================================== -->
+        <div class="section" id="manipulation">
+            <div class="card">
+                <h3><span class="emoji">✏️</span> Manipulating Content & Styles</h3>
+                <p>Once you select an element, you can change its text (<code>textContent</code>), HTML contents (<code>innerHTML</code>), or its CSS classes (<code>classList</code>).</p>
+                
+                <table>
+                    <thead><tr><th>Property / Method</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>element.textContent = 'Hi'</code></td><td>Changes exact text inside the element. (Safe from XSS)</td></tr>
+                        <tr><td><code>element.innerHTML = '&lt;b&gt;Hi&lt;/b&gt;'</code></td><td>Changes inner HTML structure. (Use cautiously)</td></tr>
+                        <tr><td><code>element.classList.add('active')</code></td><td>Adds a CSS class to the element.</td></tr>
+                        <tr><td><code>element.classList.toggle('dark')</code></td><td>Toggles a CSS class off and on.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">🎨</span> Changing Classes</h3>
+                <p>It's generally better to toggle <strong>classes</strong> rather than directly modifying <code>element.style</code> properties.</p>
+
+                <div class="playground" id="pg-manipulate">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>manipulation.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-manipulate')">▶ Run</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-manipulate', true)">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-manipulate" spellcheck="false">const myBox = document.querySelector('#content-box');
+
+// Let's toggle a pre-existing CSS class
+myBox.classList.toggle('demo-highlight');
+
+// Let's change the text!
+myBox.textContent = 'Content was updated via JavaScript!';
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Live Preview</div>
+                            <div class="playground-preview">
+                                <div id="content-box" class="demo-box" data-default="Original text content here.">Original text content here.</div>
+                            </div>
+                            <div class="playground-log"><pre><code id="output-pg-manipulate">Console Output...</code></pre></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 3: EVENTS
+             ==================================================== -->
+        <div class="section" id="events">
+            <div class="card">
+                <h3><span class="emoji">🖱️</span> Event Listeners</h3>
+                <p>Events happen when the user interacts with the page (clicks, typing, hovering). We use <code>addEventListener</code> to execute functions when these events occur.</p>
+                
+                <pre><code>button.addEventListener('click', function(event) {
+    console.log('Button clicked!');
+});</code></pre>
+            </div>
+
+            <div class="card">
+                <h3><span class="emoji">⚡</span> Interactive Events</h3>
+
+                <div class="playground" id="pg-events">
+                    <div class="playground-header">
+                        <div class="playground-dots"><span></span><span></span><span></span></div>
+                        <span>events.js</span>
+                        <div>
+                            <button class="btn-run" onclick="runPlayground('pg-events')">▶ Run (Attach Listener)</button>
+                            <button class="btn-reset" onclick="resetPlayground('pg-events', true)">Reset</button>
+                        </div>
+                    </div>
+                    <div class="playground-body">
+                        <div class="playground-code">
+                            <textarea id="code-pg-events" spellcheck="false">const actionBtn = document.getElementById('action-btn');
+const eventBox = document.getElementById('event-box');
+
+// Remove existing listeners (playground cleanup)
+actionBtn.replaceWith(actionBtn.cloneNode(true));
+const cleanBtn = document.getElementById('action-btn');
+
+// Add a "click" event listener
+cleanBtn.addEventListener('click', function() {
+    eventBox.classList.toggle('demo-highlight');
+    console.log('Button was clicked, class toggled!');
+});
+</textarea>
+                        </div>
+                        <div class="playground-output">
+                            <div class="playground-output-label">Live Preview</div>
+                            <div class="playground-preview">
+                                <button id="action-btn" class="demo-btn">Click Me!</button>
+                                <div id="event-box" class="demo-box" style="margin-top: 10px;" data-default="Watch me change!">Watch me change!</div>
+                            </div>
+                            <div class="playground-log"><pre><code id="output-pg-events">Run the code, then click the preview button!</code></pre></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ====================================================
+             SECTION 4: PLAYGROUND
+             ==================================================== -->
+        <div class="section" id="playground">
+             <div class="card">
+                <h3><span class="emoji">🎮</span> Free Play</h3>
+                <p>Write whatever queries or operations you want.</p>
+            </div>
+
+            <div class="playground" id="pg-free">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>playground.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPlayground('pg-free')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPlayground('pg-free', true)">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-free" spellcheck="false">// Have fun manipulating #free-box or #free-btn!
+const box = document.querySelector('#free-box');
+const btn = document.querySelector('#free-btn');
+
+btn.addEventListener('click', () => {
+    box.innerHTML = '<strong>Magic! ✨</strong>';
+    box.style.borderColor = '#fbbf24';
+});
+</textarea>
+                    </div>
+                    <div class="playground-output" style="min-height:300px;">
+                        <div class="playground-output-label">Live Preview</div>
+                        <div class="playground-preview">
+                            <button id="free-btn" class="demo-btn">Action Button</button>
+                            <div id="free-box" class="demo-box" style="margin-top: 10px;" data-default="Empty Box">Empty Box</div>
+                        </div>
+                        <div class="playground-log"><pre><code id="output-pg-free">Console Output...</code></pre></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="footer">
+        <p>Lesson 12 — Software Dev 2026 &nbsp;|&nbsp; DOM Manipulation & Events &nbsp;|&nbsp; Open <code>examples/app.js</code> to follow along</p>
+    </footer>
+
+    <script>
+        /* ========================================================
+           TAB NAVIGATION
+           ======================================================== */
+        const tabs     = document.querySelectorAll('.nav-tab');
+        const sections = document.querySelectorAll('.section');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                sections.forEach(s => s.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.section).classList.add('active');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        });
+
+        /* ========================================================
+           PLAYGROUND RUNNER
+           ======================================================== */
+        const defaults = {};
+
+        document.querySelectorAll('.playground').forEach(pg => {
+            const id   = pg.id;
+            const ta   = pg.querySelector('textarea');
+            defaults[id] = ta.value;
+        });
+
+        function runPlayground(id) {
+            const ta  = document.getElementById('code-' + id);
+            const out = document.getElementById('output-' + id);
+            const logs = [];
+
+            const origLog = console.log;
+            console.log = (...args) => {
+                logs.push(args.map(a => {
+                    if (a instanceof HTMLElement) {
+                        return `<${a.tagName.toLowerCase()} id="${a.id}" class="${a.className}">`;
+                    }
+                    if (typeof a === 'object' && a !== null) {
+                        try { return JSON.stringify(a); } catch { return String(a); }
+                    }
+                    return String(a);
+                }).join(' '));
+                origLog(...args);
+            };
+
+            try {
+                // eslint-disable-next-line no-new-func
+                new Function(ta.value)();
+                if(logs.length) {
+                    out.textContent = logs.join('\n');
+                } else {
+                    out.textContent = '(Executed successfully, no console output)';
+                }
+                out.className   = '';
+            } catch (err) {
+                out.textContent = '❌ ' + err.toString();
+                out.className   = 'error';
+            } finally {
+                console.log = origLog;
+            }
+        }
+
+        function resetPlayground(id, domReset = false) {
+            const ta  = document.getElementById('code-' + id);
+            const out = document.getElementById('output-' + id);
+            ta.value  = defaults[id];
+            out.textContent = 'Console Output...';
+            out.className   = '';
+
+            if (domReset) {
+                // Reset standard demo boxes in the playground
+                const pg = document.getElementById(id);
+                pg.querySelectorAll('.demo-box').forEach(box => {
+                    box.className = 'demo-box';
+                    box.style = '';
+                    if (box.dataset.default) box.innerHTML = box.dataset.default;
+                });
+                pg.querySelectorAll('.demo-btn').forEach(btn => {
+                     // Cloning removes event listeners
+                    const clone = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(clone, btn);
+                });
+            } else {
+                // Basic inline style reset for the select example
+                const pg = document.getElementById(id);
+                pg.querySelectorAll('.demo-box').forEach(box => {
+                    box.style = '';
+                    box.className = 'demo-box';
+                });
+            }
+        }
+    </script>
+</body>
+</html>
