@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Arrays, Objects & ES6+ — Interactive Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg-primary:   #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary:  #242842;
+            --bg-card:      #1e2235;
+            --bg-code:      #151825;
+            --border:       #2d3154;
+            --border-hover: #4f5899;
+            --text-primary:   #e8eaf0;
+            --text-secondary: #9da3b4;
+            --text-muted:     #6b7280;
+            --accent-blue:   #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-green:  #34d399;
+            --accent-orange: #fb923c;
+            --accent-red:    #f87171;
+            --accent-yellow: #fbbf24;
+            --accent-cyan:   #22d3ee;
+            --accent-pink:   #f472b6;
+            --gradient-hero: linear-gradient(135deg, #34d399 0%, #3b82f6 50%, #a855f7 100%);
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-code: 'JetBrains Mono', 'Fira Code', monospace;
+            --radius:    12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 0 30px rgba(52,211,153,0.12);
+        }
+
+        body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; overflow-x: hidden; }
+
+        /* HERO */
+        .hero { text-align: center; padding: 80px 24px 60px; background: radial-gradient(ellipse at 50% 0%, rgba(52,211,153,0.1) 0%, transparent 60%); position: relative; }
+        .hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gradient-hero); }
+        .hero-badge { display:inline-block; background:rgba(52,211,153,0.12); color:var(--accent-green); padding:6px 16px; border-radius:20px; font-size:0.85rem; font-weight:600; margin-bottom:16px; border:1px solid rgba(52,211,153,0.25); }
+        .hero h1 { font-size:clamp(2rem,5vw,3.2rem); font-weight:800; background:var(--gradient-hero); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:12px; }
+        .hero p { color:var(--text-secondary); font-size:1.1rem; max-width:680px; margin:0 auto 32px; }
+        .hero-pills { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+        .hero-pill { padding:6px 16px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:20px; font-size:0.82rem; color:var(--text-secondary); }
+
+        /* NAVIGATION */
+        .nav-tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:0 24px 48px; max-width:960px; margin:0 auto; }
+        .nav-tab { padding:10px 20px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:24px; color:var(--text-secondary); font-size:0.9rem; font-weight:500; cursor:pointer; transition:all 0.25s; user-select:none; }
+        .nav-tab:hover { border-color:var(--border-hover); color:var(--text-primary); background:var(--bg-tertiary); }
+        .nav-tab.active { background:rgba(52,211,153,0.15); border-color:var(--accent-green); color:var(--accent-green); font-weight:600; }
+
+        /* LAYOUT */
+        .container { max-width:960px; margin:0 auto; padding:0 24px 80px; }
+        .section { display:none; animation:fadeIn 0.4s ease; }
+        .section.active { display:block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+        /* CARDS */
+        .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:28px; margin-bottom:24px; transition:border-color 0.3s, box-shadow 0.3s; }
+        .card:hover { border-color:var(--border-hover); box-shadow:var(--shadow-glow); }
+        .card h3 { font-size:1.2rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:10px; }
+        .card p, .card li { color:var(--text-secondary); font-size:0.95rem; line-height:1.8; }
+        .card ul { padding-left:20px; margin-top:8px; }
+        .card ul li { margin-bottom:6px; }
+        .card h4 { font-size:1rem; margin:16px 0 8px; color:var(--text-primary); }
+
+        /* CALLOUTS */
+        .callout { padding:16px 20px; border-radius:var(--radius-sm); border-left:4px solid; margin:16px 0; font-size:0.92rem; color:var(--text-secondary); }
+        .callout.tip    { background:rgba(52,211,153,0.08);  border-color:var(--accent-green);  }
+        .callout.warn   { background:rgba(251,191,36,0.08);  border-color:var(--accent-yellow); }
+        .callout.danger { background:rgba(248,113,113,0.08); border-color:var(--accent-red);    }
+        .callout.info   { background:rgba(96,165,250,0.08);  border-color:var(--accent-blue);   }
+        .callout strong { font-weight:700; }
+        .callout.tip    strong { color:var(--accent-green); }
+        .callout.warn   strong { color:var(--accent-yellow); }
+        .callout.danger strong { color:var(--accent-red); }
+        .callout.info   strong { color:var(--accent-blue); }
+
+        /* CODE */
+        pre { background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius-sm); padding:20px; overflow-x:auto; margin:16px 0; }
+        code { font-family:var(--font-code); font-size:0.88rem; line-height:1.9; }
+        pre code { color:var(--text-primary); }
+        p code, li code, td code, .callout code { background:var(--bg-tertiary); padding:2px 7px; border-radius:4px; font-size:0.85rem; color:var(--accent-cyan); }
+        .kw { color:var(--accent-purple); } .str { color:var(--accent-green); } .num { color:var(--accent-orange); }
+        .cm { color:var(--text-muted); font-style:italic; } .fn { color:var(--accent-blue); } .op { color:var(--accent-pink); }
+
+        /* TABLE */
+        table { width:100%; border-collapse:collapse; margin:16px 0; font-size:0.92rem; }
+        th { background:var(--bg-tertiary); text-align:left; padding:12px 16px; font-weight:600; color:var(--text-primary); border-bottom:2px solid var(--border); }
+        td { padding:10px 16px; border-bottom:1px solid var(--border); color:var(--text-secondary); }
+        tr:hover td { background:rgba(52,211,153,0.03); }
+
+        /* PLAYGROUND */
+        .playground { background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+        .playground-header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:var(--bg-tertiary); border-bottom:1px solid var(--border); }
+        .playground-header span { font-family:var(--font-code); font-size:0.82rem; color:var(--text-muted); }
+        .playground-dots { display:flex; gap:6px; }
+        .playground-dots span { width:12px; height:12px; border-radius:50%; }
+        .playground-dots span:nth-child(1) { background:#ff5f57; }
+        .playground-dots span:nth-child(2) { background:#febc2e; }
+        .playground-dots span:nth-child(3) { background:#28c840; }
+        .playground-body { display:flex; flex-direction:column; }
+        @media(min-width:640px) { .playground-body { flex-direction:row; } }
+        .playground-code { flex:1; padding:20px; border-right:1px solid var(--border); min-height:180px; }
+        .playground-code textarea { width:100%; height:100%; min-height:160px; background:transparent; border:none; color:var(--text-primary); font-family:var(--font-code); font-size:0.88rem; line-height:1.9; resize:vertical; outline:none; tab-size:4; }
+        .playground-output { flex:1; padding:20px; min-height:180px; }
+        .playground-output-label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
+        .playground-output pre { background:transparent; border:none; padding:0; margin:0; }
+        .playground-output code { color:var(--accent-green); white-space:pre-wrap; }
+        .playground-output code.error { color:var(--accent-red); }
+        .btn-run { padding:8px 20px; background:var(--accent-green); color:#111; border:none; border-radius:6px; font-family:var(--font-body); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s; gap:6px; }
+        .btn-run:hover { opacity:0.88; transform:translateY(-1px); }
+        .btn-reset { padding:8px 14px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-family:var(--font-body); font-size:0.8rem; cursor:pointer; transition:all 0.2s; margin-left:8px; }
+        .btn-reset:hover { border-color:var(--border-hover); color:var(--text-secondary); }
+
+        /* VISUAL INDEX DIAGRAM */
+        .index-diagram { display:flex; align-items:flex-start; gap:2px; margin:20px 0; overflow-x:auto; padding-bottom:8px; }
+        .index-cell { display:flex; flex-direction:column; align-items:center; min-width:80px; }
+        .index-value { padding:12px 8px; background:var(--bg-tertiary); border:2px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-code); font-size:0.88rem; color:var(--accent-green); width:100%; text-align:center; }
+        .index-num { margin-top:6px; font-size:0.75rem; font-family:var(--font-code); color:var(--accent-purple); font-weight:700; }
+        .index-label { font-size:0.68rem; color:var(--text-muted); margin-top:2px; }
+        .index-bracket { font-size:1.5rem; color:var(--text-muted); padding-top:8px; font-weight:300; }
+
+        /* OBJECT KV DIAGRAM */
+        .kv-diagram { display:grid; gap:8px; margin:20px 0; }
+        .kv-row { display:flex; align-items:center; gap:12px; }
+        .kv-key { padding:10px 16px; background:rgba(96,165,250,0.1); border:1px solid rgba(96,165,250,0.3); border-radius:var(--radius-sm); font-family:var(--font-code); font-size:0.85rem; color:var(--accent-blue); min-width:120px; text-align:right; }
+        .kv-arrow { color:var(--text-muted); font-size:1.2rem; }
+        .kv-val { padding:10px 16px; background:rgba(52,211,153,0.08); border:1px solid rgba(52,211,153,0.25); border-radius:var(--radius-sm); font-family:var(--font-code); font-size:0.85rem; color:var(--accent-green); flex:1; }
+
+        /* SIDE-BY-SIDE COMPARISON */
+        .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin:16px 0; }
+        @media(max-width:600px) { .two-col { grid-template-columns:1fr; } }
+        .two-col-item { background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius-sm); padding:16px; }
+        .two-col-item .col-label { font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:1px; margin-bottom:10px; }
+        .two-col-item.old .col-label { color:var(--accent-red); }
+        .two-col-item.new .col-label { color:var(--accent-green); }
+        .two-col-item.old { border-color:rgba(248,113,113,0.25); }
+        .two-col-item.new { border-color:rgba(52,211,153,0.25); }
+        .two-col-item pre { background:transparent; border:none; padding:0; margin:0; }
+
+        /* QUIZ */
+        .quiz-question { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin:16px 0; }
+        .quiz-question h4 { font-size:1rem; margin-bottom:14px; color:var(--accent-cyan); line-height:1.6; }
+        .quiz-options { display:flex; flex-direction:column; gap:10px; }
+        .quiz-option { padding:12px 18px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-code); font-size:0.88rem; color:var(--text-secondary); transition:all 0.2s; text-align:left; }
+        .quiz-option:hover { border-color:var(--border-hover); color:var(--text-primary); }
+        .quiz-option.correct { border-color:var(--accent-green); background:rgba(52,211,153,0.1); color:var(--accent-green); }
+        .quiz-option.wrong   { border-color:var(--accent-red);   background:rgba(248,113,113,0.1); color:var(--accent-red); }
+        .quiz-option.disabled { pointer-events:none; }
+        .quiz-feedback { margin-top:12px; padding:12px 16px; border-radius:var(--radius-sm); font-size:0.9rem; display:none; }
+        .quiz-feedback.show { display:block; }
+        .quiz-feedback.correct { background:rgba(52,211,153,0.1); color:var(--accent-green); }
+        .quiz-feedback.wrong   { background:rgba(248,113,113,0.1); color:var(--accent-red); }
+        .quiz-score { text-align:center; margin-top:24px; padding:24px; background:var(--bg-secondary); border-radius:var(--radius); border:1px solid var(--border); display:none; }
+        .quiz-score.show { display:block; }
+        .quiz-score h3 { font-size:2.4rem; color:var(--accent-green); margin-bottom:8px; }
+        .quiz-score p { color:var(--text-secondary); }
+
+        /* FOOTER */
+        .footer { text-align:center; padding:40px 24px; border-top:1px solid var(--border); color:var(--text-muted); font-size:0.85rem; }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="hero-badge">Lesson 13 — Interactive Reference</div>
+    <h1>Arrays, Objects & ES6+</h1>
+    <p>Master structured data storage and write clean, modern JavaScript. Every concept has a live editor — run, break things, and learn.</p>
+    <div class="hero-pills">
+        <span class="hero-pill">📚 Arrays</span>
+        <span class="hero-pill">🗂️ Objects</span>
+        <span class="hero-pill">📦 Arrays of Objects</span>
+        <span class="hero-pill">🔄 Map & Filter</span>
+        <span class="hero-pill">✨ ES6+</span>
+    </div>
+</header>
+
+<nav class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-section="arrays">📚 Arrays</div>
+    <div class="nav-tab" data-section="objects">🗂️ Objects</div>
+    <div class="nav-tab" data-section="arrays-of-objects">📦 Arrays of Objects</div>
+    <div class="nav-tab" data-section="map-filter">🔄 Map & Filter</div>
+    <div class="nav-tab" data-section="es6">✨ ES6+</div>
+    <div class="nav-tab" data-section="playground">🎮 Playground</div>
+    <div class="nav-tab" data-section="quiz">📝 Quiz</div>
+</nav>
+
+<main class="container">
+
+    <!-- ================================================
+         SECTION 1: ARRAYS
+         ================================================ -->
+    <div class="section active" id="arrays">
+        <div class="card">
+            <h3>📚 What is an Array?</h3>
+            <p>An array is a <strong>single variable that holds a list of values</strong>. Instead of creating dozens of separate variables, one array can hold an unlimited number of items — all accessible through a single name.</p>
+            <div class="callout warn">
+                <strong>⚠️ Zero-Indexed:</strong> JavaScript always starts counting at <code>0</code>, not <code>1</code>. The first item is at index <code>[0]</code>, the second at <code>[1]</code>, and so on.
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔬 Visual: How Array Indexes Work</h3>
+            <p>Every item has an exact numbered position — its <strong>index</strong>. Think of it like seat numbers on a bus that start from seat 0.</p>
+            <div class="index-diagram">
+                <div class="index-bracket">[</div>
+                <div class="index-cell">
+                    <div class="index-value">"Alice"</div>
+                    <div class="index-num">0</div>
+                    <div class="index-label">students[0]</div>
+                </div>
+                <div class="index-cell">
+                    <div class="index-value">"Bob"</div>
+                    <div class="index-num">1</div>
+                    <div class="index-label">students[1]</div>
+                </div>
+                <div class="index-cell">
+                    <div class="index-value">"Carol"</div>
+                    <div class="index-num">2</div>
+                    <div class="index-label">students[2]</div>
+                </div>
+                <div class="index-cell">
+                    <div class="index-value">"David"</div>
+                    <div class="index-num">3</div>
+                    <div class="index-label">students[3]</div>
+                </div>
+                <div class="index-bracket">]</div>
+            </div>
+            <p style="color:var(--text-muted); font-size:0.88rem;">Length = 4 &nbsp;|&nbsp; Last item = index <code>length - 1</code> = index <code>3</code></p>
+        </div>
+
+        <div class="card">
+            <h3>⚙️ Core Array Methods</h3>
+            <table>
+                <thead><tr><th>Method</th><th>Action</th><th>Mutates Original?</th></tr></thead>
+                <tbody>
+                    <tr><td><code>.push(x)</code></td><td>Add <code>x</code> to the end</td><td>✅ Yes</td></tr>
+                    <tr><td><code>.pop()</code></td><td>Remove & return last item</td><td>✅ Yes</td></tr>
+                    <tr><td><code>.unshift(x)</code></td><td>Add <code>x</code> to the start</td><td>✅ Yes</td></tr>
+                    <tr><td><code>.shift()</code></td><td>Remove & return first item</td><td>✅ Yes</td></tr>
+                    <tr><td><code>.map(fn)</code></td><td>Transform every item → new array</td><td>❌ No</td></tr>
+                    <tr><td><code>.filter(fn)</code></td><td>Keep matching items → new array</td><td>❌ No</td></tr>
+                </tbody>
+            </table>
+
+            <div class="playground" id="pg-arrays">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>arrays-basics.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-arrays')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-arrays')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-arrays" spellcheck="false">const students = ["Alice", "Bob", "Carol"];
+
+// Zero-indexed access
+console.log("First:", students[0]);
+console.log("Last:", students[students.length - 1]);
+console.log("Doesn't exist:", students[10]);
+
+// Adding & removing
+students.push("Diana");
+console.log("After push:", students);
+
+let removed = students.pop();
+console.log("pop() returned:", removed);
+console.log("Array after pop:", students);
+
+// TASK: Try students.unshift("Zara") and log the result
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-arrays">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 2: OBJECTS
+         ================================================ -->
+    <div class="section" id="objects">
+        <div class="card">
+            <h3>🗂️ What is an Object?</h3>
+            <p>An object stores data as <strong>key-value pairs</strong>. Instead of using numbers to find data (like arrays), you use <strong>descriptive names</strong> (keys). This makes data self-describing and far easier to read.</p>
+            <div class="callout tip">
+                <strong>💡 Analogy:</strong> An array is like a shoebox where items are numbered by position. An object is like a labelled filing system — each drawer has a name like "Name", "Age", "Email".
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔬 Visual: Key-Value Structure</h3>
+            <p>Each property is a pair — a key (the label) maps to a value (the data):</p>
+            <div class="kv-diagram">
+                <div class="kv-row">
+                    <div class="kv-key">"name"</div>
+                    <div class="kv-arrow">→</div>
+                    <div class="kv-val">"Alex"   (string)</div>
+                </div>
+                <div class="kv-row">
+                    <div class="kv-key">"age"</div>
+                    <div class="kv-arrow">→</div>
+                    <div class="kv-val">28   (number)</div>
+                </div>
+                <div class="kv-row">
+                    <div class="kv-key">"isSubscribed"</div>
+                    <div class="kv-arrow">→</div>
+                    <div class="kv-val">true   (boolean)</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔑 Dot Notation vs Bracket Notation</h3>
+            <p>You have <strong>two ways</strong> to access data from an object. Knowing when to use each is critical.</p>
+            <table>
+                <thead><tr><th>Notation</th><th>Syntax</th><th>Use When</th></tr></thead>
+                <tbody>
+                    <tr><td><strong>Dot</strong></td><td><code>user.name</code></td><td>Key name is known and fixed (95% of cases)</td></tr>
+                    <tr><td><strong>Bracket</strong></td><td><code>user["name"]</code> or <code>user[var]</code></td><td>Key is stored in a variable or has special characters</td></tr>
+                </tbody>
+            </table>
+
+            <div class="playground" id="pg-objects">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>objects-notation.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-objects')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-objects')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-objects" spellcheck="false">const user = {
+    name: "Alex",
+    age: 28,
+    isSubscribed: true
+};
+
+// Dot notation (standard)
+console.log("Name:", user.name);
+
+// Bracket notation (key as string)
+console.log("Age:", user["age"]);
+
+// Bracket notation with a variable — THIS is its main use-case
+const propToFind = "isSubscribed";
+console.log("Dynamic access:", user[propToFind]);
+
+// What happens with a typo or missing key?
+console.log("Missing key:", user.salary); // undefined — no crash!
+
+// Update a property
+user.age = 29;
+// Add a new property
+user.city = "Lagos";
+console.log("Updated user:", JSON.stringify(user));
+
+// TASK: Delete user.city using the 'delete' operator, then log user
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-objects">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 3: ARRAYS OF OBJECTS
+         ================================================ -->
+    <div class="section" id="arrays-of-objects">
+        <div class="card">
+            <h3>📦 Arrays of Objects — The Real-World Pattern</h3>
+            <p>In real applications, data almost always arrives as an <strong>array of objects</strong>. Think of it like a spreadsheet: the array is the table, and each object is a row with named columns.</p>
+            <div class="callout info">
+                <strong>📡 Real world:</strong> Every API response you'll ever work with — Twitter feeds, weather data, product lists, user databases — is an array of objects. Mastering this pattern is essential.
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔬 Reading Data from an Array of Objects</h3>
+            <p>Combine array index syntax with object dot notation: <code>arr[index].property</code></p>
+
+            <div class="playground" id="pg-arr-obj">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>arrays-of-objects.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-arr-obj')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-arr-obj')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-arr-obj" spellcheck="false">const employees = [
+    { id: 1, name: "Alice",   dept: "Engineering", salary: 80000 },
+    { id: 2, name: "Bob",     dept: "Design",       salary: 65000 },
+    { id: 3, name: "Charlie", dept: "Engineering",  salary: 90000 },
+    { id: 4, name: "Diana",   dept: "Marketing",    salary: 72000 },
+];
+
+// Access: array index, then object dot notation
+console.log("First employee:", employees[0].name);    // "Alice"
+console.log("Bob's salary:", employees[1].salary);    // 65000
+
+// Loop through all employees
+console.log("--- All Employees ---");
+for (let emp of employees) {
+    console.log(`${emp.name} (${emp.dept}): £${emp.salary}`);
+}
+
+// TASK: Log only the names of employees in the "Engineering" dept
+// Hint: Use a for...of loop with an if condition
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-arr-obj">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔄 Filtering & Mapping Arrays of Objects</h3>
+            <p>The real power of <code>.filter()</code> and <code>.map()</code> becomes clear when working with structured data.</p>
+
+            <div class="playground" id="pg-arr-obj2">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>filter-map-objects.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-arr-obj2')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-arr-obj2')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-arr-obj2" spellcheck="false">const products = [
+    { name: "Laptop",  category: "Tech",     price: 800, inStock: true  },
+    { name: "T-Shirt", category: "Clothing", price: 25,  inStock: true  },
+    { name: "Phone",   category: "Tech",     price: 600, inStock: false },
+    { name: "Jacket",  category: "Clothing", price: 80,  inStock: true  },
+];
+
+// Filter: only Tech products that are in stock
+const techInStock = products.filter(p => p.category === "Tech" && p.inStock);
+console.log("Tech (in stock):", JSON.stringify(techInStock));
+
+// Map: extract just names from those filtered results
+const techNames = techInStock.map(p => p.name);
+console.log("Tech names:", techNames);
+
+// Chain filter + map in ONE expression
+const result = products
+    .filter(p => p.price < 100)
+    .map(p => `${p.name}: £${p.price}`);
+console.log("Under £100:", result);
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-arr-obj2">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 4: MAP & FILTER
+         ================================================ -->
+    <div class="section" id="map-filter">
+        <div class="card">
+            <h3>🔄 Higher-Order Array Methods</h3>
+            <p>These methods accept a <strong>function as an argument</strong> (called a callback) and apply it to every item in the array. They are the modern, readable replacement for manual <code>for</code> loops when processing data.</p>
+            <div class="callout danger">
+                <strong>⚠️ Key Rule:</strong> Both <code>.map()</code> and <code>.filter()</code> ALWAYS return a <strong>brand new array</strong>. They never change the original.
+            </div>
+
+            <table>
+                <thead><tr><th>Method</th><th>What it does</th><th>Returns</th></tr></thead>
+                <tbody>
+                    <tr><td><code>.map(fn)</code></td><td>Transforms every item</td><td>New array of same length</td></tr>
+                    <tr><td><code>.filter(fn)</code></td><td>Keeps only items where fn returns true</td><td>New array, possibly shorter</td></tr>
+                    <tr><td><code>.forEach(fn)</code></td><td>Runs fn for each item (side-effects only)</td><td><code>undefined</code> — use for logging, not data</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card">
+            <h3>🏭 <code>.map()</code> — The Assembly Line</h3>
+            <div class="playground" id="pg-map">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>map-method.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-map')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-map')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-map" spellcheck="false">const prices = [10, 20, 30, 40];
+
+// .map() transforms EVERY item — same length always
+const withTax = prices.map(price => price * 1.2);
+
+console.log("Original:", prices);   // Unchanged!
+console.log("With tax:", withTax);  // New array
+
+// The callback receives each item in turn
+// "For each price in prices, return price * 1.2"
+
+// TASK 1: Use .map() to create a 'doubled' array (every item x2)
+// TASK 2: Use .map() to convert every number to a string like "£10"
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-map">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="callout warn">
+                <strong>⚠️ Most common map mistake:</strong> Using curly braces but forgetting <code>return</code>.<br>
+                <code>prices.map(p =&gt; &#123; p * 1.2 &#125;)</code> → returns <code>[undefined, undefined, ...]</code><br>
+                <code>prices.map(p =&gt; p * 1.2)</code> → returns <code>[12, 24, 36, 48]</code> ✅
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🚪 <code>.filter()</code> — The Bouncer</h3>
+            <div class="playground" id="pg-filter">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>filter-method.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-filter')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-filter')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-filter" spellcheck="false">const scores = [45, 80, 95, 60, 72, 88];
+
+// .filter() keeps items where callback returns true
+const passed = scores.filter(score => score >= 70);
+const failed = scores.filter(score => score < 70);
+
+console.log("All scores:", scores);  // Original unchanged
+console.log("Passed:", passed);
+console.log("Failed:", failed);
+
+// Chaining: passed scores formatted as strings
+const report = scores
+    .filter(s => s >= 70)
+    .map(s => `${s}/100 ✅`);
+
+console.log("Report:", report);
+
+// TASK: Filter scores to find those EXACTLY equal to 95 or 80
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-filter">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 5: ES6+
+         ================================================ -->
+    <div class="section" id="es6">
+        <div class="card">
+            <h3>✨ Why ES6+ Matters</h3>
+            <p>ES6 (released 2015) modernised JavaScript. These three features alone will make your code dramatically more readable, concise, and professional. Every JavaScript developer uses them daily.</p>
+        </div>
+
+        <div class="card">
+            <h3>A. Template Literals — No More String Pasting</h3>
+            <p>Use <strong>backticks</strong> (the key above Tab) and <code>${}</code> to embed variables directly in strings.</p>
+            <div class="two-col">
+                <div class="two-col-item old">
+                    <div class="col-label">❌ Old Way (confusing)</div>
+                    <pre><code><span class="kw">const</span> n = <span class="str">"Sarah"</span>;
+<span class="kw">const</span> s = <span class="num">95</span>;
+console.<span class="fn">log</span>(
+  <span class="str">"Hello "</span> <span class="op">+</span> n
+  <span class="op">+</span> <span class="str">", score: "</span>
+  <span class="op">+</span> s <span class="op">+</span> <span class="str">"/100"</span>
+);</code></pre>
+                </div>
+                <div class="two-col-item new">
+                    <div class="col-label">✅ Template Literal</div>
+                    <pre><code><span class="kw">const</span> n = <span class="str">"Sarah"</span>;
+<span class="kw">const</span> s = <span class="num">95</span>;
+console.<span class="fn">log</span>(
+  <span class="str">`Hello ${n}, score: ${s}/100`</span>
+);</code></pre>
+                </div>
+            </div>
+            <div class="playground" id="pg-template">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>template-literals.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-template')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-template')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-template" spellcheck="false">const student = "Sarah";
+const score = 95;
+const grade = score >= 70 ? "Pass" : "Fail";
+
+// You can put ANY expression inside ${}
+console.log(`Student: ${student}`);
+console.log(`Score: ${score}/100 — ${grade}`);
+console.log(`Result: ${score >= 90 ? "Distinction" : "Standard pass"}`);
+
+// TASK: Create a product object { name, price } and use a template
+// literal to log: "Product: [name] costs £[price]"
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-template">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>B. Arrow Functions — Concise Function Syntax</h3>
+            <p>Arrow functions replace the <code>function</code> keyword. When the body is a single expression, curly braces <em>and</em> <code>return</code> can both be dropped.</p>
+            <div class="two-col">
+                <div class="two-col-item old">
+                    <div class="col-label">❌ Old (verbose)</div>
+                    <pre><code><span class="kw">function</span> <span class="fn">double</span>(n) {
+  <span class="kw">return</span> n <span class="op">*</span> <span class="num">2</span>;
+}</code></pre>
+                </div>
+                <div class="two-col-item new">
+                    <div class="col-label">✅ Arrow (concise)</div>
+                    <pre><code><span class="kw">const</span> <span class="fn">double</span> = n <span class="op">=></span> n <span class="op">*</span> <span class="num">2</span>;
+
+<span class="cm">// With two params:</span>
+<span class="kw">const</span> <span class="fn">add</span> = (a, b) <span class="op">=></span> a <span class="op">+</span> b;</code></pre>
+                </div>
+            </div>
+            <div class="playground" id="pg-arrow">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>arrow-functions.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-arrow')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-arrow')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-arrow" spellcheck="false">// All four do EXACTLY the same thing:
+function doubleA(n) { return n * 2; }              // Traditional
+const doubleB = function(n) { return n * 2; };     // Expression
+const doubleC = (n) => { return n * 2; };          // Arrow, explicit return
+const doubleD = n => n * 2;                        // Arrow, implicit return
+
+console.log(doubleA(5), doubleB(5), doubleC(5), doubleD(5));
+
+// Arrow functions shine inside .map() and .filter():
+const numbers = [1, 2, 3, 4, 5];
+const evens = numbers.filter(n => n % 2 === 0);
+const squared = numbers.map(n => n ** 2);
+
+console.log("Evens:", evens);
+console.log("Squared:", squared);
+
+// ⚠️ THE TRAP — this returns [undefined, undefined, ...]
+// const wrong = numbers.map(n => { n * 2 });
+// console.log("Wrong:", wrong); // Uncomment to see!
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-arrow">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>C. Destructuring — Unpack Values Instantly</h3>
+            <p>Destructuring lets you extract multiple values from an object or array in a single, readable line.</p>
+            <div class="two-col">
+                <div class="two-col-item old">
+                    <div class="col-label">❌ Old (repetitive)</div>
+                    <pre><code><span class="kw">const</span> title = product.title;
+<span class="kw">const</span> price = product.price;
+<span class="kw">const</span> brand = product.brand;</code></pre>
+                </div>
+                <div class="two-col-item new">
+                    <div class="col-label">✅ Destructuring (one line)</div>
+                    <pre><code><span class="kw">const</span> { title, price, brand }
+  = product;</code></pre>
+                </div>
+            </div>
+            <div class="playground" id="pg-destruct">
+                <div class="playground-header">
+                    <div class="playground-dots"><span></span><span></span><span></span></div>
+                    <span>destructuring.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-destruct')">▶ Run</button>
+                        <button class="btn-reset" onclick="resetPG('pg-destruct')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-destruct" spellcheck="false">const product = { title: "Laptop", price: 999, brand: "TechCo", inStock: true };
+
+// Object destructuring
+const { title, price, brand } = product;
+console.log(`${brand} ${title}: £${price}`);
+
+// Destructuring in function parameters (very common!)
+function describeProduct({ title, price, inStock }) {
+    const status = inStock ? "✅ In Stock" : "❌ Out of Stock";
+    return `${title} — £${price} — ${status}`;
+}
+console.log(describeProduct(product));
+
+// Destructuring inside .map()
+const inventory = [
+    { name: "Phone", price: 600 },
+    { name: "Tablet", price: 400 },
+];
+const labels = inventory.map(({ name, price }) => `${name}: £${price}`);
+console.log(labels);
+
+// TASK: Add a 'category' property to product and destructure ALL four
+</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Console Output</div>
+                        <pre><code id="output-pg-destruct">Click ▶ Run to see output…</code></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 6: PLAYGROUND
+         ================================================ -->
+    <div class="section" id="playground">
+        <div class="card">
+            <h3>🎮 Free Practice Playground</h3>
+            <p>Experiment freely. The suggestions below are designed to test everything from this lesson together.</p>
+            <div class="callout tip">
+                <strong>💡 Try this:</strong> Build an array of 3 student objects (name, grade, passed). Use <code>.filter()</code> for passing students. Chain <code>.map()</code> to get a template literal for each. Log the result.
+            </div>
+        </div>
+        <div class="playground" id="pg-free">
+            <div class="playground-header">
+                <div class="playground-dots"><span></span><span></span><span></span></div>
+                <span>free-playground.js</span>
+                <div>
+                    <button class="btn-run" onclick="runPG('pg-free')">▶ Run</button>
+                    <button class="btn-reset" onclick="resetPG('pg-free')">Reset</button>
+                </div>
+            </div>
+            <div class="playground-body">
+                <div class="playground-code">
+                    <textarea id="code-pg-free" spellcheck="false">// Your code here — try combining everything from this lesson!
+const students = [
+    { name: "Alice", grade: 85, passed: true },
+    { name: "Bob",   grade: 52, passed: false },
+    { name: "Carol", grade: 91, passed: true },
+];
+
+// Step 1: Filter passing students
+// Step 2: Map to a readable string using destructuring + template literals
+// Step 3: Log the result
+
+const report = students
+    .filter(s => s.passed)
+    .map(({ name, grade }) => `${name}: ${grade}/100 ✅`);
+
+console.log(report);
+</textarea>
+                </div>
+                <div class="playground-output" style="min-height:300px;">
+                    <div class="playground-output-label">Console Output</div>
+                    <pre><code id="output-pg-free">Click ▶ Run to see output…</code></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================================================
+         SECTION 7: QUIZ
+         ================================================ -->
+    <div class="section" id="quiz">
+        <div class="card">
+            <h3>📝 Test Your Understanding</h3>
+            <p>7 questions covering everything from this lesson. Answer each one — you get instant feedback and a final score.</p>
+        </div>
+
+        <div class="quiz-question" id="q1">
+            <h4>Q1. You have <code>const fruits = ["Apple", "Banana", "Cherry"]</code>. What does <code>fruits[2]</code> return?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q1',false)">"Apple"</button>
+                <button class="quiz-option" onclick="answer(this,'q1',false)">"Banana"</button>
+                <button class="quiz-option" onclick="answer(this,'q1',true)">"Cherry"</button>
+                <button class="quiz-option" onclick="answer(this,'q1',false)">undefined</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-question" id="q2">
+            <h4>Q2. You have <code>const arr = [1, 2, 3]</code>. You run <code>arr.push(4)</code>. What is <code>arr</code> now?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q2',false)">[4, 1, 2, 3]</button>
+                <button class="quiz-option" onclick="answer(this,'q2',true)">[1, 2, 3, 4]</button>
+                <button class="quiz-option" onclick="answer(this,'q2',false)">[1, 2, 3] — const prevents changes</button>
+                <button class="quiz-option" onclick="answer(this,'q2',false)">A TypeError is thrown</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-question" id="q3">
+            <h4>Q3. <code>const user = { name: "Sam", role: "Admin" }; const key = "role"; console.log(user.key);</code> — What prints?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q3',false)">"Admin"</button>
+                <button class="quiz-option" onclick="answer(this,'q3',true)">undefined</button>
+                <button class="quiz-option" onclick="answer(this,'q3',false)">"role"</button>
+                <button class="quiz-option" onclick="answer(this,'q3',false)">A ReferenceError</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-question" id="q4">
+            <h4>Q4. What does <code>[1,2,3,4].filter(n => n > 2)</code> return?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q4',false)">[1, 2]</button>
+                <button class="quiz-option" onclick="answer(this,'q4',true)">[3, 4]</button>
+                <button class="quiz-option" onclick="answer(this,'q4',false)">[1, 2, 3, 4] — original is unchanged</button>
+                <button class="quiz-option" onclick="answer(this,'q4',false)">2</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+
+        <div class="quiz-question" id="q5">
+            <h4>Q5. <code>[1,2,3].map(n => { n * 2 })</code> — What does this return?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q5',false)">[2, 4, 6]</button>
+                <button class="quiz-option" onclick="answer(this,'q5',true)">[undefined, undefined, undefined]</button>
+                <button class="quiz-option" onclick="answer(this,'q5',false)">A SyntaxError</button>
+                <button class="quiz-option" onclick="answer(this,'q5',false)">[1, 2, 3]</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+
+        <div class="quiz-question" id="q6">
+            <h4>Q6. <code>const { name, age } = { name: "Jo", age: 30, city: "Abuja" };</code> — What value does <code>age</code> have?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q6',false)">undefined — you didn't destructure city too</button>
+                <button class="quiz-option" onclick="answer(this,'q6',false)">"Abuja"</button>
+                <button class="quiz-option" onclick="answer(this,'q6',true)">30</button>
+                <button class="quiz-option" onclick="answer(this,'q6',false)">A SyntaxError — you must destructure all keys</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q6"></div>
+        </div>
+
+        <div class="quiz-question" id="q7">
+            <h4>Q7. You have an array of product objects. In one chained expression, how do you get the <em>names</em> of only the in-stock products?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" onclick="answer(this,'q7',false)"><code>products.map(p => p.inStock).filter(p => p.name)</code></button>
+                <button class="quiz-option" onclick="answer(this,'q7',true)"><code>products.filter(p => p.inStock).map(p => p.name)</code></button>
+                <button class="quiz-option" onclick="answer(this,'q7',false)"><code>products.filter(p => p.name).map(p => p.inStock)</code></button>
+                <button class="quiz-option" onclick="answer(this,'q7',false)"><code>products.map(p => p.name).filter(p => p.inStock)</code></button>
+            </div>
+            <div class="quiz-feedback" id="fb-q7"></div>
+        </div>
+
+        <div class="quiz-score" id="quizScore">
+            <h3 id="scoreDisplay">0 / 7</h3>
+            <p id="scoreMsg"></p>
+        </div>
+    </div>
+
+</main>
+
+<footer class="footer">
+    <p>Lesson 13 — Software Dev 2026 &nbsp;|&nbsp; Arrays, Objects & ES6+ &nbsp;|&nbsp; Open <code>examples/script.js</code> to follow along</p>
+</footer>
+
+<script>
+    /* TAB NAVIGATION */
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.section).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+
+    /* PLAYGROUND ENGINE */
+    const pgDefaults = {};
+    document.querySelectorAll('.playground').forEach(pg => {
+        const ta = pg.querySelector('textarea');
+        if (ta) pgDefaults[pg.id] = ta.value;
+    });
+
+    function runPG(id) {
+        const ta = document.getElementById('code-' + id);
+        const out = document.getElementById('output-' + id);
+        const logs = [];
+        const orig = console.log;
+        console.log = (...args) => {
+            logs.push(args.map(a => {
+                if (typeof a === 'object' && a !== null) {
+                    try { return JSON.stringify(a); } catch { return String(a); }
+                }
+                return String(a);
+            }).join(' '));
+            orig(...args);
+        };
+        try {
+            new Function(ta.value)();
+            out.textContent = logs.length ? logs.join('\n') : '(no output)';
+            out.className = '';
+        } catch(e) {
+            out.textContent = '❌ ' + e.toString();
+            out.className = 'error';
+        } finally {
+            console.log = orig;
+        }
+    }
+
+    function resetPG(id) {
+        const ta = document.getElementById('code-' + id);
+        const out = document.getElementById('output-' + id);
+        if (pgDefaults[id]) ta.value = pgDefaults[id];
+        out.textContent = 'Click ▶ Run to see output…';
+        out.className = '';
+    }
+
+    /* QUIZ ENGINE */
+    const feedbacks = {
+        q1: { correct: '✅ Correct! Arrays are zero-indexed. Index 0 = "Apple", Index 1 = "Banana", Index 2 = "Cherry".', wrong: '❌ Remember: JS starts counting at 0. So index 2 is the third item — "Cherry".' },
+        q2: { correct: '✅ Correct! .push() adds to the end. const only prevents reassigning the variable, NOT mutation of the array contents.', wrong: '❌ .push() adds to the END of the array. And const arrays CAN be mutated — const only prevents arr = [] reassignment.' },
+        q3: { correct: '✅ Correct! user.key looks for a property LITERALLY called "key" — which doesn\'t exist. To use the variable, you need user[key] (bracket notation).', wrong: '❌ Dot notation does NOT evaluate variables. user.key looks for a property named "key". To access using the variable, use user[key] — bracket notation.' },
+        q4: { correct: '✅ Correct! .filter() keeps only items where the callback returns true. 3 > 2 is true, 4 > 2 is true. 1 and 2 are excluded.', wrong: '❌ .filter(n => n > 2) keeps items that are GREATER than 2. That\'s 3 and 4.' },
+        q5: { correct: '✅ Exactly right! Curly braces without a return keyword means the function returns undefined. Every item maps to undefined. Avoid this — drop the braces or add return.', wrong: '❌ Curly braces in an arrow function body require an explicit return. Without it, the function returns undefined. So the result is [undefined, undefined, undefined].' },
+        q6: { correct: '✅ Correct! Destructuring extracts only the properties you name. You don\'t have to destructure ALL keys — just the ones you want. age = 30.', wrong: '❌ Destructuring doesn\'t require you to extract every key. { name, age } correctly pulls out those two values. age = 30.' },
+        q7: { correct: '✅ Correct! You must filter FIRST (to get only in-stock items) THEN map (to extract just the names). Doing it the other way around would map first — giving you a list of names — and then try to filter names by inStock (which wouldn\'t work).', wrong: '❌ Order matters when chaining! You must filter() first (select the objects that are inStock), THEN map() to extract the name from THOSE selected objects.' }
+    };
+
+    let answered = {}, correctCount = 0;
+    const total = 7;
+
+    function answer(btn, qId, isCorrect) {
+        if (answered[qId]) return;
+        answered[qId] = true;
+        if (isCorrect) correctCount++;
+        btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+        btn.classList.add(isCorrect ? 'correct' : 'wrong');
+        const fb = document.getElementById('fb-' + qId);
+        fb.textContent = feedbacks[qId][isCorrect ? 'correct' : 'wrong'];
+        fb.className = `quiz-feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+        if (Object.keys(answered).length === total) {
+            const sc = document.getElementById('quizScore');
+            sc.classList.add('show');
+            document.getElementById('scoreDisplay').textContent = `${correctCount} / ${total}`;
+            const pct = Math.round((correctCount / total) * 100);
+            document.getElementById('scoreMsg').textContent = pct === 100 ? '🏆 Perfect! You have mastered Lesson 13.' : pct >= 71 ? '✅ Great work! Review any questions you got wrong.' : '📖 Good effort. Revisit the sections for missed questions and try again.';
+            sc.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+</script>
+</body>
+</html>

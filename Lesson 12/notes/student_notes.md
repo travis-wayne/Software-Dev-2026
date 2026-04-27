@@ -105,7 +105,7 @@ const img  = document.querySelector('img');
 const link = document.querySelector('#main-link');
 
 // Reading an attribute
-console.log(img.getAttribute('src'));    // e.g., "photo.jpg"
+console.log(img.getAttribute('src'));    // e.g., "photo.jpg" ./images/dom-events.png
 
 // Setting / updating an attribute
 img.setAttribute('alt', 'A photo of a sunset');

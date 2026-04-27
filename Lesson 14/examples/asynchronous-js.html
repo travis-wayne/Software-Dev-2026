@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asynchronous JS & Fetch — Interactive Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary:   #0f1117;
+            --bg-secondary: #1a1d2e;
+            --bg-tertiary:  #242842;
+            --bg-card:      #1e2235;
+            --bg-code:      #151825;
+            --border:       #2d3154;
+            --border-hover: #4f5899;
+            --text-primary:   #e8eaf0;
+            --text-secondary: #9da3b4;
+            --text-muted:     #6b7280;
+            --accent-blue:   #60a5fa;
+            --accent-purple: #a78bfa;
+            --accent-green:  #34d399;
+            --accent-orange: #fb923c;
+            --accent-red:    #f87171;
+            --accent-cyan:   #22d3ee;
+            --gradient-hero: linear-gradient(135deg, #a78bfa 0%, #60a5fa 50%, #34d399 100%);
+            --font-body: 'Inter', system-ui, sans-serif;
+            --font-code: 'JetBrains Mono', monospace;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow-glow: 0 0 30px rgba(167, 139, 250, 0.12);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: var(--font-body); background: var(--bg-primary); color: var(--text-primary); line-height: 1.7; overflow-x: hidden; }
+
+        /* HERO */
+        .hero { text-align: center; padding: 80px 24px 60px; background: radial-gradient(ellipse at 50% 0%, rgba(167, 139, 250, 0.1) 0%, transparent 60%); position: relative; }
+        .hero::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gradient-hero); }
+        .hero-badge { display:inline-block; background:rgba(167,139,250,0.12); color:var(--accent-purple); padding:6px 16px; border-radius:20px; font-size:0.85rem; font-weight:600; margin-bottom:16px; border:1px solid rgba(167,139,250,0.25); }
+        .hero h1 { font-size:clamp(2rem,5vw,3.2rem); font-weight:800; background:var(--gradient-hero); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:12px; }
+        .hero p { color:var(--text-secondary); font-size:1.1rem; max-width:680px; margin:0 auto 32px; }
+
+        /* NAVIGATION */
+        .nav-tabs { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; padding:0 24px 48px; max-width:1000px; margin:0 auto; }
+        .nav-tab { padding:10px 20px; background:var(--bg-secondary); border:1px solid var(--border); border-radius:24px; color:var(--text-secondary); font-size:0.9rem; font-weight:500; cursor:pointer; transition:all 0.25s; user-select:none; }
+        .nav-tab:hover { border-color:var(--border-hover); color:var(--text-primary); background:var(--bg-tertiary); }
+        .nav-tab.active { background:rgba(167,139,250,0.15); border-color:var(--accent-purple); color:var(--accent-purple); font-weight:600; }
+
+        /* LAYOUT */
+        .container { max-width:1000px; margin:0 auto; padding:0 24px 80px; }
+        .section { display:none; animation:fadeIn 0.4s ease; }
+        .section.active { display:block; }
+        @keyframes fadeIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+
+        /* CARDS */
+        .card { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:28px; margin-bottom:24px; transition:border-color 0.3s, box-shadow 0.3s; }
+        .card:hover { border-color:var(--border-hover); box-shadow:var(--shadow-glow); }
+        .card h3 { font-size:1.2rem; font-weight:700; margin-bottom:14px; display:flex; align-items:center; gap:10px; color: var(--accent-cyan); }
+        .card p { color:var(--text-secondary); font-size:0.95rem; margin-bottom: 16px; }
+
+        /* CALLOUTS */
+        .callout { padding:16px 20px; border-radius:var(--radius-sm); border-left:4px solid; margin:16px 0; font-size:0.92rem; color:var(--text-secondary); }
+        .callout.tip    { background:rgba(52,211,153,0.08);  border-color:var(--accent-green);  }
+        .callout.warn   { background:rgba(251,191,36,0.08);  border-color:var(--accent-orange); }
+        .callout.info   { background:rgba(96,165,250,0.08);  border-color:var(--accent-blue);   }
+        .callout.danger { background:rgba(248,113,113,0.08); border-color:var(--accent-red);    }
+        .callout strong { font-weight:700; }
+        .callout.tip strong    { color:var(--accent-green); }
+        .callout.warn strong   { color:var(--accent-orange); }
+        .callout.danger strong { color:var(--accent-red); }
+        .callout.info strong   { color:var(--accent-blue); }
+
+        /* TABLES */
+        table { width:100%; border-collapse:collapse; margin:16px 0; font-size:0.92rem; }
+        th { background:var(--bg-tertiary); text-align:left; padding:11px 16px; font-weight:600; color:var(--text-primary); border-bottom:2px solid var(--border); }
+        td { padding:10px 16px; border-bottom:1px solid var(--border); color:var(--text-secondary); vertical-align:top; }
+        tr:hover td { background:rgba(167,139,250,0.03); }
+        td code, th code { background:var(--bg-secondary); padding:2px 7px; border-radius:4px; font-size:0.84rem; color:var(--accent-cyan); font-family:var(--font-code); }
+
+        /* PLAYGROUND */
+        .playground { background:var(--bg-code); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; margin:20px 0; }
+        .playground-header { display:flex; align-items:center; justify-content:space-between; padding:12px 20px; background:var(--bg-tertiary); border-bottom:1px solid var(--border); }
+        .playground-header span { font-family:var(--font-code); font-size:0.82rem; color:var(--text-muted); }
+        .playground-body { display:flex; flex-direction:column; }
+        @media(min-width:640px) { .playground-body { flex-direction:row; } }
+        .playground-code { flex:1.2; padding:20px; border-right:1px solid var(--border); min-height:220px; }
+        .playground-code textarea { width:100%; height:100%; min-height:200px; background:transparent; border:none; color:var(--text-primary); font-family:var(--font-code); font-size:0.88rem; line-height:1.9; resize:vertical; outline:none; tab-size:4; }
+        .playground-output { flex:1; padding:20px; background: #0a0c10; display: flex; flex-direction: column; }
+        .playground-output-label { font-size:0.75rem; font-weight:600; text-transform:uppercase; letter-spacing:1px; color:var(--text-muted); margin-bottom:10px; }
+        .playground-log { flex: 1; overflow-y: auto; font-family: var(--font-code); font-size: 0.85rem; }
+        .playground-log .entry { margin-bottom: 4px; border-bottom: 1px solid #1a1d2e; padding-bottom: 4px; }
+        .entry.log { color: var(--accent-blue); }
+        .entry.error { color: var(--accent-red); font-weight: bold; }
+        .entry.success { color: var(--accent-green); }
+
+        .btn-run { padding:8px 20px; background:var(--accent-purple); color:#000; border:none; border-radius:6px; font-family:var(--font-body); font-size:0.85rem; font-weight:700; cursor:pointer; transition:all 0.2s; }
+        .btn-run:hover { opacity:0.88; transform:translateY(-1px); }
+        .btn-reset { padding:8px 14px; background:transparent; color:var(--text-muted); border:1px solid var(--border); border-radius:6px; font-family:var(--font-body); font-size:0.8rem; cursor:pointer; transition:all 0.2s; margin-left:8px; }
+
+        /* VISUAL: PROMISE STATES */
+        .promise-visual { display: flex; justify-content: space-between; align-items: center; margin: 40px 0; position: relative; }
+        .promise-node { width: 100px; height: 100px; border-radius: 50%; border: 2px dashed var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--text-muted); text-align: center; background: var(--bg-secondary); z-index: 2; transition: all 0.5s; }
+        .promise-node.active { border-style: solid; border-color: var(--accent-purple); color: var(--text-primary); box-shadow: 0 0 20px rgba(167, 139, 250, 0.3); transform: scale(1.1); }
+        .promise-node.success { border-color: var(--accent-green); color: var(--accent-green); box-shadow: 0 0 20px rgba(52, 211, 153, 0.2); }
+        .promise-node.error { border-color: var(--accent-red); color: var(--accent-red); box-shadow: 0 0 20px rgba(248, 113, 113, 0.2); }
+        .promise-line { position: absolute; height: 2px; background: var(--border); width: 100%; top: 50%; left: 0; z-index: 1; }
+        .promise-line-fill { position: absolute; height: 2px; background: var(--accent-purple); width: 0%; top: 50%; left: 0; z-index: 1; transition: width 1s; }
+
+        /* QUIZ */
+        .quiz-question { background:var(--bg-card); border:1px solid var(--border); border-radius:var(--radius); padding:24px; margin:16px 0; }
+        .quiz-question h4 { font-size:1rem; margin-bottom:14px; color:var(--accent-cyan); line-height:1.6; }
+        .quiz-options { display:flex; flex-direction:column; gap:10px; }
+        .quiz-option { padding:12px 18px; background:var(--bg-tertiary); border:1px solid var(--border); border-radius:var(--radius-sm); cursor:pointer; font-family:var(--font-code); font-size:0.88rem; color:var(--text-secondary); transition:all 0.2s; text-align:left; }
+        .quiz-option:hover { border-color:var(--border-hover); color:var(--text-primary); }
+        .quiz-option.correct { border-color:var(--accent-green); background:rgba(52,211,153,0.1); color:var(--accent-green); }
+        .quiz-option.wrong   { border-color:var(--accent-red);   background:rgba(248,113,113,0.1); color:var(--accent-red); }
+        .quiz-feedback { margin-top:12px; padding:12px 16px; border-radius:var(--radius-sm); font-size:0.9rem; display:none; }
+        .quiz-feedback.show { display:block; }
+        .quiz-feedback.correct { background:rgba(52,211,153,0.1); color:var(--accent-green); }
+        .quiz-feedback.wrong   { background:rgba(248,113,113,0.1); color:var(--accent-red); }
+        .quiz-score { text-align:center; margin-top:24px; padding:24px; background:var(--bg-secondary); border-radius:var(--radius); border:1px solid var(--border); display:none; }
+        .quiz-score h3 { font-size:2.4rem; color:var(--accent-green); margin-bottom:8px; }
+        .quiz-score p  { color:var(--text-secondary); }
+
+        footer { text-align:center; padding:40px 24px; border-top:1px solid var(--border); color:var(--text-muted); font-size:0.85rem; }
+    </style>
+</head>
+<body>
+
+<header class="hero">
+    <div class="hero-badge">Lesson 14 — Asynchronous JavaScript</div>
+    <h1>Promises, Async/Await & Fetch</h1>
+    <p>Master the power of non-blocking code. Learn how to fetch real-world data and handle operations that take time without freezing the browser.</p>
+</header>
+
+<nav class="nav-tabs" id="navTabs">
+    <div class="nav-tab active" data-section="intro">⏱️ Blocking vs Async</div>
+    <div class="nav-tab" data-section="promises">📦 Promises</div>
+    <div class="nav-tab" data-section="async-await">✨ Async/Await</div>
+    <div class="nav-tab" data-section="fetch">📡 Fetch API</div>
+    <div class="nav-tab" data-section="playground">🎮 Playground</div>
+    <div class="nav-tab" data-section="quiz">📝 Quiz</div>
+</nav>
+
+<main class="container">
+
+    <!-- BLOCKING VS ASYNC -->
+    <div class="section active" id="intro">
+        <div class="card">
+            <h3>⏱️ The Blocking Problem</h3>
+            <p>JavaScript is <strong>single-threaded</strong>. If a task (like a massive calculation or waiting for a server) blocks the main thread, the entire browser freezes. Users can't scroll, click, or type.</p>
+            <div class="callout warn">
+                <strong>Try it:</strong> Click the "Run Blocking" button below. Notice how the console logs "Done" only after the loop finishes. In a real app, the UI would be dead during this time.
+            </div>
+            
+            <div class="playground" id="pg-blocking">
+                <div class="playground-header">
+                    <span>blocking-demo.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-blocking')">▶ Run Blocking</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-blocking" spellcheck="false">console.log("1. Script Start");
+
+// Simulate a task that takes 2 seconds
+const start = Date.now();
+while (Date.now() - start < 2000) {
+    // Blocking the main thread...
+}
+
+console.log("2. Heavy Loop Done");
+console.log("3. Script End");</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Execution Log</div>
+                        <div class="playground-log" id="log-pg-blocking"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🏃 The Asynchronous Solution</h3>
+            <p>Instead of waiting, we use <strong>callbacks</strong> or <strong>Promises</strong> to handle time-consuming tasks in the background.</p>
+            <div class="playground" id="pg-async-intro">
+                <div class="playground-header">
+                    <span>async-solution.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-async-intro')">▶ Run Asynchronous</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-async-intro" spellcheck="false">console.log("1. Script Start");
+
+// This runs in the background!
+setTimeout(() => {
+    console.log("2. Async Task Done (2s later)");
+}, 2000);
+
+console.log("3. Script End (Instant)");</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Execution Log</div>
+                        <div class="playground-log" id="log-pg-async-intro"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PROMISES -->
+    <div class="section" id="promises">
+        <div class="card">
+            <h3>📦 Understanding Promises</h3>
+            <p>A Promise is like a pager at a restaurant. You are promised food. While you wait, the promise is <strong>Pending</strong>. Eventually, it is either <strong>Fulfilled</strong> (success) or <strong>Rejected</strong> (failure).</p>
+            
+            <div class="promise-visual" id="promise-v">
+                <div class="promise-line"></div>
+                <div class="promise-line-fill" id="v-line"></div>
+                <div class="promise-node active" id="v-pending">PENDING<br><small>Waiting...</small></div>
+                <div class="promise-node" id="v-success">FULFILLED<br><small>Success!</small></div>
+                <div class="promise-node" id="v-error">REJECTED<br><small>Failed!</small></div>
+            </div>
+
+            <div class="playground" id="pg-promise">
+                <div class="playground-header">
+                    <span>promise-basics.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPromiseDemo()">▶ Test Promise</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-promise" spellcheck="false">const myPromise = new Promise((resolve, reject) => {
+    const success = Math.random() > 0.5; // 50/50 chance
+    
+    setTimeout(() => {
+        if (success) resolve("Great success! 🎉");
+        else reject("Oops, failure... ❌");
+    }, 2000);
+});
+
+myPromise
+    .then(data => console.log(data))
+    .catch(err => console.error(err));</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Promise Console</div>
+                        <div class="playground-log" id="log-pg-promise"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>🔗 Consuming a Promise: <code>.then()</code> / <code>.catch()</code> / <code>.finally()</code></h3>
+            <p>Once you have a Promise, you consume it with these chained methods. The key rule: <strong>each method returns a new Promise</strong>, so you chain them flat — no nesting.</p>
+            <table>
+                <thead><tr><th>Method</th><th>Runs when</th><th>Receives</th></tr></thead>
+                <tbody>
+                    <tr><td><code>.then(fn)</code></td><td>Promise is <strong>Fulfilled</strong></td><td>The resolved value</td></tr>
+                    <tr><td><code>.catch(fn)</code></td><td>Promise is <strong>Rejected</strong></td><td>The rejection reason / error</td></tr>
+                    <tr><td><code>.finally(fn)</code></td><td>Always — success or failure</td><td>Nothing (no argument)</td></tr>
+                </tbody>
+            </table>
+            <div class="callout tip">
+                <strong>💡 Tip:</strong> <code>.finally()</code> is perfect for cleanup — hiding a loading spinner regardless of whether the request succeeded or failed.
+            </div>
+            <pre><code><span class="fn">fetch</span>(<span class="str">'https://api.example.com/data'</span>)
+    .<span class="fn">then</span>(response <span class="op">=></span> response.<span class="fn">json</span>())
+    .<span class="fn">then</span>(data <span class="op">=></span> console.<span class="fn">log</span>(data))
+    .<span class="fn">catch</span>(err <span class="op">=></span> console.<span class="fn">error</span>(<span class="str">'Failed:'</span>, err))
+    .<span class="fn">finally</span>(() <span class="op">=></span> hideLoadingSpinner());</code></pre>
+        </div>
+    </div>
+
+    <!-- ASYNC / AWAIT -->
+    <div class="section" id="async-await">
+        <div class="card">
+            <h3>✨ Async/Await: The Modern Standard</h3>
+            <p>Promises are powerful but can get messy with <code>.then()</code> nesting. <code>async/await</code> allows you to write async code that looks like regular synchronous code.</p>
+            <div class="callout info">
+                <strong>Tip:</strong> Always use <code>try...catch</code> to handle errors when using <code>await</code>.
+            </div>
+
+            <div class="playground" id="pg-async-await">
+                <div class="playground-header">
+                    <span>modern-async.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-async-await')">▶ Run Async/Await</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-async-await" spellcheck="false">async function processData() {
+    try {
+        console.log("Fetching user...");
+        
+        // Wait for 1.5 seconds manually
+        await new Promise(r => setTimeout(r, 1500));
+        
+        console.log("User: Travis Wayne ✅");
+    } catch (err) {
+        console.error("Error happened!");
+    } finally {
+        console.log("Done.");
+    }
+}
+
+processData();</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">Output</div>
+                        <div class="playground-log" id="log-pg-async-await"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FETCH API -->
+    <div class="section" id="fetch">
+        <div class="card">
+            <h3>📡 Fetch API: Getting Real Data</h3>
+            <p>The <code>fetch()</code> method makes an HTTP GET request and returns a Promise. It takes <strong>two awaits</strong> to get to the data.</p>
+            <div class="callout danger">
+                <strong>⚠️ Critical Gotcha:</strong> <code>fetch()</code> only <em>rejects</em> on a complete network failure (no internet, bad DNS). If the server replies with a <code>404</code> or <code>500</code>, the Promise still <strong>resolves</strong>. You MUST manually check <code>response.ok</code> to detect server errors.
+            </div>
+            <table>
+                <thead><tr><th>Step</th><th>Code</th><th>What it does</th></tr></thead>
+                <tbody>
+                    <tr><td>1</td><td><code>await fetch(url)</code></td><td>Gets the <code>Response</code> object (status + headers)</td></tr>
+                    <tr><td>1b</td><td><code>if (!response.ok) throw new Error(...)</code></td><td>Manually catch 4xx / 5xx errors</td></tr>
+                    <tr><td>2</td><td><code>await response.json()</code></td><td>Reads + parses the JSON body into a JS object</td></tr>
+                </tbody>
+            </table>
+            
+            <div class="playground" id="pg-fetch">
+                <div class="playground-header">
+                    <span>real-fetch.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-fetch')">▶ Fetch Data</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-fetch" spellcheck="false">async function getPost() {
+    try {
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts/1');
+        
+        if (!response.ok) throw new Error("Status: " + response.status);
+
+        const post = await response.json(); // Step 2: Parse JSON
+        
+        console.log("Title: " + post.title);
+        console.log("Body: " + post.body.substring(0, 50) + "...");
+    } catch (err) {
+        console.error("Fetch failed: " + err.message);
+    }
+}
+
+getPost();</textarea>
+                    </div>
+                    <div class="playground-output">
+                        <div class="playground-output-label">API Result</div>
+                        <div class="playground-log" id="log-pg-fetch"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PLAYGROUND -->
+    <div class="section" id="playground">
+        <div class="card">
+            <h3>🎮 Free Practice Playground</h3>
+            <p>Try to fetch a random user from <code>https://jsonplaceholder.typicode.com/users/1</code> and log their name and email.</p>
+            
+            <div class="playground" id="pg-free">
+                <div class="playground-header">
+                    <span>playground.js</span>
+                    <div>
+                        <button class="btn-run" onclick="runPG('pg-free')">▶ Run Code</button>
+                        <button class="btn-reset" onclick="resetPG('pg-free')">Reset</button>
+                    </div>
+                </div>
+                <div class="playground-body">
+                    <div class="playground-code">
+                        <textarea id="code-pg-free" spellcheck="false">// Write any async code here!
+async function challenge() {
+    const res = await fetch('https://jsonplaceholder.typicode.com/users/2');
+    const user = await res.json();
+    console.log(`User: ${user.name} (${user.email})`);
+}
+
+challenge();</textarea>
+                    </div>
+                    <div class="playground-output" style="min-height:300px;">
+                        <div class="playground-output-label">Console</div>
+                        <div class="playground-log" id="log-pg-free"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- QUIZ -->
+    <div class="section" id="quiz">
+        <div class="card">
+            <h3>📝 Test Your Understanding</h3>
+            <p>7 questions covering async concepts, Promises, and the Fetch API. You get instant feedback and a final score.</p>
+        </div>
+
+        <div class="quiz-question" id="q1">
+            <h4>Q1. What happens when a heavy synchronous loop runs on the main thread?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q1')">JavaScript runs it in a Web Worker automatically</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q1')">The browser freezes — the user can't scroll, click, or type</button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q1')">The browser ignores it and moves on</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q1"></div>
+        </div>
+
+        <div class="quiz-question" id="q2">
+            <h4>Q2. What are the three states of a Promise?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q2')">Loading, Success, Failure</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q2')">Pending, Fulfilled, Rejected</button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q2')">Waiting, Resolved, Errored</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q2"></div>
+        </div>
+
+        <div class="quiz-question" id="q3">
+            <h4>Q3. You write <code>const data = fetch(url);</code> without <code>await</code>. What is <code>data</code>?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q3')">The JSON response from the server</button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q3')">undefined — fetch hasn't finished yet</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q3')">A Promise object — you forgot to await it</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q3"></div>
+        </div>
+
+        <div class="quiz-question" id="q4">
+            <h4>Q4. A server returns a 404 status. Does <code>fetch()</code> throw an error automatically?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q4')">Yes — any non-200 status rejects the Promise</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q4')">No — fetch only rejects on network failure. You must check <code>response.ok</code></button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q4')">Yes — but only for 404, not 500</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q4"></div>
+        </div>
+
+        <div class="quiz-question" id="q5">
+            <h4>Q5. How many <code>await</code> statements does a standard fetch-and-parse operation need?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q5')">One — for <code>fetch()</code></button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q5')">Two — one for <code>fetch()</code> and one for <code>response.json()</code></button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q5')">None — <code>fetch()</code> is synchronous</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q5"></div>
+        </div>
+
+        <div class="quiz-question" id="q6">
+            <h4>Q6. Where should you put error handling code when using <code>async/await</code>?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q6')">In a <code>.catch()</code> chain after the function call</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q6')">Inside a <code>try...catch</code> block within the async function</button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q6')">In a <code>.finally()</code> block — it runs on both success and failure</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q6"></div>
+        </div>
+
+        <div class="quiz-question" id="q7">
+            <h4>Q7. Does <code>await</code> block the entire browser while waiting?</h4>
+            <div class="quiz-options">
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q7')">Yes — the page freezes until the awaited promise resolves</button>
+                <button class="quiz-option" data-correct="true"  onclick="qAnswer(this,'q7')">No — it only pauses that specific async function; the rest of the browser stays responsive</button>
+                <button class="quiz-option" data-correct="false" onclick="qAnswer(this,'q7')">It depends on the browser</button>
+            </div>
+            <div class="quiz-feedback" id="fb-q7"></div>
+        </div>
+
+        <div class="quiz-score" id="quizScore">
+            <h3 id="scoreDisplay">0 / 7</h3>
+            <p id="scoreMsg"></p>
+        </div>
+    </div>
+
+</main>
+
+<footer>
+    <p>Lesson 14 — Software Dev 2026 &nbsp;|&nbsp; Asynchronous JS & Fetch &nbsp;|&nbsp; Travis Wayne Enterprise</p>
+</footer>
+
+<script>
+    /* TAB NAVIGATION */
+    document.querySelectorAll('.nav-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            tab.classList.add('active');
+            document.getElementById(tab.dataset.section).classList.add('active');
+        });
+    });
+
+    /* PLAYGROUND ENGINE */
+    const defaults = {};
+    document.querySelectorAll('textarea').forEach(ta => {
+        defaults[ta.id] = ta.value;
+    });
+
+    function runPG(id) {
+        const code = document.getElementById('code-' + id).value;
+        const log = document.getElementById('log-' + id);
+        log.innerHTML = '';
+
+        const addEntry = (text, cls) => {
+            const div = document.createElement('div');
+            div.className = 'entry ' + cls;
+            div.textContent = text;
+            log.appendChild(div);
+            log.scrollTop = log.scrollHeight;
+        };
+
+        const customConsole = {
+            log:   (...a) => addEntry('> ' + a.map(x => typeof x === 'object' ? JSON.stringify(x) : String(x)).join(' '), 'log'),
+            error: (...a) => addEntry('❌ ' + a.map(String).join(' '), 'error'),
+            warn:  (...a) => addEntry('⚠️ ' + a.map(String).join(' '), 'log'),
+        };
+
+        try {
+            // Wrap in async IIFE — supports await, fetch, and all async patterns
+            const fn = new Function('console', 'return (async () => {\n' + code + '\n})()');
+            addEntry('⏳ Running…', 'log');
+            fn(customConsole)
+                .then(() => {
+                    if (log.firstChild && log.firstChild.textContent === '⏳ Running…') log.firstChild.remove();
+                })
+                .catch(err => addEntry('❌ ' + err.message, 'error'));
+        } catch (err) {
+            addEntry('❌ ' + err.message, 'error');
+        }
+    }
+
+    function resetPG(id) {
+        const ta = document.getElementById('code-' + id);
+        if (defaults[ta.id]) ta.value = defaults[ta.id];
+        document.getElementById('log-' + id).innerHTML = '';
+    }
+
+    /* PROMISE VISUAL DEMO */
+    function runPromiseDemo() {
+        const log = document.getElementById('log-pg-promise');
+        const pending = document.getElementById('v-pending');
+        const success = document.getElementById('v-success');
+        const error = document.getElementById('v-error');
+        const lineFill = document.getElementById('v-line');
+
+        log.innerHTML = "";
+        pending.className = "promise-node active";
+        success.className = "promise-node";
+        error.className = "promise-node";
+        lineFill.style.width = "50%";
+
+        const code = document.getElementById('code-pg-promise').value;
+        
+        const customConsole = {
+            log: (msg) => {
+                const div = document.createElement('div');
+                div.className = "entry log";
+                div.textContent = "> " + msg;
+                log.appendChild(div);
+                pending.className = "promise-node";
+                success.className = "promise-node success active";
+                lineFill.style.width = "100%";
+                lineFill.style.background = "var(--accent-green)";
+            },
+            error: (msg) => {
+                const div = document.createElement('div');
+                div.className = "entry error";
+                div.textContent = "❌ " + msg;
+                log.appendChild(div);
+                pending.className = "promise-node";
+                error.className = "promise-node error active";
+                lineFill.style.width = "100%";
+                lineFill.style.background = "var(--accent-red)";
+            }
+        };
+
+        try {
+            const fn = new Function('console', code);
+            fn(customConsole);
+        } catch (err) {
+            customConsole.error(err.message);
+        }
+    }
+
+    /* QUIZ ENGINE */
+    const quizFeedbacks = {
+        q1: { correct: '✅ Correct! Synchronous JS runs on one thread. A blocking loop starves the event loop, making the page completely unresponsive.', wrong: '❌ JavaScript is single-threaded. A heavy loop blocks the call stack entirely — the browser cannot respond to anything else until it finishes.' },
+        q2: { correct: '✅ Correct! Every Promise starts Pending, then settles as either Fulfilled (success) or Rejected (failure).', wrong: '❌ The three official states are: Pending (waiting), Fulfilled (success), and Rejected (failure). These are the terms used in the specification.' },
+        q3: { correct: '✅ Exactly right! Without await, fetch() returns a Promise object immediately. The actual response is inside that promise — you need await to unwrap it.', wrong: '❌ Without await, fetch() returns a Promise object, not the data. This is the most common mistake with async/await — always await your promises.' },
+        q4: { correct: '✅ Correct! fetch() only rejects on a network-level failure (e.g. no internet). A 404 or 500 from the server still resolves — always check response.ok manually.', wrong: '❌ fetch() does NOT reject on HTTP errors like 404 or 500. It only rejects if the network itself fails. You must check response.ok to handle server errors.' },
+        q5: { correct: '✅ Correct! Step 1: await fetch(url) gets the Response headers. Step 2: await response.json() reads and parses the response body. Both are async.', wrong: '❌ You need two awaits. The first gets the Response object (headers only). The second — await response.json() — reads and parses the actual body, which is also async.' },
+        q6: { correct: '✅ Right! try...catch is the async/await equivalent of .catch(). Anything that throws inside the try block — including rejected awaits — is caught.', wrong: '❌ With async/await, error handling goes inside a try...catch block. .catch() is for .then() chains. .finally() runs cleanup code but does not catch errors.' },
+        q7: { correct: '✅ Correct! await only pauses the async function it is inside. The browser\'s event loop stays active — other events, animations, and interactions keep working.', wrong: '❌ await does NOT freeze the browser. It pauses only the async function, handing control back to the event loop. The page stays responsive while waiting.' }
+    };
+
+    let qAnswered = {}, qCorrect = 0;
+    const Q_TOTAL = 7;
+
+    function qAnswer(btn, qId) {
+        if (qAnswered[qId]) return;
+        qAnswered[qId] = true;
+        const isCorrect = btn.dataset.correct === 'true';
+        if (isCorrect) qCorrect++;
+        btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(o => {
+            o.disabled = true;
+            if (o.dataset.correct === 'true') o.classList.add('correct');
+        });
+        if (!isCorrect) btn.classList.add('wrong');
+        const fb = document.getElementById('fb-' + qId);
+        fb.textContent = quizFeedbacks[qId][isCorrect ? 'correct' : 'wrong'];
+        fb.className = 'quiz-feedback show ' + (isCorrect ? 'correct' : 'wrong');
+        if (Object.keys(qAnswered).length === Q_TOTAL) {
+            const sc = document.getElementById('quizScore');
+            sc.style.display = 'block';
+            document.getElementById('scoreDisplay').textContent = qCorrect + ' / ' + Q_TOTAL;
+            const pct = Math.round(qCorrect / Q_TOTAL * 100);
+            document.getElementById('scoreMsg').textContent = pct === 100 ? '🏆 Perfect! You have mastered Asynchronous JavaScript.' : pct >= 71 ? '✅ Great work! Review any questions you got wrong.' : '📖 Good effort — revisit the tabs for sections you missed, then try again.';
+            sc.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+</script>
+</body>
+</html>

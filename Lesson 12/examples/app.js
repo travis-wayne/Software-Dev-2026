@@ -11,6 +11,7 @@
 // actually exist before we try to select them. (Alternatively, just use <script defer>)
 
 document.addEventListener('DOMContentLoaded', () => {
+    
 
     console.log("DOM fully loaded and parsed!");
 

@@ -411,6 +411,47 @@
         .btn-reset:hover { border-color: var(--border-hover); color: var(--text-secondary); }
 
         /* ============================================================
+           QUIZ
+           ============================================================ */
+        .quiz-question {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 24px;
+            margin: 16px 0;
+        }
+        .quiz-question h4 { font-size: 1rem; margin-bottom: 14px; color: var(--accent-cyan); line-height: 1.6; }
+        .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+        .quiz-option {
+            padding: 12px 18px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: var(--font-code);
+            font-size: 0.88rem;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            text-align: left;
+        }
+        .quiz-option:hover { border-color: var(--border-hover); color: var(--text-primary); }
+        .quiz-option.correct { border-color: var(--accent-green); background: rgba(52,211,153,0.1); color: var(--accent-green); }
+        .quiz-option.wrong   { border-color: var(--accent-red);   background: rgba(248,113,113,0.1); color: var(--accent-red); }
+        .quiz-option.disabled { pointer-events: none; }
+        .quiz-feedback { margin-top: 12px; padding: 12px 16px; border-radius: var(--radius-sm); font-size: 0.9rem; display: none; }
+        .quiz-feedback.show { display: block; }
+        .quiz-feedback.correct { background: rgba(52,211,153,0.1); color: var(--accent-green); }
+        .quiz-feedback.wrong   { background: rgba(248,113,113,0.1); color: var(--accent-red); }
+        .quiz-score {
+            text-align: center; margin-top: 24px; padding: 24px;
+            background: var(--bg-secondary); border-radius: var(--radius);
+            border: 1px solid var(--border); display: none;
+        }
+        .quiz-score.show { display: block; }
+        .quiz-score h3 { font-size: 2.4rem; color: var(--accent-green); margin-bottom: 8px; }
+        .quiz-score p  { color: var(--text-secondary); }
+
+        /* ============================================================
            FOOTER
            ============================================================ */
         .footer {
@@ -438,6 +479,8 @@
             <span class="hero-pill">🖱️ Events</span>
         </div>
     </header>
+    <img src="./images/dom-events.png" alt="dom-events">
+    <a href="./dom-events.html"></a>
 
     <!-- ====================================================
          NAVIGATION
@@ -447,6 +490,7 @@
         <div class="nav-tab"         data-section="manipulation">✏️ Manipulation</div>
         <div class="nav-tab"         data-section="events">🖱️ Events</div>
         <div class="nav-tab"         data-section="playground">🎮 Playground</div>
+        <div class="nav-tab"         data-section="quiz">📝 Quiz</div>
     </nav>
 
     <main class="container">
@@ -650,6 +694,98 @@ btn.addEventListener('click', () => {
             </div>
         </div>
 
+        <!-- ====================================================
+             SECTION 5: QUIZ
+             ==================================================== -->
+        <div class="section" id="quiz">
+            <div class="card">
+                <h3><span class="emoji">📝</span> Test Your Understanding</h3>
+                <p>7 questions covering DOM selection, manipulation, events, and best practices. You get instant feedback on every answer plus a final score.</p>
+            </div>
+
+            <div class="quiz-question" id="q1">
+                <h4>Q1. Which method is considered the modern standard for selecting a single element by its CSS selector?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q1',false)">document.getElementById()</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q1',false)">document.getElementsByClassName()</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q1',true)">document.querySelector()</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q1',false)">document.getElement()</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q1"></div>
+            </div>
+
+            <div class="quiz-question" id="q2">
+                <h4>Q2. What is the correct way to safely change the visible text inside a &lt;p&gt; element called <code>para</code>?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q2',false)">para.innerHTML = 'Hello'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q2',true)">para.textContent = 'Hello'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q2',false)">para.value = 'Hello'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q2',false)">para.text = 'Hello'</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q2"></div>
+            </div>
+
+            <div class="quiz-question" id="q3">
+                <h4>Q3. You want to add a CSS class <code>'active'</code> to a button without removing any existing classes. Which method do you use?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q3',false)">btn.className = 'active'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q3',true)">btn.classList.add('active')</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q3',false)">btn.classList = 'active'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q3',false)">btn.style.class = 'active'</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q3"></div>
+            </div>
+
+            <div class="quiz-question" id="q4">
+                <h4>Q4. What does <code>element.classList.toggle('dark')</code> do?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q4',false)">Always adds the class 'dark'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q4',false)">Always removes the class 'dark'</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q4',true)">Adds 'dark' if it's absent; removes it if it's present</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q4',false)">Replaces all classes with just 'dark'</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q4"></div>
+            </div>
+
+            <div class="quiz-question" id="q5">
+                <h4>Q5. What is the preferred modern way to attach a click handler to a button?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q5',false)">&lt;button onclick="doSomething()"&gt;</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q5',true)">btn.addEventListener('click', doSomething)</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q5',false)">btn.onclick = doSomething()</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q5',false)">btn.click(doSomething)</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q5"></div>
+            </div>
+
+            <div class="quiz-question" id="q6">
+                <h4>Q6. Why is <code>innerHTML</code> considered risky when displaying user-provided content?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q6',false)">It is slower than textContent</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q6',false)">It doesn't work in all browsers</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q6',true)">It can execute injected HTML/JS, creating an XSS vulnerability</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q6',false)">It only works on &lt;div&gt; elements</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q6"></div>
+            </div>
+
+            <div class="quiz-question" id="q7">
+                <h4>Q7. <code>document.querySelectorAll('.card')</code> returns a NodeList. How do you loop over it?</h4>
+                <div class="quiz-options">
+                    <button class="quiz-option" onclick="quizAnswer(this,'q7',false)">You can't — NodeLists are not iterable</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q7',false)">nodeList.map(el => ...)</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q7',true)">nodeList.forEach(el => ...) or a for...of loop</button>
+                    <button class="quiz-option" onclick="quizAnswer(this,'q7',false)">for (let el in nodeList)</button>
+                </div>
+                <div class="quiz-feedback" id="fb-q7"></div>
+            </div>
+
+            <div class="quiz-score" id="quizScore">
+                <h3 id="scoreDisplay">0 / 7</h3>
+                <p id="scoreMsg"></p>
+            </div>
+        </div>
+
     </main>
 
     <footer class="footer">
@@ -657,6 +793,45 @@ btn.addEventListener('click', () => {
     </footer>
 
     <script>
+        /* ========================================================
+           QUIZ ENGINE
+           ======================================================== */
+        const quizFeedbacks = {
+            q1: { correct: '✅ Correct! querySelector() accepts any valid CSS selector (like .class, #id, div > p). It is the modern standard.', wrong: '❌ getElementById() only works with IDs. The modern standard is querySelector() which accepts any CSS selector.' },
+            q2: { correct: '✅ Correct! textContent is safe because it treats the value as plain text and never parses HTML. innerHTML should only be used when you deliberately need to set HTML structure.', wrong: '❌ Use textContent for plain text — it is safe and fast. innerHTML parses HTML which can be dangerous if the content comes from a user.' },
+            q3: { correct: '✅ Correct! classList.add() appends a class without disturbing existing ones. Using className = "active" would REPLACE all classes.', wrong: '❌ Setting className = "active" replaces ALL existing classes. Use classList.add() to safely add without removing others.' },
+            q4: { correct: '✅ Exactly! toggle() is perfect for dark-mode switches or accordion menus — it adds the class if absent, removes it if present.', wrong: '❌ toggle() does both: it adds the class if it is missing, and removes it if it is already there. This makes it ideal for on/off UI states.' },
+            q5: { correct: '✅ Correct! addEventListener is the proper, modern method. It lets you attach multiple handlers to the same event and keeps your JS separate from your HTML.', wrong: '❌ The modern standard is addEventListener(). Inline onclick mixes HTML with behaviour. btn.onclick = doSomething() (with brackets) would call the function immediately and assign its return value.' },
+            q6: { correct: '✅ Correct! This is called Cross-Site Scripting (XSS). If a user submits &lt;script&gt;stealData()&lt;\/script&gt; and you set innerHTML with it, it runs. Always use textContent for user input.', wrong: '❌ The danger is XSS (Cross-Site Scripting). A malicious user could inject a script tag. innerHTML would execute it. textContent safely neutralises it by treating it as plain text.' },
+            q7: { correct: '✅ Correct! NodeLists support forEach() and for...of. They do NOT have .map() or .filter() — for those, convert first: Array.from(nodeList).map(...).', wrong: '❌ NodeLists support forEach() and for...of loops. They do NOT support .map() or .filter() directly. To use those, first convert: Array.from(nodeList).map(...).' }
+        };
+
+        let quizAnswered = {}, quizCorrect = 0;
+
+        function quizAnswer(btn, qId, isCorrect) {
+            if (quizAnswered[qId]) return;
+            quizAnswered[qId] = true;
+            if (isCorrect) quizCorrect++;
+            btn.closest('.quiz-question').querySelectorAll('.quiz-option').forEach(o => o.classList.add('disabled'));
+            btn.classList.add(isCorrect ? 'correct' : 'wrong');
+            const fb = document.getElementById('fb-' + qId);
+            fb.textContent = quizFeedbacks[qId][isCorrect ? 'correct' : 'wrong'];
+            fb.className = `quiz-feedback show ${isCorrect ? 'correct' : 'wrong'}`;
+
+            if (Object.keys(quizAnswered).length === 7) {
+                const sc = document.getElementById('quizScore');
+                sc.classList.add('show');
+                document.getElementById('scoreDisplay').textContent = `${quizCorrect} / 7`;
+                const pct = Math.round((quizCorrect / 7) * 100);
+                document.getElementById('scoreMsg').textContent = pct === 100
+                    ? '🏆 Perfect! You have fully mastered DOM Manipulation & Events.'
+                    : pct >= 71
+                    ? '✅ Great work! Go back and review any sections you missed.'
+                    : '📖 Good effort. Revisit the Selection, Manipulation, and Events tabs then try again.';
+                sc.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
         /* ========================================================
            TAB NAVIGATION
            ======================================================== */
