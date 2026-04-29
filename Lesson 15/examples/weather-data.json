@@ -1,0 +1,47 @@
+[
+{
+  "latitude": 10.369068,
+  "longitude": 7.836412,
+  "generationtime_ms": 3.6478042602539062,
+  "utc_offset_seconds": 0,
+  "timezone": "GMT",
+  "timezone_abbreviation": "GMT",
+  "elevation": 660.0,
+  "current_units": {
+    "time": "iso8601",
+    "interval": "seconds",
+    "temperature_2m": "°C",
+    "relative_humidity_2m": "%",
+    "apparent_temperature": "°C",
+    "surface_pressure": "hPa",
+    "wind_speed_10m": "km/h",
+    "weather_code": "wmo code"
+  },
+  "current": {
+    "time": "2026-04-29T16:30",
+    "interval": 900,
+    "temperature_2m": 26.3,
+    "relative_humidity_2m": 73,
+    "apparent_temperature": 29.9,
+    "surface_pressure": 936.5,
+    "wind_speed_10m": 5.2,
+    "weather_code": 53
+  }
+}
+{
+    "place_id": 41735299,
+    "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+    "osm_type": "relation",
+    "osm_id": 3709353,
+    "lat": "10.3825318",
+    "lon": "7.8533226",
+    "class": "boundary",
+    "type": "administrative",
+    "place_rank": 8,
+    "importance": 0.5263618328802072,
+    "addresstype": "state",
+    "name": "Kaduna State",
+    "display_name": "Kaduna State, Nigeria",
+    "boundingbox": ["9.0006409", "11.5237694", "6.0865312", "8.8235216"]
+  }
+]
