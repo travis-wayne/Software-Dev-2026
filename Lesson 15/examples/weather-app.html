@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App — Lesson 15 Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:     #0f1117;
+            --bg2:    #1a1d2e;
+            --bg3:    #242842;
+            --card:   #1e2235;
+            --border: #2d3154;
+            --blue:   #60a5fa;
+            --purple: #a78bfa;
+            --green:  #34d399;
+            --orange: #fb923c;
+            --red:    #f87171;
+            --cyan:   #22d3ee;
+            --text:   #e8eaf0;
+            --sub:    #9da3b4;
+            --muted:  #6b7280;
+            --radius: 14px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 40px 16px 80px; }
+
+        /* HEADER */
+        .header { text-align: center; margin-bottom: 32px; }
+        .header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .header p { color: var(--sub); margin-top: 6px; font-size: 0.95rem; }
+
+        /* APP WRAPPER */
+        .app { width: 100%; max-width: 540px; }
+
+        /* API KEY SETUP */
+        .setup-card { background: var(--bg2); border: 1px solid rgba(167,139,250,0.3); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+        .setup-card h4 { font-size: 0.9rem; font-weight: 700; color: var(--purple); margin-bottom: 10px; }
+        .setup-card p { font-size: 0.83rem; color: var(--sub); margin-bottom: 10px; line-height: 1.6; }
+        .setup-card a { color: var(--blue); text-decoration: none; }
+        .setup-card a:hover { text-decoration: underline; }
+        #api-key { width: 100%; background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; color: var(--text); font-family: 'Inter', monospace; font-size: 0.85rem; outline: none; transition: border-color 0.2s; }
+        #api-key:focus { border-color: var(--purple); }
+        #api-key::placeholder { color: var(--muted); }
+
+        /* SEARCH */
+        .search-row { display: flex; gap: 10px; margin-bottom: 8px; }
+        .search-row input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; color: var(--text); font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        .search-row input:focus { border-color: var(--blue); }
+        .search-row input::placeholder { color: var(--muted); }
+        .btn-search { background: var(--blue); color: #000; border: none; border-radius: var(--radius); padding: 14px 22px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
+        .btn-search:hover { opacity: 0.88; transform: translateY(-1px); }
+        .btn-search:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .btn-demo { width: 100%; margin-bottom: 16px; background: none; border: 1px dashed var(--border); border-radius: var(--radius); padding: 10px; font-family: inherit; font-size: 0.85rem; color: var(--sub); cursor: pointer; transition: all 0.2s; }
+        .btn-demo:hover { border-color: var(--cyan); color: var(--cyan); }
+
+        /* STATES */
+        .state { display: none; text-align: center; padding: 30px; }
+        .state.show { display: block; }
+
+        /* LOADING */
+        .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loading p { color: var(--sub); font-size: 0.9rem; }
+
+        /* ERROR */
+        #error-state { background: rgba(248,113,113,0.08); border: 1px solid rgba(248,113,113,0.3); border-radius: var(--radius); }
+        .error-icon { font-size: 2rem; margin-bottom: 8px; }
+        #error-msg { color: var(--red); font-weight: 600; margin-bottom: 6px; }
+        #error-hint { color: var(--sub); font-size: 0.85rem; }
+
+        /* WEATHER CARD */
+        #weather-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; animation: fadeUp 0.4s ease; }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+        .weather-main { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+        .weather-location { font-size: 1.6rem; font-weight: 800; }
+        .weather-country { font-size: 0.9rem; color: var(--sub); margin-top: 2px; }
+        .weather-icon { width: 72px; height: 72px; filter: drop-shadow(0 0 12px rgba(96,165,250,0.4)); }
+
+        .weather-temp { font-size: 4rem; font-weight: 800; background: linear-gradient(135deg, #60a5fa, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 4px; }
+        .weather-desc { color: var(--sub); font-size: 1rem; text-transform: capitalize; }
+
+        .weather-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 20px; }
+        .weather-stat { background: var(--bg2); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+        .weather-stat .label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+        .weather-stat .value { font-size: 1.2rem; font-weight: 700; }
+        .humidity-val  { color: var(--blue); }
+        .wind-val      { color: var(--green); }
+        .feels-val     { color: var(--orange); }
+        .pressure-val  { color: var(--purple); }
+
+        /* LESSON NOTE */
+        .lesson-note { margin-top: 20px; background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.2); border-radius: var(--radius); padding: 14px 18px; font-size: 0.83rem; color: var(--sub); line-height: 1.7; }
+        .lesson-note strong { color: var(--blue); }
+        code { background: var(--bg3); padding: 1px 6px; border-radius: 4px; font-family: monospace; font-size: 0.82rem; color: var(--cyan); }
+    </style>
+</head>
+<body>
+
+<header class="header">
+    <h1>🌤 Weather App</h1>
+    <p>Lesson 15 Reference Implementation — Fetch API · Async/Await · JSON</p>
+</header>
+
+<div class="app">
+
+    <!-- SEARCH -->
+    <div class="search-row">
+        <input type="text" id="city-input" placeholder="Enter a city name (e.g. Lagos, London…)" autocomplete="off">
+        <button class="btn-search" id="search-btn">Search</button>
+    </div>
+
+    <button class="btn-demo" id="demo-btn">⚡ Load Demo Data (offline mode)</button>
+
+    <!-- LOADING STATE -->
+    <div class="state" id="loading">
+        <div class="spinner"></div>
+        <p>Fetching weather data…</p>
+    </div>
+
+    <!-- ERROR STATE -->
+    <div class="state" id="error-state">
+        <div class="error-icon">⚠️</div>
+        <p id="error-msg">Something went wrong.</p>
+        <p id="error-hint"></p>
+    </div>
+
+    <!-- WEATHER CARD -->
+    <div class="state" id="weather-card">
+        <div class="weather-main">
+            <div>
+                <div class="weather-location" id="w-city">—</div>
+                <div class="weather-country" id="w-country"></div>
+                <div class="weather-temp" id="w-temp">—</div>
+                <div class="weather-desc" id="w-desc">—</div>
+            </div>
+            <img class="weather-icon" id="w-icon" src="" alt="weather icon">
+        </div>
+        <div class="weather-grid">
+            <div class="weather-stat">
+                <div class="label">Feels Like</div>
+                <div class="value feels-val" id="w-feels">—</div>
+            </div>
+            <div class="weather-stat">
+                <div class="label">Humidity</div>
+                <div class="value humidity-val" id="w-humidity">—</div>
+            </div>
+            <div class="weather-stat">
+                <div class="label">Wind Speed</div>
+                <div class="value wind-val" id="w-wind">—</div>
+            </div>
+            <div class="weather-stat">
+                <div class="label">Pressure</div>
+                <div class="value pressure-val" id="w-pressure">—</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="lesson-note">
+        <strong>📚 How to Study This Code</strong>
+        <p style="margin:10px 0 6px;">This is a reference implementation. Study these specific patterns:</p>
+        <ul style="padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:0.83rem;">
+            <li><strong>Chained Fetches:</strong> This app does TWO fetches in a row. First, it asks Nominatim for coordinates (lat/lon). Then, it asks Open-Meteo for the weather. See <code>fetchWeather()</code>.</li>
+            <li><strong>Two-Step Fetch:</strong> <code>await fetch(url)</code> gets the Response. <code>await response.json()</code> reads the body. Both need <code>await</code>.</li>
+            <li><strong>No API Key:</strong> By using Open-Meteo, we remove the friction of signing up for keys, making it easier for beginners to get started.</li>
+            <li><strong>Three States:</strong> The UI has exactly three states: loading, error, weather card. <code>showState(id)</code> hides all three then shows one.</li>
+            <li><strong>Destructuring:</strong> <code>const { temperature, windspeed } = data.current_weather;</code> pulls specific values out of a deeply nested object.</li>
+        </ul>
+        <p style="margin:12px 0 6px; font-weight:700; color: var(--blue);">✏️ Try These Experiments:</p>
+        <ol style="padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:0.83rem;">
+            <li>Click “Load Demo Data” and notice no network request happens. Then search for a city and watch TWO requests appear in the Network tab.</li>
+            <li>In <code>fetchWeather()</code>, comment out the second fetch. What does the app show?</li>
+            <li>Try searching for a city that doesn't exist (e.g., "Qwertyuiopasdf"). How does the app handle it?</li>
+            <li>Modify <code>displayWeather</code> to show the <code>weathercode</code>. Use the Open-Meteo documentation to map codes to icons.</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    /* ==============================================
+       FETCH WEATHER — The core async function
+       ============================================== */
+    async function fetchWeather(city) {
+        // Step 1: Geocoding (City Name -> Latitude/Longitude)
+        const geoUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`;
+        const geoResponse = await fetch(geoUrl);
+        if (!geoResponse.ok) throw new Error("Geocoding service failed.");
+        
+        const geoData = await geoResponse.json();
+        if (geoData.length === 0) throw new Error(`City "${city}" not found.`);
+        
+        const { lat, lon, display_name } = geoData[0];
+
+        // Step 2: Weather Data (using coordinates)
+        const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,surface_pressure,wind_speed_10m,weather_code`;
+        const weatherResponse = await fetch(weatherUrl);
+        if (!weatherResponse.ok) throw new Error("Weather service failed.");
+
+        const weatherData = await weatherResponse.json();
+        
+        // Add the city name back to the data object for display
+        weatherData.location_name = display_name;
+        return weatherData;
+    }
+
+    /* ==============================================
+       DISPLAY — Extract data from JSON & update DOM
+       ============================================== */
+    function displayWeather(data) {
+        const { current, location_name } = data;
+        const { 
+            temperature_2m, 
+            relative_humidity_2m, 
+            apparent_temperature, 
+            surface_pressure, 
+            wind_speed_10m, 
+            weather_code 
+        } = current;
+
+        document.getElementById('w-city').textContent     = location_name.split(',')[0];
+        document.getElementById('w-country').textContent  = location_name.split(',').slice(1).join(',').trim();
+        document.getElementById('w-temp').textContent     = Math.round(temperature_2m) + '°C';
+        document.getElementById('w-desc').textContent     = getWeatherDesc(weather_code);
+        document.getElementById('w-feels').textContent    = Math.round(apparent_temperature) + '°C';
+        document.getElementById('w-humidity').textContent = relative_humidity_2m + '%';
+        document.getElementById('w-wind').textContent     = wind_speed_10m + ' km/h';
+        document.getElementById('w-pressure').textContent = Math.round(surface_pressure) + ' hPa';
+
+        // Simulating icons based on code
+        const iconMapping = {
+            0: "01d", 1: "02d", 2: "02d", 3: "03d", 
+            45: "50d", 48: "50d",
+            51: "09d", 53: "09d", 55: "09d",
+            61: "10d", 63: "10d", 65: "10d",
+            71: "13d", 73: "13d", 75: "13d",
+            95: "11d"
+        };
+        const iconCode = iconMapping[weather_code] || "03d";
+        document.getElementById('w-icon').src = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
+    }
+
+    function getWeatherDesc(code) {
+        const mapping = {
+            0: "Clear sky", 1: "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
+            45: "Fog", 48: "Depositing rime fog",
+            51: "Light drizzle", 53: "Moderate drizzle", 55: "Dense drizzle",
+            61: "Slight rain", 63: "Moderate rain", 65: "Heavy rain",
+            71: "Slight snow fall", 73: "Moderate snow fall", 75: "Heavy snow fall",
+            95: "Thunderstorm"
+        };
+        return mapping[code] || "Unknown";
+    }
+
+    /* ==============================================
+       UI HELPERS — Show/hide states
+       ============================================== */
+    function showState(id) {
+        ['loading', 'error-state', 'weather-card'].forEach(s => {
+            document.getElementById(s).classList.remove('show');
+        });
+        if (id) document.getElementById(id).classList.add('show');
+    }
+
+    function showError(msg, hint = '') {
+        document.getElementById('error-msg').textContent  = msg;
+        document.getElementById('error-hint').textContent = hint;
+        showState('error-state');
+    }
+
+    /* ==============================================
+       SEARCH HANDLER
+       ============================================== */
+    async function handleSearch() {
+        const city = document.getElementById('city-input').value.trim();
+
+        if (!city) {
+            showError('Please enter a city name.', 'Try: Lagos, London, New York');
+            return;
+        }
+
+        showState('loading');
+        document.getElementById('search-btn').disabled = true;
+
+        try {
+            const data = await fetchWeather(city);
+            displayWeather(data);
+            showState('weather-card');
+        } catch (err) {
+            showError(err.message, 'Check your city spelling and try again.');
+        } finally {
+            document.getElementById('search-btn').disabled = false;
+        }
+    }
+
+    /* ==============================================
+       DEMO MODE — No API key required
+       ============================================== */
+    function loadDemoData() {
+        const demoData = {
+            location_name: "Lagos, Nigeria",
+            current: {
+                temperature_2m: 31.4,
+                relative_humidity_2m: 78,
+                apparent_temperature: 36.2,
+                surface_pressure: 1010,
+                wind_speed_10m: 13.7,
+                weather_code: 3
+            }
+        };
+        displayWeather(demoData);
+        showState('weather-card');
+    }
+
+    /* ==============================================
+       EVENT LISTENERS
+       ============================================== */
+    document.getElementById('search-btn').addEventListener('click', handleSearch);
+
+    document.getElementById('city-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') handleSearch();
+    });
+
+    document.getElementById('demo-btn').addEventListener('click', loadDemoData);
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do App — Lesson 15 Reference</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:      #0f1117;
+            --bg2:     #1a1d2e;
+            --bg3:     #242842;
+            --card:    #1e2235;
+            --border:  #2d3154;
+            --purple:  #a78bfa;
+            --green:   #34d399;
+            --red:     #f87171;
+            --blue:    #60a5fa;
+            --text:    #e8eaf0;
+            --muted:   #6b7280;
+            --sub:     #9da3b4;
+            --radius:  12px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: flex-start; justify-content: center; padding: 40px 16px 80px; }
+
+        .app { width: 100%; max-width: 600px; }
+
+        /* HEADER */
+        .app-header { text-align: center; margin-bottom: 32px; }
+        .app-header h1 { font-size: 2.2rem; font-weight: 800; background: linear-gradient(135deg, #a78bfa, #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .app-header p { color: var(--sub); margin-top: 6px; font-size: 0.95rem; }
+
+        /* INPUT */
+        .input-row { display: flex; gap: 10px; margin-bottom: 16px; }
+        .input-row input { flex: 1; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 18px; color: var(--text); font-family: inherit; font-size: 1rem; outline: none; transition: border-color 0.2s; }
+        .input-row input:focus { border-color: var(--purple); }
+        .input-row input::placeholder { color: var(--muted); }
+        .btn-add { background: var(--purple); color: #000; border: none; border-radius: var(--radius); padding: 14px 22px; font-family: inherit; font-size: 0.95rem; font-weight: 700; cursor: pointer; transition: opacity 0.2s, transform 0.15s; white-space: nowrap; }
+        .btn-add:hover { opacity: 0.88; transform: translateY(-1px); }
+
+        /* STATS ROW */
+        .stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 0.88rem; color: var(--sub); }
+        .btn-clear { background: none; border: none; color: var(--red); font-size: 0.85rem; font-family: inherit; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+        .btn-clear:hover { opacity: 1; }
+
+        /* FILTERS */
+        .filters { display: flex; gap: 6px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); padding: 5px; margin-bottom: 16px; }
+        .filter-btn { flex: 1; padding: 8px; border: none; border-radius: 8px; background: transparent; color: var(--sub); font-family: inherit; font-size: 0.88rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+        .filter-btn.active { background: var(--bg3); color: var(--purple); font-weight: 700; }
+
+        /* TASK LIST */
+        #task-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+
+        .task-item { display: flex; align-items: center; gap: 14px; background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; transition: border-color 0.2s, opacity 0.3s; animation: slideIn 0.25s ease; }
+        .task-item:hover { border-color: #3d4168; }
+        .task-item.done { opacity: 0.55; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .task-cb { width: 20px; height: 20px; min-width: 20px; border-radius: 50%; border: 2px solid var(--border); appearance: none; cursor: pointer; transition: all 0.2s; position: relative; }
+        .task-cb:checked { background: var(--green); border-color: var(--green); }
+        .task-cb:checked::after { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #000; font-weight: 800; }
+
+        .task-text { flex: 1; font-size: 0.97rem; line-height: 1.5; word-break: break-word; transition: all 0.2s; }
+        .task-text.done { text-decoration: line-through; color: var(--muted); }
+
+        .task-edit-input { flex: 1; background: transparent; border: none; border-bottom: 1px solid var(--purple); color: var(--text); font-family: inherit; font-size: 0.97rem; outline: none; padding: 2px 0; }
+
+        .btn-delete { background: none; border: none; color: var(--muted); font-size: 1rem; cursor: pointer; padding: 4px 6px; border-radius: 6px; transition: all 0.2s; line-height: 1; flex-shrink: 0; }
+        .btn-delete:hover { color: var(--red); background: rgba(248,113,113,0.1); }
+
+        /* EMPTY STATE */
+        .empty-state { text-align: center; padding: 60px 0; color: var(--muted); }
+        .empty-state .emoji { font-size: 2.5rem; margin-bottom: 12px; }
+        .empty-state p { font-size: 0.95rem; }
+
+        /* FOOTER NOTE */
+        .lesson-note { margin-top: 32px; background: rgba(167,139,250,0.06); border: 1px solid rgba(167,139,250,0.2); border-radius: var(--radius); padding: 14px 18px; font-size: 0.85rem; color: var(--sub); }
+        .lesson-note strong { color: var(--purple); }
+    </style>
+</head>
+<body>
+<div class="app">
+
+    <header class="app-header">
+        <h1>📝 To-Do App</h1>
+        <p>Lesson 15 Reference Implementation — Arrays · DOM · localStorage</p>
+    </header>
+
+    <div class="input-row">
+        <input type="text" id="task-input" placeholder="What needs to be done? Press Enter to add…" autocomplete="off">
+        <button class="btn-add" id="add-btn">+ Add</button>
+    </div>
+
+    <div class="stats-row">
+        <span id="task-count">0 tasks left</span>
+        <button class="btn-clear" id="clear-btn">Clear completed</button>
+    </div>
+
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="active">Active</button>
+        <button class="filter-btn" data-filter="completed">Completed</button>
+    </div>
+
+    <ul id="task-list"></ul>
+
+    <div class="lesson-note">
+        <strong>📚 How to Study This Code</strong>
+        <p style="margin:10px 0 6px;">This is a reference implementation. Don't just read it — study these specific patterns:</p>
+        <ul style="padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:0.83rem;">
+            <li><strong>One source of truth:</strong> The <code>tasks</code> array is the ONLY state. The DOM is always rebuilt from it — never updated directly.</li>
+            <li><strong>The Core Loop:</strong> Every action calls <code>save()</code> then <code>render()</code>. Find these calls in <code>addTask</code>, <code>toggleTask</code>, and <code>deleteTask</code>.</li>
+            <li><strong>Event Delegation:</strong> There is ONE click listener on <code>#task-list</code> — not one per task. This handles dynamically created elements. See line ~238.</li>
+            <li><strong>XSS Safety:</strong> Task text is set with <code>.textContent</code>, never <code>.innerHTML</code>. Find this in the <code>render()</code> function.</li>
+            <li><strong>localStorage:</strong> <code>save()</code> uses <code>JSON.stringify</code>. The initial load uses <code>JSON.parse(...) || []</code>. Find both.</li>
+        </ul>
+        <p style="margin:12px 0 6px; font-weight:700; color: var(--purple);">✏️ Try These Experiments:</p>
+        <ol style="padding-left:18px; display:flex; flex-direction:column; gap:6px; font-size:0.83rem;">
+            <li>Add a task, open DevTools → Application → Local Storage. Can you see the JSON string?</li>
+            <li>In the console, type <code>localStorage.clear()</code> then refresh. What happens to the tasks?</li>
+            <li>Change the <code>id: Date.now()</code> to <code>id: Math.random()</code>. Does everything still work?</li>
+            <li>Remove the <code>if (!text.trim()) return;</code> guard from <code>addTask</code>. What happens when you press Enter with nothing typed?</li>
+        </ol>
+    </div>
+</div>
+
+<script>
+    /* ==============================================
+       STATE — The single source of truth
+       ============================================== */
+    let tasks  = JSON.parse(localStorage.getItem('todo-tasks')) || [];
+    let filter = 'all'; // 'all' | 'active' | 'completed'
+
+    /* ==============================================
+       CORE FUNCTIONS
+       ============================================== */
+    function addTask(text) {
+        if (!text.trim()) return;
+        tasks.push({ id: Date.now(), text: text.trim(), completed: false });
+        save();
+        render();
+    }
+
+    function toggleTask(id) {
+        tasks = tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t);
+        save();
+        render();
+    }
+
+    function deleteTask(id) {
+        tasks = tasks.filter(t => t.id !== id);
+        save();
+        render();
+    }
+
+    function clearCompleted() {
+        tasks = tasks.filter(t => !t.completed);
+        save();
+        render();
+    }
+
+    function save() {
+        localStorage.setItem('todo-tasks', JSON.stringify(tasks));
+    }
+
+    /* ==============================================
+       RENDER — Rebuild DOM from the tasks array
+       ============================================== */
+    function render() {
+        const list = document.getElementById('task-list');
+        list.innerHTML = '';
+
+        // Apply current filter
+        const visible = tasks.filter(t => {
+            if (filter === 'active')    return !t.completed;
+            if (filter === 'completed') return  t.completed;
+            return true;
+        });
+
+        // Empty state
+        if (visible.length === 0) {
+            const msgs = {
+                all:       { emoji: '✅', text: 'Nothing here yet. Add a task above!' },
+                active:    { emoji: '🎉', text: 'All done! No active tasks.' },
+                completed: { emoji: '📋', text: 'No completed tasks yet.' }
+            };
+            const { emoji, text } = msgs[filter];
+            list.innerHTML = `<div class="empty-state"><div class="emoji">${emoji}</div><p>${text}</p></div>`;
+        }
+
+        // Build each task item
+        visible.forEach(task => {
+            const li = document.createElement('li');
+            li.className = 'task-item' + (task.completed ? ' done' : '');
+            li.dataset.id = task.id;
+
+            // Checkbox
+            const cb = document.createElement('input');
+            cb.type      = 'checkbox';
+            cb.className = 'task-cb';
+            cb.checked   = task.completed;
+            cb.dataset.id = task.id;
+
+            // Text — use textContent (never innerHTML for user input — XSS!)
+            const span = document.createElement('span');
+            span.className   = 'task-text' + (task.completed ? ' done' : '');
+            span.textContent = task.text;
+
+            // Delete button
+            const del = document.createElement('button');
+            del.className   = 'btn-delete';
+            del.textContent = '✕';
+            del.dataset.id  = task.id;
+            del.title       = 'Delete task';
+
+            li.append(cb, span, del);
+            list.appendChild(li);
+        });
+
+        // Update count (active tasks only)
+        const active = tasks.filter(t => !t.completed).length;
+        document.getElementById('task-count').textContent =
+            `${active} task${active !== 1 ? 's' : ''} left`;
+
+        // Show/hide clear button
+        const hasCompleted = tasks.some(t => t.completed);
+        document.getElementById('clear-btn').style.visibility = hasCompleted ? 'visible' : 'hidden';
+    }
+
+    /* ==============================================
+       EVENT LISTENERS
+       ============================================== */
+
+    // Add on Enter key
+    document.getElementById('task-input').addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            addTask(e.target.value);
+            e.target.value = '';
+        }
+    });
+
+    // Add on button click
+    document.getElementById('add-btn').addEventListener('click', () => {
+        const input = document.getElementById('task-input');
+        addTask(input.value);
+        input.value = '';
+        input.focus();
+    });
+
+    // Event delegation — one listener handles ALL checkbox + delete clicks
+    document.getElementById('task-list').addEventListener('click', e => {
+        const id = Number(e.target.dataset.id);
+        if (!id) return; // click was on empty area
+
+        if (e.target.classList.contains('task-cb'))     toggleTask(id);
+        if (e.target.classList.contains('btn-delete'))  deleteTask(id);
+    });
+
+    // Clear completed
+    document.getElementById('clear-btn').addEventListener('click', clearCompleted);
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            filter = btn.dataset.filter;
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            render();
+        });
+    });
+
+    /* ==============================================
+       INITIAL RENDER
+       ============================================== */
+    render();
+</script>
+</body>
+</html>
