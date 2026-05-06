@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Structures Visualizer | Lesson 17</title>
+    <style>
+        :root {
+            --bg:#0f172a; --text:#f8fafc; --surface:#1e293b; --border:#334155;
+            --primary:#3b82f6; --success:#10b981; --warning:#f59e0b;
+            --danger:#ef4444; --purple:#a855f7;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding:2rem;line-height:1.6;}
+        .container{max-width:1000px;margin:0 auto;}
+        h1{font-size:1.8rem;margin-bottom:.25rem;}
+        .subtitle{color:#94a3b8;margin-bottom:2rem;}
+        h2{margin-bottom:.5rem;}
+        p.desc{color:#94a3b8;margin-bottom:1.25rem;font-size:.95rem;}
+        /* Tabs */
+        .tabs{display:flex;gap:.5rem;margin-bottom:2rem;border-bottom:2px solid var(--border);padding-bottom:1rem;}
+        .tab-btn{background:none;border:1px solid var(--border);color:#94a3b8;font-size:.95rem;cursor:pointer;padding:.45rem 1rem;border-radius:6px;transition:all .2s;}
+        .tab-btn:hover{background:var(--surface);color:var(--text);}
+        .tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+        .tab-content{display:none;animation:fadeIn .25s;}
+        .tab-content.active{display:block;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        /* Panel */
+        .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.75rem;margin-bottom:1.5rem;}
+        /* Controls */
+        .controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;}
+        input,button{padding:.5rem 1rem;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:white;font-size:.95rem;}
+        button{background:var(--primary);cursor:pointer;border:none;font-weight:600;}
+        button:hover{filter:brightness(1.15);}
+        button.danger{background:var(--danger);}
+        button.success{background:var(--success);}
+        /* Visual area */
+        .visual{min-height:80px;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;padding:1.75rem 1rem 1rem;background:#000;border-radius:8px;margin-bottom:1rem;}
+        .node-box{
+            display:flex;align-items:center;justify-content:center;
+            min-width:52px;height:52px;border-radius:8px;
+            font-weight:700;font-size:1rem;position:relative;
+            transition:all .35s cubic-bezier(.34,1.56,.64,1);
+        }
+        .node-box.stack-node{background:linear-gradient(135deg,#1d4ed8,#3b82f6);border:2px solid #60a5fa;}
+        .node-box.queue-node{background:linear-gradient(135deg,#065f46,#10b981);border:2px solid #34d399;}
+        .node-box.ll-node{background:linear-gradient(135deg,#6b21a8,#a855f7);border:2px solid #c084fc;position:relative;margin-right:28px;}
+        .node-box.new-node{background:linear-gradient(135deg,#92400e,#f59e0b)!important;border-color:#fcd34d!important;}
+        /* Linked list arrow */
+        .ll-arrow{position:absolute;right:-24px;top:50%;transform:translateY(-50%);color:#c084fc;font-size:1.2rem;font-weight:900;}
+        /* Label chips */
+        .chip{font-size:.7rem;font-weight:700;padding:.15rem .45rem;border-radius:4px;position:absolute;top:-18px;left:50%;transform:translateX(-50%);white-space:nowrap;}
+        .chip.top{background:var(--warning);color:#000;}
+        .chip.front{background:var(--success);color:#000;}
+        .chip.back{background:var(--danger);color:white;}
+        .chip.head{background:var(--primary);color:white;}
+        .chip.tail{background:var(--purple);color:white;}
+        /* Log */
+        .log{background:#000;border-radius:6px;padding:1rem;max-height:140px;overflow-y:auto;font-family:'Consolas','Courier New',monospace;font-size:.82rem;}
+        .log p{color:#a5b4fc;margin-bottom:.2rem;}
+        .log .ok{color:var(--success);}
+        .log .err{color:var(--danger);}
+        .log .info{color:var(--warning);}
+        /* Info box */
+        .info-box{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#93c5fd;}
+        /* Stats row */
+        .stats-row{display:flex;gap:1rem;margin-bottom:1rem;}
+        .stat{background:#0f172a;border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;flex:1;text-align:center;}
+        .stat-val{font-size:1.5rem;font-weight:700;color:var(--primary);}
+        .stat-lbl{font-size:.75rem;color:#64748b;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🗂️ Data Structures Visualizer</h1>
+    <p class="subtitle">Interact with Stack, Queue, and Linked List side by side.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('stack',this)">📚 Stack</button>
+        <button class="tab-btn" onclick="switchTab('queue',this)">🚶 Queue</button>
+        <button class="tab-btn" onclick="switchTab('ll',this)">🔗 Linked List</button>
+    </div>
+
+    <!-- STACK TAB -->
+    <div id="tab-stack" class="tab-content active">
+        <div class="panel">
+            <h2>Stack — Last In, First Out (LIFO)</h2>
+            <p class="desc">Add to the top with <strong>push</strong>. Remove from the top with <strong>pop</strong>. The most recently added item is always first out.</p>
+            <div class="info-box">Real-world use: Browser back button, Undo/Redo, JavaScript Call Stack</div>
+            <div class="controls">
+                <input type="text" id="stack-input" placeholder="Value to push..." maxlength="6" style="width:160px">
+                <button onclick="stackPush()">Push ↑</button>
+                <button class="danger" onclick="stackPop()">Pop ↑</button>
+                <button onclick="stackPeek()" style="background:var(--warning);color:#000">Peek</button>
+                <button onclick="stackClear()" style="background:#334155">Clear</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><div class="stat-val" id="stack-size">0</div><div class="stat-lbl">Size</div></div>
+                <div class="stat"><div class="stat-val" id="stack-top">—</div><div class="stat-lbl">Top</div></div>
+                <div class="stat"><div class="stat-val" id="stack-empty">Yes</div><div class="stat-lbl">isEmpty</div></div>
+            </div>
+            <!-- Visual: grows upward, newest at top visually (rendered last = rightmost for horizontal) -->
+            <p style="color:#64748b;font-size:.8rem;margin-bottom:.3rem">← bottom &nbsp;&nbsp;&nbsp; top →</p>
+            <div class="visual" id="stack-visual"></div>
+            <div class="log" id="stack-log"><p class="info">Stack ready. Push some values!</p></div>
+        </div>
+    </div>
+
+    <!-- QUEUE TAB -->
+    <div id="tab-queue" class="tab-content">
+        <div class="panel">
+            <h2>Queue — First In, First Out (FIFO)</h2>
+            <p class="desc">Add to the back with <strong>enqueue</strong>. Remove from the front with <strong>dequeue</strong>. The oldest item is always served first.</p>
+            <div class="info-box">Real-world use: Print queues, JavaScript Event Loop, task schedulers</div>
+            <div class="controls">
+                <input type="text" id="queue-input" placeholder="Value to enqueue..." maxlength="6" style="width:170px">
+                <button onclick="queueEnqueue()">Enqueue →</button>
+                <button class="danger" onclick="queueDequeue()">← Dequeue</button>
+                <button onclick="queuePeek()" style="background:var(--warning);color:#000">Peek</button>
+                <button onclick="queueClear()" style="background:#334155">Clear</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><div class="stat-val" id="queue-size">0</div><div class="stat-lbl">Size</div></div>
+                <div class="stat"><div class="stat-val" id="queue-front">—</div><div class="stat-lbl">Front</div></div>
+                <div class="stat"><div class="stat-val" id="queue-back">—</div><div class="stat-lbl">Back</div></div>
+            </div>
+            <p style="color:#64748b;font-size:.8rem;margin-bottom:.3rem">← front &nbsp;&nbsp;&nbsp; back →</p>
+            <div class="visual" id="queue-visual"></div>
+            <div class="log" id="queue-log"><p class="info">Queue ready. Enqueue some values!</p></div>
+        </div>
+    </div>
+
+    <!-- LINKED LIST TAB -->
+    <div id="tab-ll" class="tab-content">
+        <div class="panel">
+            <h2>Linked List — Nodes Connected by Pointers</h2>
+            <p class="desc">Each node stores a value and a pointer to the next node. Fast O(1) insertions at head/tail. O(n) search and delete.</p>
+            <div class="info-box">Real-world use: Music playlists (next track), efficient queue implementations</div>
+            <div class="controls">
+                <input type="text" id="ll-input" placeholder="Value..." maxlength="6" style="width:120px">
+                <button onclick="llAdd()" class="success">Add (tail)</button>
+                <button onclick="llInsertHead()">Insert (head)</button>
+                <button class="danger" onclick="llRemove()">Remove</button>
+                <button onclick="llSearch()" style="background:var(--warning);color:#000">Search</button>
+                <button onclick="llClear()" style="background:#334155">Clear</button>
+            </div>
+            <div class="stats-row">
+                <div class="stat"><div class="stat-val" id="ll-length">0</div><div class="stat-lbl">Length</div></div>
+                <div class="stat"><div class="stat-val" id="ll-head-val">—</div><div class="stat-lbl">Head</div></div>
+                <div class="stat"><div class="stat-val" id="ll-tail-val">—</div><div class="stat-lbl">Tail</div></div>
+            </div>
+            <div class="visual" id="ll-visual"></div>
+            <div class="log" id="ll-log"><p class="info">Linked List ready. Add some nodes!</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+
+// ── UTILITIES ─────────────────────────────────────────────────
+function logMsg(logId, msg, type='ok') {
+    const log = document.getElementById(logId);
+    const p = document.createElement('p');
+    p.className = type;
+    p.textContent = msg;
+    log.prepend(p);
+    while (log.children.length > 20) log.removeChild(log.lastChild);
+}
+
+function getInput(id) {
+    const el = document.getElementById(id);
+    const v = el.value.trim();
+    el.value = '';
+    el.focus();
+    return v;
+}
+
+// ── STACK ─────────────────────────────────────────────────────
+let stackData = [];
+
+function renderStack() {
+    const vis = document.getElementById('stack-visual');
+    vis.innerHTML = '';
+    stackData.forEach((val, i) => {
+        const box = document.createElement('div');
+        box.className = 'node-box stack-node';
+        box.textContent = val;
+        if (i === stackData.length - 1) {
+            const chip = document.createElement('span');
+            chip.className = 'chip top';
+            chip.textContent = 'TOP';
+            box.appendChild(chip);
+        }
+        vis.appendChild(box);
+    });
+    document.getElementById('stack-size').textContent = stackData.length;
+    document.getElementById('stack-top').textContent = stackData.length ? stackData[stackData.length-1] : '—';
+    document.getElementById('stack-empty').textContent = stackData.length === 0 ? 'Yes' : 'No';
+}
+
+function stackPush() {
+    const v = getInput('stack-input');
+    if (!v) return logMsg('stack-log', '⚠ Enter a value first.', 'err');
+    stackData.push(v);
+    renderStack();
+    logMsg('stack-log', `push("${v}") → Stack size: ${stackData.length}`);
+}
+
+function stackPop() {
+    if (!stackData.length) return logMsg('stack-log', '✗ pop() called on empty stack → returns null', 'err');
+    const removed = stackData.pop();
+    renderStack();
+    logMsg('stack-log', `pop() → "${removed}" removed. Stack size: ${stackData.length}`);
+}
+
+function stackPeek() {
+    if (!stackData.length) return logMsg('stack-log', '✗ peek() — stack is empty', 'err');
+    logMsg('stack-log', `peek() → "${stackData[stackData.length-1]}" (not removed)`, 'info');
+}
+
+function stackClear() { stackData = []; renderStack(); logMsg('stack-log', 'Stack cleared.', 'info'); }
+
+renderStack();
+
+// ── QUEUE ─────────────────────────────────────────────────────
+let queueData = [];
+
+function renderQueue() {
+    const vis = document.getElementById('queue-visual');
+    vis.innerHTML = '';
+    queueData.forEach((val, i) => {
+        const box = document.createElement('div');
+        box.className = 'node-box queue-node';
+        box.textContent = val;
+        if (i === 0) {
+            const c = document.createElement('span');
+            c.className = 'chip front'; c.textContent = 'FRONT';
+            box.appendChild(c);
+        }
+        if (i === queueData.length - 1) {
+            const c = document.createElement('span');
+            c.className = 'chip back'; c.textContent = 'BACK';
+            box.appendChild(c);
+        }
+        vis.appendChild(box);
+    });
+    document.getElementById('queue-size').textContent = queueData.length;
+    document.getElementById('queue-front').textContent = queueData.length ? queueData[0] : '—';
+    document.getElementById('queue-back').textContent = queueData.length ? queueData[queueData.length-1] : '—';
+}
+
+function queueEnqueue() {
+    const v = getInput('queue-input');
+    if (!v) return logMsg('queue-log', '⚠ Enter a value first.', 'err');
+    queueData.push(v);
+    renderQueue();
+    logMsg('queue-log', `enqueue("${v}") → added to back. Size: ${queueData.length}`);
+}
+
+function queueDequeue() {
+    if (!queueData.length) return logMsg('queue-log', '✗ dequeue() on empty queue → returns null', 'err');
+    const removed = queueData.shift();
+    renderQueue();
+    logMsg('queue-log', `dequeue() → "${removed}" removed from front. Size: ${queueData.length}`);
+}
+
+function queuePeek() {
+    if (!queueData.length) return logMsg('queue-log', '✗ peek() — queue is empty', 'err');
+    logMsg('queue-log', `peek() → "${queueData[0]}" (front, not removed)`, 'info');
+}
+
+function queueClear() { queueData = []; renderQueue(); logMsg('queue-log', 'Queue cleared.', 'info'); }
+
+renderQueue();
+
+// ── LINKED LIST ───────────────────────────────────────────────
+class LLNode { constructor(v){ this.value=v; this.next=null; } }
+class LL {
+    constructor(){ this.head=null; this.tail=null; this.length=0; }
+    add(v){ const n=new LLNode(v); if(!this.head){this.head=n;this.tail=n;}else{this.tail.next=n;this.tail=n;} this.length++; }
+    insertAtHead(v){ const n=new LLNode(v); if(!this.head){this.head=n;this.tail=n;}else{n.next=this.head;this.head=n;} this.length++; }
+    remove(v){ if(!this.head)return false; if(this.head.value==v){this.head=this.head.next;if(!this.head)this.tail=null;this.length--;return true;} let c=this.head; while(c.next){if(c.next.value==v){if(c.next===this.tail)this.tail=c;c.next=c.next.next;this.length--;return true;}c=c.next;} return false; }
+    search(v){ let c=this.head,i=0; while(c){if(c.value==v)return i;c=c.next;i++;} return -1; }
+    toArray(){ const a=[];let c=this.head;while(c){a.push(c.value);c=c.next;}return a; }
+}
+
+let ll = new LL();
+
+function renderLL() {
+    const vis = document.getElementById('ll-visual');
+    vis.innerHTML = '';
+    const arr = ll.toArray();
+    arr.forEach((val, i) => {
+        const box = document.createElement('div');
+        box.className = 'node-box ll-node';
+        box.textContent = val;
+        if (i === 0) { const c=document.createElement('span');c.className='chip head';c.textContent='HEAD';box.appendChild(c); }
+        if (i === arr.length - 1) { const c=document.createElement('span');c.className='chip tail';c.textContent='TAIL';box.appendChild(c); }
+        if (i < arr.length - 1) { const a=document.createElement('span');a.className='ll-arrow';a.textContent='→';box.appendChild(a); }
+        vis.appendChild(box);
+    });
+    // Show null terminator at the end
+    if (arr.length > 0) {
+        const nullBox = document.createElement('div');
+        nullBox.style.cssText = 'display:flex;align-items:center;gap:.35rem;color:#475569;font-family:monospace;font-size:.85rem;margin-left:.25rem';
+        nullBox.innerHTML = '<span style="color:#a855f7;font-weight:700">→</span> <span style="background:#1e293b;border:1px dashed #475569;border-radius:6px;padding:.3rem .6rem">null</span>';
+        vis.appendChild(nullBox);
+    }
+    document.getElementById('ll-length').textContent = ll.length;
+    document.getElementById('ll-head-val').textContent = ll.head ? ll.head.value : '—';
+    document.getElementById('ll-tail-val').textContent = ll.tail ? ll.tail.value : '—';
+}
+
+function llAdd() {
+    const v = getInput('ll-input');
+    if (!v) return logMsg('ll-log', '⚠ Enter a value.', 'err');
+    ll.add(v); renderLL();
+    logMsg('ll-log', `add("${v}") → appended to tail. Length: ${ll.length}`);
+}
+
+function llInsertHead() {
+    const v = getInput('ll-input');
+    if (!v) return logMsg('ll-log', '⚠ Enter a value.', 'err');
+    ll.insertAtHead(v); renderLL();
+    logMsg('ll-log', `insertAtHead("${v}") → new head. Length: ${ll.length}`);
+}
+
+function llRemove() {
+    const v = getInput('ll-input');
+    if (!v) return logMsg('ll-log', '⚠ Enter a value to remove.', 'err');
+    const found = ll.remove(v);
+    renderLL();
+    if (found) logMsg('ll-log', `remove("${v}") → removed. Length: ${ll.length}`);
+    else       logMsg('ll-log', `remove("${v}") → not found.`, 'err');
+}
+
+function llSearch() {
+    const v = getInput('ll-input');
+    if (!v) return logMsg('ll-log', '⚠ Enter a value to search.', 'err');
+    const idx = ll.search(v);
+    if (idx >= 0) logMsg('ll-log', `search("${v}") → found at index ${idx}`, 'ok');
+    else           logMsg('ll-log', `search("${v}") → not found (-1)`, 'err');
+}
+
+function llClear() { ll = new LL(); renderLL(); logMsg('ll-log', 'List cleared.', 'info'); }
+
+renderLL();
+</script>
+</body>
+</html>

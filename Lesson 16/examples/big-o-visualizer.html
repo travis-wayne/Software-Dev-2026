@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big O Visualizer | Lesson 16</title>
+    <style>
+        :root {
+            --bg: #0f172a; --text: #f8fafc; --primary: #3b82f6;
+            --success: #10b981; --warning: #f59e0b; --danger: #ef4444;
+            --surface: #1e293b; --border: #334155;
+            --o1: #10b981; --ologn: #3b82f6; --on: #f59e0b;
+            --onlogn: #a855f7; --on2: #ef4444;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 2rem; }
+        .container { max-width: 1040px; margin: 0 auto; }
+        h1 { font-size: 1.8rem; margin-bottom: 0.25rem; }
+        .subtitle { color: #94a3b8; margin-bottom: 2rem; }
+        /* Tabs */
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 2rem; border-bottom: 2px solid var(--border); padding-bottom: 1rem; flex-wrap: wrap; }
+        .tab-btn { background: none; border: 1px solid var(--border); color: #94a3b8; font-size: 1rem; cursor: pointer; padding: 0.5rem 1.1rem; border-radius: 6px; transition: all 0.2s; }
+        .tab-btn:hover { background: var(--surface); color: var(--text); }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .tab-content { display: none; animation: fadeIn 0.25s; }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        /* Panel */
+        .panel { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.75rem; margin-bottom: 1.5rem; }
+        /* Chart */
+        canvas { width: 100%; border-radius: 6px; }
+        .legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1rem; }
+        .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+        /* Controls */
+        .controls { display: flex; gap: 1rem; margin-bottom: 1.25rem; align-items: center; flex-wrap: wrap; }
+        label { color: #94a3b8; font-size: 0.9rem; }
+        input, select, button { padding: 0.5rem 1rem; border-radius: 6px; border: 1px solid var(--border); background: #0f172a; color: white; font-size: 0.95rem; }
+        button { background: var(--primary); cursor: pointer; border: none; font-weight: 600; }
+        button:hover { filter: brightness(1.15); }
+        button:disabled { opacity: 0.4; cursor: not-allowed; }
+        /* Race */
+        .race-track { background: #000; height: 38px; border-radius: 20px; position: relative; margin: 0.5rem 0 1.25rem; overflow: hidden; border: 1px solid var(--border); }
+        .runner { height: 100%; position: absolute; left: 0; top: 0; border-radius: 20px; display: flex; align-items: center; padding-right: 12px; justify-content: flex-end; font-weight: 700; font-size: 0.78rem; white-space: nowrap; }
+        #linear-runner { background: linear-gradient(90deg, #7f1d1d, var(--danger)); width: 0%; }
+        #binary-runner { background: linear-gradient(90deg, #064e3b, var(--success)); width: 0%; }
+        .stats { display: flex; gap: 1.5rem; margin-top: 0.5rem; }
+        .stat-box { background: #0f172a; padding: 1rem; border-radius: 6px; flex: 1; border: 1px solid var(--border); }
+        .stat-value { font-size: 2rem; font-weight: 700; margin: 0.35rem 0; }
+        /* Analyzer */
+        .grid { display: grid; grid-template-columns: 220px 1fr; gap: 2rem; }
+        .snippet-list { display: flex; flex-direction: column; gap: 0.5rem; }
+        .snippet-btn { text-align: left; background: #0f172a; color: var(--text); border: 1px solid var(--border); padding: 0.75rem 1rem; border-radius: 6px; cursor: pointer; font-size: 0.9rem; }
+        .snippet-btn.active, .snippet-btn:hover { border-color: var(--primary); }
+        pre { background: #000; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 0 0 1rem 0; }
+        code { font-family: 'Consolas', 'Courier New', monospace; color: #a5b4fc; font-size: 0.88rem; }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; margin-bottom: 1rem; }
+        .badge.o1    { background: rgba(16,185,129,0.15); color: var(--o1); }
+        .badge.ologn { background: rgba(59,130,246,0.15); color: var(--ologn); }
+        .badge.on    { background: rgba(245,158,11,0.15); color: var(--on); }
+        .badge.on2   { background: rgba(239,68,68,0.15); color: var(--on2); }
+        .danger-text { color: var(--danger); }
+        .success-text { color: var(--success); }
+        .info-box { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1rem; font-size: 0.9rem; color: #93c5fd; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>📈 Big O Visualizer</h1>
+    <p class="subtitle">Explore algorithm efficiency through three interactive experiments.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" id="btn-chart"  onclick="switchTab('chart',this)">📊 Complexity Chart</button>
+        <button class="tab-btn"        id="btn-race"   onclick="switchTab('race',this)">🏁 Search Race</button>
+        <button class="tab-btn"        id="btn-analyzer" onclick="switchTab('analyzer',this)">🔍 Code Analyzer</button>
+    </div>
+
+    <!-- TAB 1: Complexity Chart -->
+    <div id="tab-chart" class="tab-content active">
+        <div class="panel">
+            <h2 style="margin-bottom:0.5rem">Growth Rate Comparison</h2>
+            <p style="color:#94a3b8;margin-bottom:1.25rem">As input size <strong>n</strong> grows, see how many operations each complexity requires. This is why choosing the right algorithm matters.</p>
+            <div class="controls">
+                <label>Max Input Size (n):</label>
+                <select id="chart-n" onchange="drawChart()">
+                    <option value="20">20</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                </select>
+            </div>
+            <canvas id="bigOChart" height="380"></canvas>
+            <div class="legend" id="chart-legend"></div>
+        </div>
+        <div class="panel">
+            <h2 style="margin-bottom:0.75rem">Numbers at a Glance</h2>
+            <p style="color:#94a3b8;margin-bottom:1rem">How many operations does each complexity require for these input sizes?</p>
+            <div id="table-container"></div>
+        </div>
+    </div>
+
+    <!-- TAB 2: Search Race -->
+    <div id="tab-race" class="tab-content">
+        <div class="panel">
+            <h2 style="margin-bottom:0.5rem">Linear vs. Binary Search</h2>
+            <p style="color:#94a3b8;margin-bottom:1.25rem">A sorted array of 1–N numbers. See how many steps each algorithm needs to find the target.</p>
+            <div class="info-box">💡 <strong>Binary Search only works on sorted arrays.</strong> It cuts the remaining search space in half every step.</div>
+            <div class="controls">
+                <label>Array Size (N):</label>
+                <select id="array-size">
+                    <option value="100">100 items</option>
+                    <option value="1000" selected>1,000 items</option>
+                    <option value="10000">10,000 items</option>
+                    <option value="1000000">1,000,000 items</option>
+                </select>
+                <label>Target Number:</label>
+                <input type="number" id="target-num" value="950" min="1" style="width:100px">
+                <button id="race-btn" onclick="startRace()">▶ Start Race</button>
+            </div>
+            <div>
+                <p style="margin-bottom:0.3rem"><strong style="color:var(--danger)">Linear Search — O(n)</strong> — checks every item one by one</p>
+                <div class="race-track"><div id="linear-runner" class="runner"></div></div>
+            </div>
+            <div>
+                <p style="margin-bottom:0.3rem"><strong style="color:var(--success)">Binary Search — O(log n)</strong> — halves the search space each step</p>
+                <div class="race-track"><div id="binary-runner" class="runner"></div></div>
+            </div>
+            <div class="stats">
+                <div class="stat-box">
+                    <div style="color:#94a3b8;font-size:0.9rem">Linear Search Steps</div>
+                    <div id="linear-steps" class="stat-value danger-text">–</div>
+                    <div id="linear-formula" style="color:#64748b;font-size:0.85rem"></div>
+                </div>
+                <div class="stat-box">
+                    <div style="color:#94a3b8;font-size:0.9rem">Binary Search Steps</div>
+                    <div id="binary-steps" class="stat-value success-text">–</div>
+                    <div id="binary-formula" style="color:#64748b;font-size:0.85rem"></div>
+                </div>
+                <div class="stat-box">
+                    <div style="color:#94a3b8;font-size:0.9rem">Steps Saved</div>
+                    <div id="steps-saved" class="stat-value" style="color:var(--primary)">–</div>
+                    <div id="steps-pct" style="color:#64748b;font-size:0.85rem"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: Code Analyzer -->
+    <div id="tab-analyzer" class="tab-content">
+        <div class="panel">
+            <div class="grid">
+                <div>
+                    <h2 style="margin-bottom:0.75rem">Select a Snippet</h2>
+                    <div class="snippet-list">
+                        <button class="snippet-btn active" onclick="loadSnippet('arrayLookup',this)">1. Array Index Lookup</button>
+                        <button class="snippet-btn" onclick="loadSnippet('objectKey',this)">2. Object Key Lookup</button>
+                        <button class="snippet-btn" onclick="loadSnippet('singleLoop',this)">3. Single For Loop</button>
+                        <button class="snippet-btn" onclick="loadSnippet('twoLoops',this)">4. Two Separate Loops</button>
+                        <button class="snippet-btn" onclick="loadSnippet('nestedLoops',this)">5. Nested Loops</button>
+                        <button class="snippet-btn" onclick="loadSnippet('hiddenLoop',this)">6. The Hidden Trap</button>
+                        <button class="snippet-btn" onclick="loadSnippet('binarySearch',this)">7. Binary Search</button>
+                    </div>
+                </div>
+                <div>
+                    <h2 style="margin-bottom:0.75rem">Analysis</h2>
+                    <div id="analysis-container"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ── TAB SWITCHING ──────────────────────────────────────────────
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+    if (id === 'chart') drawChart();
+}
+
+// ── COMPLEXITY CHART ──────────────────────────────────────────
+const curves = [
+    { label: 'O(1)',     color: '#10b981', fn: () => 1 },
+    { label: 'O(log n)', color: '#3b82f6', fn: n => Math.log2(n) },
+    { label: 'O(n)',     color: '#f59e0b', fn: n => n },
+    { label: 'O(n log n)', color: '#a855f7', fn: n => n * Math.log2(n) },
+    { label: 'O(n²)',   color: '#ef4444', fn: n => n * n },
+];
+
+function drawChart() {
+    const canvas = document.getElementById('bigOChart');
+    const ctx = canvas.getContext('2d');
+    const N = parseInt(document.getElementById('chart-n').value);
+
+    canvas.width  = canvas.offsetWidth * window.devicePixelRatio || 960;
+    canvas.height = 380 * (window.devicePixelRatio || 1);
+    ctx.scale(window.devicePixelRatio || 1, window.devicePixelRatio || 1);
+
+    const W = canvas.offsetWidth || 960, H = 380;
+    const pad = { top: 20, right: 20, bottom: 40, left: 60 };
+    const plotW = W - pad.left - pad.right;
+    const plotH = H - pad.top - pad.bottom;
+
+    // Find max Y (cap O(n²) at reasonable scale)
+    const maxY = Math.min(N * N, N * 20);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#000';
+    ctx.fillRect(0, 0, W, H);
+
+    // Grid lines
+    ctx.strokeStyle = '#1e293b';
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= 5; i++) {
+        const y = pad.top + (plotH / 5) * i;
+        ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + plotW, y); ctx.stroke();
+        const val = Math.round(maxY - (maxY / 5) * i);
+        ctx.fillStyle = '#475569'; ctx.font = '11px monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(val.toLocaleString(), pad.left - 8, y + 4);
+    }
+
+    // X axis labels
+    ctx.fillStyle = '#475569'; ctx.textAlign = 'center';
+    for (let i = 0; i <= 5; i++) {
+        const x = pad.left + (plotW / 5) * i;
+        ctx.fillText(Math.round((N / 5) * i), x, H - pad.bottom + 18);
+    }
+
+    // Axis
+    ctx.strokeStyle = '#334155'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(pad.left, pad.top); ctx.lineTo(pad.left, pad.top + plotH); ctx.lineTo(pad.left + plotW, pad.top + plotH); ctx.stroke();
+
+    // Axis labels
+    ctx.fillStyle = '#94a3b8'; ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Input Size (n)', pad.left + plotW / 2, H - 4);
+    ctx.save(); ctx.translate(14, pad.top + plotH / 2); ctx.rotate(-Math.PI / 2);
+    ctx.fillText('Operations', 0, 0); ctx.restore();
+
+    // Draw each curve
+    curves.forEach(curve => {
+        ctx.beginPath();
+        ctx.strokeStyle = curve.color;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        let started = false;
+        for (let n = 1; n <= N; n++) {
+            const ops = Math.min(curve.fn(n), maxY);
+            const x = pad.left + ((n - 1) / (N - 1)) * plotW;
+            const y = pad.top + plotH - (ops / maxY) * plotH;
+            if (!started) { ctx.moveTo(x, y); started = true; } else { ctx.lineTo(x, y); }
+        }
+        ctx.stroke();
+    });
+
+    // Legend
+    const legend = document.getElementById('chart-legend');
+    legend.innerHTML = curves.map(c =>
+        `<div class="legend-item"><div class="legend-dot" style="background:${c.color}"></div>${c.label}</div>`
+    ).join('');
+
+    // Table
+    const sizes = [1, 5, 10, 50, 100, 1000];
+    const tbody = sizes.map(n =>
+        `<tr>${[`<td style="font-weight:600;padding:0.4rem 0.75rem">${n}</td>`].concat(
+            curves.map(c => {
+                const v = Math.round(c.fn(n));
+                return `<td style="padding:0.4rem 0.75rem;color:${c.color}">${v.toLocaleString()}</td>`;
+            })
+        ).join('')}</tr>`
+    ).join('');
+
+    document.getElementById('table-container').innerHTML = `
+        <table style="border-collapse:collapse;width:100%;font-size:0.9rem">
+            <thead>
+                <tr style="border-bottom:1px solid var(--border)">
+                    <th style="text-align:left;padding:0.4rem 0.75rem;color:#94a3b8">n</th>
+                    ${curves.map(c => `<th style="text-align:left;padding:0.4rem 0.75rem;color:${c.color}">${c.label}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>${tbody}</tbody>
+        </table>`;
+}
+
+window.addEventListener('load', drawChart);
+window.addEventListener('resize', () => { if (document.getElementById('tab-chart').classList.contains('active')) drawChart(); });
+
+// ── SEARCH RACE ────────────────────────────────────────────────
+async function startRace() {
+    const size   = parseInt(document.getElementById('array-size').value);
+    const target = parseInt(document.getElementById('target-num').value);
+    const btn    = document.getElementById('race-btn');
+
+    if (isNaN(target) || target < 1 || target > size) {
+        alert(`Target must be between 1 and ${size}.`); return;
+    }
+
+    btn.disabled = true;
+    ['linear-runner','binary-runner'].forEach(id => document.getElementById(id).style.width = '0%');
+    ['linear-steps','binary-steps','steps-saved'].forEach(id => document.getElementById(id).textContent = '…');
+
+    const linSteps = target;
+    const binSteps = calcBinarySteps(size, target);
+
+    await animate('linear-runner', 'linear-steps', linSteps);
+    document.getElementById('linear-formula').textContent = `worst case: ${size.toLocaleString()} steps`;
+
+    await animate('binary-runner', 'binary-steps', binSteps);
+    document.getElementById('binary-formula').textContent = `⌈log₂(${size.toLocaleString()})⌉ ≈ ${Math.ceil(Math.log2(size))} max steps`;
+
+    const saved = linSteps - binSteps;
+    document.getElementById('steps-saved').textContent  = saved.toLocaleString();
+    document.getElementById('steps-pct').textContent    = `${Math.round((saved / linSteps) * 100)}% fewer steps`;
+
+    btn.disabled = false;
+}
+
+function calcBinarySteps(size, target) {
+    let left = 1, right = size, steps = 0;
+    while (left <= right) {
+        steps++;
+        const mid = Math.floor((left + right) / 2);
+        if (mid === target) return steps;
+        if (mid < target) left = mid + 1; else right = mid - 1;
+    }
+    return steps;
+}
+
+function animate(runnerId, textId, steps) {
+    return new Promise(resolve => {
+        const runner = document.getElementById(runnerId);
+        const text   = document.getElementById(textId);
+        if (steps > 5000) {
+            runner.style.width = '100%';
+            text.textContent = steps.toLocaleString();
+            return resolve();
+        }
+        const delay = steps > 500 ? 2 : steps > 100 ? 8 : 40;
+        let cur = 0;
+        const iv = setInterval(() => {
+            cur++;
+            text.textContent = cur.toLocaleString();
+            runner.style.width = ((cur / steps) * 100) + '%';
+            if (cur >= steps) { clearInterval(iv); resolve(); }
+        }, delay);
+    });
+}
+
+// ── CODE ANALYZER ──────────────────────────────────────────────
+const snippets = {
+    arrayLookup: {
+        bigO:'O(1)', badgeClass:'o1', title:'Constant Time',
+        code:`const users = ['Alice', 'Bob', 'Charlie', 'Dave'];\n\n// Direct index lookup — goes straight to address in memory\nconst first = users[0]; // → 'Alice'\nconst third = users[2]; // → 'Charlie'\n\n// Same speed whether the array has 4 items or 4 million.`,
+        desc:'Accessing an array element by its exact index is always O(1). JavaScript knows the exact memory address of every index — there is no searching or looping involved.'
+    },
+    objectKey: {
+        bigO:'O(1)', badgeClass:'o1', title:'Constant Time (Hash Map)',
+        code:`const roles = { 101: 'Admin', 102: 'Editor', 103: 'Viewer' };\n\n// Object key lookup — no loop, direct hash table access\nconst role = roles[102]; // → 'Editor'\n\n// Works the same speed with 3 keys or 3 million keys.`,
+        desc:'Looking up a value by key in a JavaScript Object (or Map) is O(1). Internally, Objects use a hash table — the key is converted to a memory address instantly, so no looping is needed.'
+    },
+    singleLoop: {
+        bigO:'O(n)', badgeClass:'on', title:'Linear Time',
+        code:`const emails = ['a@a.com', 'b@b.com', 'c@c.com'];\n\n// Loop runs once per item — scales with input\nfor (let i = 0; i < emails.length; i++) {\n    console.log(emails[i]);\n}\n\n// 10 items → 10 iterations. 10,000 items → 10,000 iterations.`,
+        desc:'The loop runs exactly as many times as there are items. Double the input, double the work. This is O(n) — Linear Time.'
+    },
+    twoLoops: {
+        bigO:'O(n)', badgeClass:'on', title:'Linear Time (Drop Constants)',
+        code:`// Loop 1 — O(n)\nfor (let i = 0; i < arr.length; i++) console.log(arr[i]);\n\n// Loop 2 — O(n) — runs AFTER Loop 1, not INSIDE it\nfor (let j = 0; j < arr.length; j++) console.log(arr[j]);\n\n// Total: O(n) + O(n) = O(2n)\n// Rule: Drop Constants → O(n)`,
+        desc:'Two sequential (non-nested) loops gives O(2n). We apply Rule 1 — Drop Constants — because the shape of the curve is still linear. O(2n) simplifies to O(n). Only NESTED loops become O(n²).'
+    },
+    nestedLoops: {
+        bigO:'O(n²)', badgeClass:'on2', title:'Quadratic Time',
+        code:`const arr = [1, 2, 3, 4];\n\n// For EACH item in the outer loop...\nfor (let i = 0; i < arr.length; i++) {\n    // ...the inner loop runs ALL the way through\n    for (let j = 0; j < arr.length; j++) {\n        console.log(arr[i], arr[j]); // 4×4 = 16 operations\n    }\n}\n\n// 100 items → 10,000 operations. 10,000 items → 100,000,000 ops!`,
+        desc:'A loop inside a loop gives O(n²) — Quadratic Time. For every single item in the outer loop, the inner loop runs n times. The total operations = n × n = n². This grows explosively and will freeze a browser on large arrays.'
+    },
+    hiddenLoop: {
+        bigO:'O(n)', badgeClass:'on', title:'The Hidden Loop Trap',
+        code:`const users = ['Alice', 'Bob', 'Charlie'];\n\n// This looks like O(1) — it's just one line!\nconst exists = users.includes('Charlie');\n\n// But JavaScript loops through every item to check.\n// .includes() .indexOf() .find() .filter() .map()\n// are ALL O(n) loops in disguise.`,
+        desc:'One line of code does NOT mean one operation. .includes(), .indexOf(), .find() and similar methods loop through the array internally. They are all O(n). Always ask: "What is JavaScript doing under the hood?"'
+    },
+    binarySearch: {
+        bigO:'O(log n)', badgeClass:'ologn', title:'Logarithmic Time',
+        code:`function binarySearch(sorted, target) {\n    let left = 0, right = sorted.length - 1;\n\n    while (left <= right) {\n        const mid = Math.floor((left + right) / 2);\n\n        if (sorted[mid] === target) return mid;   // Found!\n        if (sorted[mid] < target)  left = mid + 1; // Right half\n        else                       right = mid - 1; // Left half\n    }\n    return -1; // Not found\n}\n// 1,000,000 items → max 20 checks! Requires SORTED array.`,
+        desc:'Binary Search is O(log n) — Logarithmic Time. Each step eliminates half the remaining data. log₂(1,000,000) ≈ 20, so even a million items need at most 20 checks. IMPORTANT: requires the array to be sorted first.'
+    }
+};
+
+function loadSnippet(id, btn) {
+    document.querySelectorAll('.snippet-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const d = snippets[id];
+    // Escape HTML for display inside <code>
+    const escaped = d.code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    document.getElementById('analysis-container').innerHTML = `
+        <div class="badge ${d.badgeClass}">${d.bigO} — ${d.title}</div>
+        <pre><code>${escaped}</code></pre>
+        <p style="color:#cbd5e1">${d.desc}</p>`;
+}
+
+loadSnippet('arrayLookup', document.querySelector('.snippet-btn'));
+</script>
+</body>
+</html>

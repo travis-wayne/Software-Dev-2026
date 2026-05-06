@@ -165,7 +165,7 @@
         localStorage.setItem('todo-tasks', JSON.stringify(tasks));
     }
 
-    /* ==============================================
+   /* ==============================================
        RENDER — Rebuild DOM from the tasks array
        ============================================== */
     function render() {
@@ -187,7 +187,10 @@
                 completed: { emoji: '📋', text: 'No completed tasks yet.' }
             };
             const { emoji, text } = msgs[filter];
-            list.innerHTML = `<div class="empty-state"><div class="emoji">${emoji}</div><p>${text}</p></div>`;
+            list.innerHTML = `<div class="empty-state">
+                                <div class="emoji">${emoji}</div>
+                                <p>${text}</p>
+                            </div>`;
         }
 
         // Build each task item
