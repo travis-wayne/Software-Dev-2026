@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>useState & useEffect Visualizer | Lesson 20</title>
+    <style>
+        :root {
+            --bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#f8fafc;
+            --primary:#3b82f6;--success:#10b981;--warning:#f59e0b;
+            --danger:#ef4444;--purple:#a855f7;--muted:#94a3b8;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding:2rem;line-height:1.6;}
+        .container{max-width:1020px;margin:0 auto;}
+        h1{font-size:1.8rem;margin-bottom:.2rem;}
+        .subtitle{color:var(--muted);margin-bottom:2rem;}
+        h2{margin-bottom:.4rem;}
+        p.desc{color:var(--muted);margin-bottom:1.2rem;font-size:.93rem;}
+        /* Tabs */
+        .tabs{display:flex;gap:.5rem;flex-wrap:wrap;border-bottom:2px solid var(--border);padding-bottom:1rem;margin-bottom:2rem;}
+        .tab-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:.93rem;cursor:pointer;padding:.45rem 1rem;border-radius:6px;transition:all .2s;}
+        .tab-btn:hover{background:var(--surface);color:var(--text);}
+        .tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+        .tab-content{display:none;animation:fi .25s;}
+        .tab-content.active{display:block;}
+        @keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        /* Panel */
+        .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.75rem;margin-bottom:1.5rem;}
+        /* Controls */
+        .controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.25rem;}
+        input[type=text],input[type=number]{padding:.5rem .9rem;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:white;font-size:.95rem;}
+        button{padding:.5rem 1.1rem;border-radius:6px;border:none;background:var(--primary);color:white;font-size:.95rem;cursor:pointer;font-weight:600;transition:filter .15s;}
+        button:hover{filter:brightness(1.15);}
+        button.danger{background:var(--danger);}
+        button.success{background:var(--success);}
+        button.warn{background:var(--warning);color:#000;}
+        button.muted{background:#334155;}
+        /* State display */
+        .state-box{background:#000;border:1px solid var(--border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;font-family:monospace;}
+        .state-label{color:var(--muted);font-size:.78rem;margin-bottom:.25rem;}
+        .state-val{font-size:1.5rem;font-weight:700;color:var(--primary);}
+        .state-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:1rem;}
+        .state-card{background:#000;border:1px solid var(--border);border-radius:8px;padding:.75rem 1.1rem;flex:1;min-width:100px;}
+        /* Log */
+        .log{background:#000;border-radius:6px;padding:1rem;max-height:160px;overflow-y:auto;font-family:'Consolas','Courier New',monospace;font-size:.8rem;}
+        .log p{margin-bottom:.2rem;}
+        .log .ok{color:var(--success);}
+        .log .warn{color:var(--warning);}
+        .log .err{color:var(--danger);}
+        .log .info{color:#60a5fa;}
+        /* Info box */
+        .info-box{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#93c5fd;}
+        .warn-box{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35);border-radius:6px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#fcd34d;}
+        /* Render counter */
+        .render-badge{display:inline-block;background:var(--purple);color:white;font-size:.78rem;font-weight:700;padding:.2rem .6rem;border-radius:999px;margin-left:.5rem;}
+        /* Code snippet */
+        .code-block{background:#000;border:1px solid var(--border);border-radius:6px;padding:.85rem 1rem;font-family:'Consolas','Courier New',monospace;font-size:.82rem;color:#a5b4fc;margin-bottom:1rem;white-space:pre;}
+        /* Grid */
+        .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;}
+        @media(max-width:600px){.grid-2{grid-template-columns:1fr;}}
+        /* Toggle */
+        .toggle-box{background:var(--surface);border:2px solid var(--border);border-radius:10px;padding:1rem;text-align:center;transition:all .3s;}
+        .toggle-box.visible{border-color:var(--success);}
+        /* Effect badge */
+        .effect-tag{display:inline-block;padding:.2rem .65rem;border-radius:6px;font-size:.78rem;font-weight:700;margin:.2rem;}
+        .effect-tag.mount{background:rgba(16,185,129,.2);color:var(--success);}
+        .effect-tag.update{background:rgba(59,130,246,.2);color:var(--primary);}
+        .effect-tag.unmount{background:rgba(239,68,68,.2);color:var(--danger);}
+        label{color:var(--muted);font-size:.9rem;}
+        select{padding:.5rem .9rem;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:white;font-size:.95rem;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>⚛️ useState & useEffect Visualizer</h1>
+    <p class="subtitle">See exactly how React state and effects work — without a build step.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('state',this)">🔵 useState</button>
+        <button class="tab-btn" onclick="switchTab('effect',this)">⚡ useEffect Explorer</button>
+        <button class="tab-btn" onclick="switchTab('fetch',this)">🌐 Data Fetching</button>
+    </div>
+
+    <!-- ═══════════════════════════════════ TAB 1: useState ═══ -->
+    <div id="tab-state" class="tab-content active">
+
+        <!-- Counter -->
+        <div class="panel">
+            <h2>Counter Component <span id="counter-renders" class="render-badge">0 renders</span></h2>
+            <p class="desc">Click the buttons and watch the state update and the render counter increment. Every <code>setCount()</code> call triggers a re-render.</p>
+            <div class="code-block">const [count, setCount] = useState(0);</div>
+            <div class="controls">
+                <button class="danger" onclick="counterAction('dec')">− Decrement</button>
+                <button class="success" onclick="counterAction('inc')">+ Increment</button>
+                <button class="muted" onclick="counterAction('reset')">Reset</button>
+            </div>
+            <div class="state-row">
+                <div class="state-card">
+                    <div class="state-label">count (state)</div>
+                    <div class="state-val" id="counter-val">0</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">render count</div>
+                    <div class="state-val" id="counter-render-val" style="color:var(--purple)">1</div>
+                </div>
+            </div>
+            <div class="log" id="counter-log"><p class="info">useState counter ready.</p></div>
+        </div>
+
+        <!-- Toggle -->
+        <div class="panel">
+            <h2>Toggle Component</h2>
+            <p class="desc">Boolean state — the simplest form. <code>!isVisible</code> flips the boolean on each click.</p>
+            <div class="code-block">const [isVisible, setIsVisible] = useState(false);</div>
+            <div class="controls">
+                <button onclick="toggleAction()" id="toggle-btn">Show Message</button>
+            </div>
+            <div class="grid-2">
+                <div class="state-card">
+                    <div class="state-label">isVisible (state)</div>
+                    <div class="state-val" id="toggle-val" style="color:var(--warning)">false</div>
+                </div>
+                <div class="toggle-box" id="toggle-box">
+                    <span id="toggle-msg" style="display:none;font-size:1.1rem">🎉 Hello! I'm visible!</span>
+                    <span id="toggle-placeholder" style="color:var(--muted);font-size:.9rem">Hidden</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controlled Input -->
+        <div class="panel">
+            <h2>Controlled Input</h2>
+            <p class="desc">Every keystroke calls <code>setText(e.target.value)</code>. React becomes the single source of truth for the input's value.</p>
+            <div class="code-block">const [text, setText] = useState('');</div>
+            <div class="controls">
+                <input type="text" id="controlled-input" oninput="controlledAction()" placeholder="Type something..." style="width:280px">
+                <button class="muted" onclick="document.getElementById('controlled-input').value='';controlledAction()">Clear</button>
+            </div>
+            <div class="state-row">
+                <div class="state-card">
+                    <div class="state-label">text (state)</div>
+                    <div class="state-val" id="controlled-val" style="color:var(--success);font-size:1rem;word-break:break-all">""</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">text.length</div>
+                    <div class="state-val" id="controlled-len" style="color:var(--warning)">0</div>
+                </div>
+            </div>
+            <p id="controlled-warning" style="color:var(--danger);font-size:.85rem;display:none">⚠ Over 20 characters!</p>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ TAB 2: useEffect ═══ -->
+    <div id="tab-effect" class="tab-content">
+        <div class="panel">
+            <h2>useEffect Dependency Explorer</h2>
+            <p class="desc">Click the buttons to trigger renders and state changes. Watch the Effect Log to see exactly when each pattern fires.</p>
+            <div class="warn-box">💡 In real React this runs inside a component. Here we simulate the same behaviour so you can observe it without a build step.</div>
+
+            <div class="controls">
+                <label>Count:</label>
+                <button class="success" onclick="effectAction('incCount')">setCount +1</button>
+                <label>Name:</label>
+                <input type="text" id="effect-name" oninput="effectAction('setName')" placeholder="setName..." style="width:140px">
+                <button class="muted" onclick="effectAction('forceRender')">Force Re-render</button>
+                <button class="danger" onclick="effectAction('unmount')">Unmount Component</button>
+                <button class="success" onclick="effectAction('remount')">Remount</button>
+            </div>
+
+            <div class="state-row">
+                <div class="state-card">
+                    <div class="state-label">count</div>
+                    <div class="state-val" id="eff-count">0</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">name</div>
+                    <div class="state-val" id="eff-name" style="font-size:1rem">""</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">render #</div>
+                    <div class="state-val" id="eff-render" style="color:var(--purple)">1</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">mounted</div>
+                    <div class="state-val" id="eff-mounted" style="color:var(--success)">Yes</div>
+                </div>
+            </div>
+
+            <!-- Pattern legend + log -->
+            <div style="margin-bottom:.75rem;">
+                <span class="effect-tag mount">🟢 On Mount</span>
+                <span class="effect-tag update">🔵 Every Render</span>
+                <span class="effect-tag" style="background:rgba(245,158,11,.2);color:var(--warning)">🟡 count changes</span>
+                <span class="effect-tag" style="background:rgba(168,85,247,.2);color:var(--purple)">🟣 name changes</span>
+                <span class="effect-tag unmount">🔴 Cleanup</span>
+            </div>
+            <div class="log" id="effect-log" style="max-height:220px"><p class="info">Mount the component to begin.</p></div>
+        </div>
+
+        <!-- Pattern reference -->
+        <div class="panel">
+            <h2>Pattern Quick Reference</h2>
+            <div class="grid-2">
+                <div>
+                    <p style="color:var(--muted);font-size:.85rem;margin-bottom:.5rem">Dependency Array</p>
+                    <div class="code-block" style="margin-bottom:.5rem">useEffect(() => { … })
+→ Every render</div>
+                    <div class="code-block" style="margin-bottom:.5rem">useEffect(() => { … }, [])
+→ Mount only</div>
+                    <div class="code-block" style="margin-bottom:.5rem">useEffect(() => { … }, [count])
+→ Mount + when count changes</div>
+                    <div class="code-block">useEffect(() => {
+  …
+  return () => cleanup();
+}, [])
+→ Mount + cleanup on unmount</div>
+                </div>
+                <div>
+                    <p style="color:var(--muted);font-size:.85rem;margin-bottom:.5rem">Use For</p>
+                    <div style="color:var(--muted);font-size:.88rem;line-height:2">
+                        <p>⚠️ Rarely — debugging only</p>
+                        <p>✅ Initial data fetch, one-time setup</p>
+                        <p>✅ Refetch when a value changes</p>
+                        <p>✅ Timers, event listeners, WebSockets</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════ TAB 3: Data Fetch ═══ -->
+    <div id="tab-fetch" class="tab-content">
+        <div class="panel">
+            <h2>Data Fetching with useEffect</h2>
+            <p class="desc">Simulates fetching from <code>https://jsonplaceholder.typicode.com/posts/{id}</code>. Observe the loading → success / error state transitions.</p>
+            <div class="info-box">This calls a real public API. Make sure you have internet access.</div>
+            <div class="controls">
+                <label>Post ID:</label>
+                <input type="number" id="fetch-id" value="1" min="1" max="100" style="width:80px">
+                <button onclick="doFetch()" class="success">Fetch Post</button>
+                <button onclick="doFetchBad()" class="danger">Fetch Bad ID (999)</button>
+                <button class="muted" onclick="resetFetch()">Reset</button>
+            </div>
+            <div class="state-row">
+                <div class="state-card">
+                    <div class="state-label">status (state)</div>
+                    <div class="state-val" id="fetch-status" style="font-size:1rem">idle</div>
+                </div>
+                <div class="state-card">
+                    <div class="state-label">postId (state)</div>
+                    <div class="state-val" id="fetch-postid">—</div>
+                </div>
+            </div>
+
+            <!-- The three states -->
+            <div id="fetch-loading" style="display:none;text-align:center;padding:1.5rem">
+                <div style="font-size:1.5rem;animation:spin 1s linear infinite;display:inline-block">⏳</div>
+                <p style="color:var(--muted);margin-top:.5rem">Loading post...</p>
+            </div>
+            <div id="fetch-error" style="display:none;background:rgba(239,68,68,.1);border:1px solid var(--danger);border-radius:8px;padding:1.25rem">
+                <p style="color:var(--danger);font-weight:700">⚠ Error</p>
+                <p id="fetch-error-msg" style="color:var(--muted)"></p>
+            </div>
+            <div id="fetch-result" style="display:none;background:#000;border:1px solid var(--border);border-radius:8px;padding:1.25rem">
+                <p style="color:var(--muted);font-size:.8rem;margin-bottom:.35rem">Post #<span id="res-id"></span></p>
+                <h3 id="res-title" style="margin-bottom:.5rem;color:var(--primary)"></h3>
+                <p id="res-body" style="color:var(--muted);font-size:.9rem"></p>
+            </div>
+
+            <div class="log" id="fetch-log" style="margin-top:1rem"><p class="info">Click "Fetch Post" to begin.</p></div>
+        </div>
+
+        <div class="panel">
+            <h2>The Three States Pattern</h2>
+            <p class="desc">Every data fetch should handle all three states. Never show a blank screen.</p>
+            <div class="code-block">const [post, setPost]       = useState(null);
+const [loading, setLoading] = useState(true);
+const [error, setError]     = useState(null);
+
+// In JSX:
+if (loading) return &lt;p&gt;Loading...&lt;/p&gt;;
+if (error)   return &lt;p style={{color:'red'}}&gt;{error}&lt;/p&gt;;
+return &lt;div&gt;{post.title}&lt;/div&gt;;</div>
+        </div>
+    </div>
+</div>
+
+<style>
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+</style>
+
+<script>
+// ── TAB SWITCHING ──────────────────────────────────────────────
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+
+function log(logId, msg, type = 'ok') {
+    const el = document.getElementById(logId);
+    const p = document.createElement('p');
+    p.className = type;
+    p.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+    el.prepend(p);
+    while (el.children.length > 30) el.removeChild(el.lastChild);
+}
+
+// ── COUNTER ────────────────────────────────────────────────────
+let count = 0, counterRenders = 1;
+
+function counterAction(type) {
+    if (type === 'inc') { count++; log('counter-log', `setCount(${count}) called → re-render #${counterRenders + 1}`); }
+    else if (type === 'dec') { count--; log('counter-log', `setCount(${count}) called → re-render #${counterRenders + 1}`); }
+    else { count = 0; log('counter-log', `setCount(0) — reset → re-render #${counterRenders + 1}`, 'warn'); }
+    counterRenders++;
+    document.getElementById('counter-val').textContent = count;
+    document.getElementById('counter-render-val').textContent = counterRenders;
+    document.getElementById('counter-renders').textContent = counterRenders + ' renders';
+}
+
+// ── TOGGLE ─────────────────────────────────────────────────────
+let isVisible = false;
+
+function toggleAction() {
+    isVisible = !isVisible;
+    document.getElementById('toggle-val').textContent = isVisible ? 'true' : 'false';
+    document.getElementById('toggle-val').style.color = isVisible ? 'var(--success)' : 'var(--warning)';
+    document.getElementById('toggle-btn').textContent = isVisible ? 'Hide Message' : 'Show Message';
+    document.getElementById('toggle-msg').style.display = isVisible ? 'block' : 'none';
+    document.getElementById('toggle-placeholder').style.display = isVisible ? 'none' : 'block';
+    const box = document.getElementById('toggle-box');
+    box.classList.toggle('visible', isVisible);
+}
+
+// ── CONTROLLED INPUT ───────────────────────────────────────────
+function controlledAction() {
+    const val = document.getElementById('controlled-input').value;
+    document.getElementById('controlled-val').textContent = '"' + val + '"';
+    document.getElementById('controlled-len').textContent = val.length;
+    document.getElementById('controlled-warning').style.display = val.length > 20 ? 'block' : 'none';
+}
+
+// ── EFFECT EXPLORER ────────────────────────────────────────────
+let effCount = 0, effName = '', effRenders = 0, effMounted = false;
+
+function effectLog(msg, type) { log('effect-log', msg, type); }
+
+function simulateMount() {
+    effMounted = true;
+    effRenders = 1;
+    effCount = 0;
+    effName = '';
+    document.getElementById('eff-count').textContent = '0';
+    document.getElementById('eff-name').textContent = '""';
+    document.getElementById('eff-render').textContent = '1';
+    document.getElementById('eff-mounted').textContent = 'Yes';
+    document.getElementById('eff-mounted').style.color = 'var(--success)';
+    effectLog('🟢 [Mount] useEffect(fn, []) fired — component mounted', 'ok');
+    effectLog('🔵 [Every] useEffect(fn) fired — after render #1', 'info');
+}
+
+function effectAction(type) {
+    if (!effMounted && type !== 'remount') {
+        effectLog('⚠ Component is unmounted. Click "Remount" first.', 'warn');
+        return;
+    }
+    if (type === 'incCount') {
+        const old = effCount;
+        effCount++;
+        effRenders++;
+        document.getElementById('eff-count').textContent = effCount;
+        document.getElementById('eff-render').textContent = effRenders;
+        effectLog(`🔵 [Every] useEffect(fn) — render #${effRenders}`, 'info');
+        effectLog(`🟡 [count] useEffect(fn, [count]) — count: ${old} → ${effCount}`, 'warn');
+    } else if (type === 'setName') {
+        const val = document.getElementById('effect-name').value;
+        const old = effName;
+        effName = val;
+        effRenders++;
+        document.getElementById('eff-name').textContent = '"' + val + '"';
+        document.getElementById('eff-render').textContent = effRenders;
+        effectLog(`🔵 [Every] useEffect(fn) — render #${effRenders}`, 'info');
+        if (old !== val) effectLog(`🟣 [name] useEffect(fn, [name]) — name changed`, 'ok');
+    } else if (type === 'forceRender') {
+        effRenders++;
+        document.getElementById('eff-render').textContent = effRenders;
+        effectLog(`🔵 [Every] useEffect(fn) — render #${effRenders}`, 'info');
+        effectLog(`  ↳ useEffect(fn, []) did NOT fire — no dependency changed`, 'warn');
+        effectLog(`  ↳ useEffect(fn, [count]) did NOT fire — count unchanged`, 'warn');
+    } else if (type === 'unmount') {
+        effMounted = false;
+        document.getElementById('eff-mounted').textContent = 'No';
+        document.getElementById('eff-mounted').style.color = 'var(--danger)';
+        effectLog('🔴 [Cleanup] cleanup fn from useEffect(fn, []) ran — component unmounted', 'err');
+        effectLog('🔴 [Cleanup] cleanup fn from useEffect(fn, [count]) ran', 'err');
+    } else if (type === 'remount') {
+        simulateMount();
+    }
+}
+
+simulateMount();
+
+// ── DATA FETCH ─────────────────────────────────────────────────
+function setFetchState(status) {
+    document.getElementById('fetch-status').textContent = status;
+    document.getElementById('fetch-loading').style.display = status === 'loading' ? 'block' : 'none';
+    document.getElementById('fetch-error').style.display   = status === 'error'   ? 'block' : 'none';
+    document.getElementById('fetch-result').style.display  = status === 'success' ? 'block' : 'none';
+    const colors = { idle:'var(--muted)', loading:'var(--warning)', success:'var(--success)', error:'var(--danger)' };
+    document.getElementById('fetch-status').style.color = colors[status] || 'white';
+}
+
+function doFetch(badId = false) {
+    const id = badId ? 999 : parseInt(document.getElementById('fetch-id').value) || 1;
+    document.getElementById('fetch-postid').textContent = id;
+    setFetchState('loading');
+    log('fetch-log', `setStatus('loading') — fetch starting for post #${id}`, 'warn');
+
+    fetch(`https://jsonplaceholder.typicode.com/posts/${id}`)
+        .then(res => {
+            if (!res.ok) throw new Error(`HTTP ${res.status} — Post not found`);
+            return res.json();
+        })
+        .then(data => {
+            document.getElementById('res-id').textContent    = data.id;
+            document.getElementById('res-title').textContent = data.title;
+            document.getElementById('res-body').textContent  = data.body;
+            setFetchState('success');
+            log('fetch-log', `setPost(data) — post "${data.title.slice(0,30)}..." loaded`, 'ok');
+            log('fetch-log', `setStatus('success')`, 'ok');
+        })
+        .catch(err => {
+            document.getElementById('fetch-error-msg').textContent = err.message;
+            setFetchState('error');
+            log('fetch-log', `setError("${err.message}")`, 'err');
+            log('fetch-log', `setStatus('error')`, 'err');
+        });
+}
+
+function doFetchBad() { doFetch(true); }
+function resetFetch() {
+    setFetchState('idle');
+    document.getElementById('fetch-postid').textContent = '—';
+    log('fetch-log', 'Reset.', 'info');
+}
+</script>
+</body>
+</html>
