@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Algorithms Visualizer | Lesson 18</title>
+    <style>
+        :root {
+            --bg:#0f172a; --text:#f8fafc; --surface:#1e293b; --border:#334155;
+            --primary:#3b82f6; --success:#10b981; --warning:#f59e0b;
+            --danger:#ef4444; --purple:#a855f7; --muted:#94a3b8;
+        }
+        *{box-sizing:border-box;margin:0;padding:0;}
+        body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);padding:2rem;line-height:1.6;}
+        .container{max-width:1000px;margin:0 auto;}
+        h1{font-size:1.8rem;margin-bottom:.25rem;}
+        .subtitle{color:var(--muted);margin-bottom:2rem;}
+        h2{margin-bottom:.5rem;}
+        p.desc{color:var(--muted);margin-bottom:1.25rem;font-size:.95rem;}
+        /* Tabs */
+        .tabs{display:flex;gap:.5rem;margin-bottom:2rem;border-bottom:2px solid var(--border);padding-bottom:1rem;}
+        .tab-btn{background:none;border:1px solid var(--border);color:var(--muted);font-size:.95rem;cursor:pointer;padding:.45rem 1rem;border-radius:6px;transition:all .2s;}
+        .tab-btn:hover{background:var(--surface);color:var(--text);}
+        .tab-btn.active{background:var(--primary);color:white;border-color:var(--primary);}
+        .tab-content{display:none;animation:fadeIn .25s;}
+        .tab-content.active{display:block;}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        /* Panel */
+        .panel{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:1.75rem;margin-bottom:1.5rem;}
+        /* Controls */
+        .controls{display:flex;gap:.75rem;align-items:center;flex-wrap:wrap;margin-bottom:1.5rem;}
+        input,button,select{padding:.5rem 1rem;border-radius:6px;border:1px solid var(--border);background:#0f172a;color:white;font-size:.95rem;}
+        button{background:var(--primary);cursor:pointer;border:none;font-weight:600;}
+        button:hover{filter:brightness(1.15);}
+        button:disabled{opacity:0.5;cursor:not-allowed;}
+        button.danger{background:var(--danger);}
+        button.success{background:var(--success);}
+        /* Visual area sorting */
+        .bars-container{display:flex;align-items:flex-end;justify-content:center;gap:4px;height:250px;background:#000;border-radius:8px;padding:1rem;margin-bottom:1rem;overflow:hidden;}
+        .bar{width:30px;background:var(--primary);border-radius:4px 4px 0 0;transition:height 0.2s, background 0.2s;}
+        .bar.comparing{background:var(--warning);}
+        .bar.swapping{background:var(--danger);}
+        .bar.sorted{background:var(--success);}
+        .bar.min{background:var(--purple);}
+        .bar-label{text-align:center;font-size:0.75rem;color:white;margin-top:-20px;font-weight:bold;}
+        /* Visual area searching */
+        .search-container{display:flex;align-items:center;justify-content:center;gap:8px;height:100px;background:#000;border-radius:8px;padding:1rem;margin-bottom:1rem;overflow:x-auto;}
+        .search-box{display:flex;align-items:center;justify-content:center;width:40px;height:40px;background:var(--surface);border:2px solid var(--border);border-radius:6px;font-weight:bold;transition:all 0.2s;}
+        .search-box.checking{border-color:var(--warning);background:rgba(245,158,11,0.2);}
+        .search-box.found{border-color:var(--success);background:rgba(16,185,129,0.2);transform:scale(1.1);}
+        .search-box.eliminated{opacity:0.2;}
+        /* Log */
+        .log{background:#000;border-radius:6px;padding:1rem;max-height:140px;overflow-y:auto;font-family:'Consolas','Courier New',monospace;font-size:.82rem;}
+        .log p{color:#a5b4fc;margin-bottom:.2rem;}
+        .log .ok{color:var(--success);}
+        .log .err{color:var(--danger);}
+        .log .info{color:var(--warning);}
+        /* Info box */
+        .info-box{background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.3);border-radius:6px;padding:.7rem 1rem;margin-bottom:1rem;font-size:.88rem;color:#93c5fd;}
+        .stats-row{display:flex;gap:1rem;margin-bottom:1rem;}
+        .stat{background:#0f172a;border:1px solid var(--border);border-radius:6px;padding:.6rem 1rem;flex:1;text-align:center;}
+        .stat-val{font-size:1.5rem;font-weight:700;color:var(--primary);}
+        .stat-lbl{font-size:.75rem;color:#64748b;}
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🔍 Algorithms Visualizer</h1>
+    <p class="subtitle">Watch Sorting and Searching Algorithms step by step.</p>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('sort',this)">📊 Sorting Algorithms</button>
+        <button class="tab-btn" onclick="switchTab('search',this)">🔎 Searching Algorithms</button>
+    </div>
+
+    <!-- SORTING TAB -->
+    <div id="tab-sort" class="tab-content active">
+        <div class="panel">
+            <h2>Sorting Visualizer</h2>
+            <p class="desc">Compare how Bubble Sort and Selection Sort arrange an array.</p>
+            <div class="info-box" id="sort-info">Select an algorithm to begin.</div>
+            
+            <div class="controls">
+                <button onclick="generateArray()">🔄 New Array</button>
+                <select id="sort-algo">
+                    <option value="bubble">Bubble Sort</option>
+                    <option value="selection">Selection Sort</option>
+                </select>
+                <button class="success" id="btn-sort" onclick="startSort()">▶ Start Sort</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="stat-val" id="sort-comparisons">0</div><div class="stat-lbl">Comparisons</div></div>
+                <div class="stat"><div class="stat-val" id="sort-swaps">0</div><div class="stat-lbl">Swaps</div></div>
+            </div>
+
+            <div class="bars-container" id="bars-container"></div>
+            
+            <div style="display:flex;gap:15px;font-size:0.8rem;color:var(--muted);justify-content:center;margin-top:10px;">
+                <div><span style="display:inline-block;width:12px;height:12px;background:var(--warning);margin-right:5px;border-radius:2px;"></span>Comparing</div>
+                <div><span style="display:inline-block;width:12px;height:12px;background:var(--danger);margin-right:5px;border-radius:2px;"></span>Swapping</div>
+                <div><span style="display:inline-block;width:12px;height:12px;background:var(--purple);margin-right:5px;border-radius:2px;"></span>Minimum (Selection Sort)</div>
+                <div><span style="display:inline-block;width:12px;height:12px;background:var(--success);margin-right:5px;border-radius:2px;"></span>Sorted</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SEARCHING TAB -->
+    <div id="tab-search" class="tab-content">
+        <div class="panel">
+            <h2>Searching Visualizer</h2>
+            <p class="desc">Compare Linear Search (O(n)) vs Binary Search (O(log n)). Note: Binary Search requires a sorted array!</p>
+            
+            <div class="controls">
+                <button onclick="generateSearchArray('unsorted')">🔄 New Unsorted Array</button>
+                <button onclick="generateSearchArray('sorted')">🔄 New Sorted Array</button>
+            </div>
+            
+            <div class="controls" style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px;">
+                <input type="number" id="search-target" placeholder="Target number..." style="width:140px">
+                <select id="search-algo">
+                    <option value="linear">Linear Search</option>
+                    <option value="binary">Binary Search</option>
+                </select>
+                <button class="success" id="btn-search" onclick="startSearch()">▶ Search</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat"><div class="stat-val" id="search-steps">0</div><div class="stat-lbl">Steps Taken</div></div>
+                <div class="stat"><div class="stat-val" id="search-result">—</div><div class="stat-lbl">Result Index</div></div>
+            </div>
+
+            <div class="search-container" id="search-container"></div>
+            <div class="log" id="search-log"><p class="info">Generate an array and enter a target to search.</p></div>
+        </div>
+    </div>
+</div>
+
+<script>
+function switchTab(id, btn) {
+    document.querySelectorAll('.tab-content').forEach(e => e.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(e => e.classList.remove('active'));
+    document.getElementById('tab-' + id).classList.add('active');
+    btn.classList.add('active');
+}
+
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+function logMsg(logId, msg, type='ok') {
+    const log = document.getElementById(logId);
+    const p = document.createElement('p');
+    p.className = type;
+    p.textContent = msg;
+    log.prepend(p);
+    while (log.children.length > 20) log.removeChild(log.lastChild);
+}
+
+// ── SORTING VISUALIZER ──────────────────────────────────────────────────
+let array = [];
+let sorting = false;
+
+function generateArray() {
+    if (sorting) return;
+    array = [];
+    for (let i = 0; i < 20; i++) {
+        array.push(Math.floor(Math.random() * 90) + 10);
+    }
+    renderBars();
+    document.getElementById('sort-comparisons').textContent = 0;
+    document.getElementById('sort-swaps').textContent = 0;
+}
+
+function renderBars(comp1 = -1, comp2 = -1, swap1 = -1, swap2 = -1, sorted = [], minIdx = -1) {
+    const container = document.getElementById('bars-container');
+    container.innerHTML = '';
+    array.forEach((val, i) => {
+        const barWrap = document.createElement('div');
+        barWrap.style.display = 'flex';
+        barWrap.style.flexDirection = 'column';
+        barWrap.style.alignItems = 'center';
+
+        const bar = document.createElement('div');
+        bar.className = 'bar';
+        bar.style.height = (val * 2.2) + 'px';
+        
+        if (i === swap1 || i === swap2) bar.classList.add('swapping');
+        else if (i === comp1 || i === comp2) bar.classList.add('comparing');
+        else if (i === minIdx) bar.classList.add('min');
+        else if (sorted.includes(i)) bar.classList.add('sorted');
+
+        const lbl = document.createElement('div');
+        lbl.className = 'bar-label';
+        lbl.textContent = val;
+
+        barWrap.appendChild(bar);
+        barWrap.appendChild(lbl);
+        container.appendChild(barWrap);
+    });
+}
+
+async function startSort() {
+    if (sorting) return;
+    sorting = true;
+    document.getElementById('btn-sort').disabled = true;
+    const algo = document.getElementById('sort-algo').value;
+    
+    let comps = 0;
+    let swaps = 0;
+    const updateStats = () => {
+        document.getElementById('sort-comparisons').textContent = comps;
+        document.getElementById('sort-swaps').textContent = swaps;
+    };
+
+    const info = document.getElementById('sort-info');
+
+    if (algo === 'bubble') {
+        info.innerHTML = "<strong>Bubble Sort:</strong> Repeatedly compares adjacent elements and swaps them if wrong. The largest element 'bubbles' to the end in each pass.";
+        let sorted = [];
+        for (let i = 0; i < array.length; i++) {
+            for (let j = 0; j < array.length - 1 - i; j++) {
+                comps++;
+                updateStats();
+                renderBars(j, j + 1, -1, -1, sorted);
+                await sleep(100);
+                
+                if (array[j] > array[j + 1]) {
+                    swaps++;
+                    updateStats();
+                    renderBars(-1, -1, j, j + 1, sorted);
+                    await sleep(100);
+                    
+                    let temp = array[j];
+                    array[j] = array[j + 1];
+                    array[j + 1] = temp;
+                    
+                    renderBars(-1, -1, j, j + 1, sorted);
+                    await sleep(100);
+                }
+            }
+            sorted.push(array.length - 1 - i);
+        }
+        sorted.push(0);
+        renderBars(-1, -1, -1, -1, sorted);
+    } 
+    else if (algo === 'selection') {
+        info.innerHTML = "<strong>Selection Sort:</strong> Scans the unsorted part to find the minimum element, then swaps it to the front.";
+        let sorted = [];
+        for (let i = 0; i < array.length; i++) {
+            let minIdx = i;
+            renderBars(i, -1, -1, -1, sorted, minIdx);
+            await sleep(100);
+            
+            for (let j = i + 1; j < array.length; j++) {
+                comps++;
+                updateStats();
+                renderBars(i, j, -1, -1, sorted, minIdx);
+                await sleep(100);
+                
+                if (array[j] < array[minIdx]) {
+                    minIdx = j;
+                    renderBars(-1, -1, -1, -1, sorted, minIdx);
+                    await sleep(100);
+                }
+            }
+            
+            if (minIdx !== i) {
+                swaps++;
+                updateStats();
+                renderBars(-1, -1, i, minIdx, sorted, minIdx);
+                await sleep(150);
+                
+                let temp = array[i];
+                array[i] = array[minIdx];
+                array[minIdx] = temp;
+                
+                renderBars(-1, -1, i, minIdx, sorted, -1);
+                await sleep(150);
+            }
+            sorted.push(i);
+        }
+        renderBars(-1, -1, -1, -1, sorted);
+    }
+
+    sorting = false;
+    document.getElementById('btn-sort').disabled = false;
+}
+
+generateArray();
+
+// ── SEARCHING VISUALIZER ────────────────────────────────────────────────
+let searchArray = [];
+let searching = false;
+let isSorted = false;
+
+function generateSearchArray(type) {
+    if (searching) return;
+    searchArray = [];
+    for (let i = 0; i < 20; i++) {
+        searchArray.push(Math.floor(Math.random() * 90) + 10);
+    }
+    
+    if (type === 'sorted') {
+        searchArray.sort((a, b) => a - b);
+        isSorted = true;
+        logMsg('search-log', 'Generated new SORTED array.', 'info');
+    } else {
+        isSorted = false;
+        logMsg('search-log', 'Generated new UNSORTED array.', 'info');
+    }
+    
+    renderSearchBoxes();
+    document.getElementById('search-steps').textContent = 0;
+    document.getElementById('search-result').textContent = '—';
+}
+
+function renderSearchBoxes(checking = -1, found = -1, left = 0, right = searchArray.length - 1) {
+    const container = document.getElementById('search-container');
+    container.innerHTML = '';
+    searchArray.forEach((val, i) => {
+        const box = document.createElement('div');
+        box.className = 'search-box';
+        box.textContent = val;
+        
+        if (i === found) box.classList.add('found');
+        else if (i === checking) box.classList.add('checking');
+        else if (i < left || i > right) box.classList.add('eliminated');
+        
+        container.appendChild(box);
+    });
+}
+
+async function startSearch() {
+    if (searching) return;
+    
+    const targetInput = document.getElementById('search-target').value;
+    if (!targetInput) {
+        logMsg('search-log', 'Please enter a target number to search for.', 'err');
+        return;
+    }
+    const target = parseInt(targetInput);
+    const algo = document.getElementById('search-algo').value;
+    
+    if (algo === 'binary' && !isSorted) {
+        logMsg('search-log', '⚠️ WARNING: You are running Binary Search on an UNSORTED array. It will likely fail to find the number.', 'err');
+        await sleep(1000);
+    }
+
+    searching = true;
+    document.getElementById('btn-search').disabled = true;
+    let steps = 0;
+    
+    if (algo === 'linear') {
+        logMsg('search-log', `Starting Linear Search for ${target}...`, 'info');
+        let foundIdx = -1;
+        
+        for (let i = 0; i < searchArray.length; i++) {
+            steps++;
+            document.getElementById('search-steps').textContent = steps;
+            renderSearchBoxes(i, -1);
+            await sleep(300);
+            
+            if (searchArray[i] === target) {
+                foundIdx = i;
+                renderSearchBoxes(-1, i);
+                logMsg('search-log', `Found ${target} at index ${i} after ${steps} steps.`, 'ok');
+                document.getElementById('search-result').textContent = i;
+                break;
+            }
+        }
+        
+        if (foundIdx === -1) {
+            renderSearchBoxes(-1, -1);
+            logMsg('search-log', `Target ${target} not found after ${steps} steps.`, 'err');
+            document.getElementById('search-result').textContent = '-1';
+        }
+    } 
+    else if (algo === 'binary') {
+        logMsg('search-log', `Starting Binary Search for ${target}...`, 'info');
+        let left = 0;
+        let right = searchArray.length - 1;
+        let foundIdx = -1;
+        
+        while (left <= right) {
+            steps++;
+            document.getElementById('search-steps').textContent = steps;
+            
+            let mid = Math.floor((left + right) / 2);
+            renderSearchBoxes(mid, -1, left, right);
+            logMsg('search-log', `Checking middle index ${mid} (value ${searchArray[mid]}). Range: [${left}, ${right}]`);
+            await sleep(800);
+            
+            if (searchArray[mid] === target) {
+                foundIdx = mid;
+                renderSearchBoxes(-1, mid, left, right);
+                logMsg('search-log', `Found ${target} at index ${mid} after ${steps} steps.`, 'ok');
+                document.getElementById('search-result').textContent = mid;
+                break;
+            } else if (searchArray[mid] < target) {
+                logMsg('search-log', `${searchArray[mid]} is too small. Eliminating left half.`);
+                left = mid + 1;
+            } else {
+                logMsg('search-log', `${searchArray[mid]} is too big. Eliminating right half.`);
+                right = mid - 1;
+            }
+        }
+        
+        if (foundIdx === -1) {
+            renderSearchBoxes(-1, -1, left, right);
+            logMsg('search-log', `Target ${target} not found after ${steps} steps.`, 'err');
+            document.getElementById('search-result').textContent = '-1';
+        }
+    }
+
+    searching = false;
+    document.getElementById('btn-search').disabled = false;
+}
+
+generateSearchArray('unsorted');
+</script>
+</body>
+</html>
