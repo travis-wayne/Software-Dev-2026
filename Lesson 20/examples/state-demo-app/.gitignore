@@ -1,0 +1,7 @@
+# .gitignore for state-demo-app
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*

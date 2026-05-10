@@ -1,0 +1,7 @@
+# .gitignore for react-intro-app
+node_modules
+dist
+dist-ssr
+*.local
+.env
+.env.*

@@ -356,6 +356,64 @@ list.print();                    // → 5 → 20 → 30
 console.log(list.length);       // → 3
 ```
 
+### The Traversal Pattern — The Foundation of All Linked List Methods
+
+Before you write `toArray()` or `contains()` (in the assignment), you need to understand **the one pattern that powers all Linked List operations**: traversal.
+
+> ⚠️ You cannot use a `for` loop with an index on a Linked List. There is no `arr[i]`.
+> Instead, you **walk the chain with a pointer**.
+
+```javascript
+// The universal traversal skeleton — memorise this pattern:
+let current = this.head;      // 1. Start at the head
+
+while (current !== null) {    // 2. Keep going until you fall off the end
+    // 3. Do something with current.value here
+    console.log(current.value);
+
+    current = current.next;   // 4. ADVANCE the pointer — NEVER forget this step!
+                              //    Missing this line causes an infinite loop.
+}
+```
+
+**Worked example — `toArray()` (returns all values as a plain array):**
+
+```javascript
+toArray() {
+    const result = [];           // Start with an empty array
+    let current = this.head;     // Start at the head of the list
+
+    while (current !== null) {
+        result.push(current.value); // Collect the value of each node
+        current = current.next;     // Move to the next node
+    }
+
+    return result;
+}
+// For list: 10 → 20 → 30
+// Returns:  [10, 20, 30]
+```
+
+**Worked example — `contains(value)` (returns true if the value exists):**
+
+```javascript
+contains(value) {
+    let current = this.head;
+
+    while (current !== null) {
+        if (current.value === value) return true; // Found it!
+        current = current.next;
+    }
+
+    return false; // Reached null — not found
+}
+// For list: 10 → 20 → 30
+// contains(20) → true
+// contains(99) → false
+```
+
+> **Key insight:** `search()`, `contains()`, `toArray()`, `remove()`, and `print()` are ALL just variations of this same traversal skeleton with different work happening at step 3.
+
 ---
 
 ## 5. When to Choose Which?

@@ -1,0 +1,137 @@
+/* ─────────────────────────────────────────────────
+   Lesson 19 — react-intro-app — App.css
+   ───────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg:         #0f172a;
+  --surface:    #1e293b;
+  --border:     #334155;
+  --text:       #f8fafc;
+  --text-muted: #94a3b8;
+  --primary:    #3b82f6;
+  --primary-dk: #2563eb;
+  --secondary:  #475569;
+  --danger:     #ef4444;
+  --success:    #10b981;
+  --radius:     10px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Layout ─────────────────────────────── */
+.app { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.app-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.app-header h1 { font-size: 2rem; margin-bottom: .5rem; }
+.app-subtitle   { color: var(--text-muted); font-size: .95rem; }
+.app-subtitle code {
+  background: var(--surface);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  font-size: .9em;
+  color: #93c5fd;
+}
+
+.team-board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2.5rem;
+}
+
+/* ── User Card ──────────────────────────── */
+.user-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem;
+  transition: transform .15s, box-shadow .15s;
+}
+.user-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  margin-bottom: 1rem;
+}
+
+.avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.avatar--online  { background: rgba(16,185,129,.2); color: var(--success); border: 2px solid var(--success); }
+.avatar--offline { background: rgba(148,163,184,.15); color: var(--text-muted); border: 2px solid var(--border); }
+
+.card-name { font-size: 1.1rem; font-weight: 600; margin-bottom: .25rem; }
+.card-role { color: var(--text-muted); font-size: .88rem; margin-bottom: 1.25rem; }
+
+.card-actions { display: flex; gap: .65rem; flex-wrap: wrap; }
+
+/* ── Button ─────────────────────────────── */
+.btn {
+  padding: .45rem 1rem;
+  border-radius: 6px;
+  border: none;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: filter .15s, opacity .15s;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+.btn--primary   { background: var(--primary);   color: #fff; }
+.btn--secondary { background: var(--secondary); color: #fff; }
+.btn--danger    { background: var(--danger);    color: #fff; }
+.btn:not(:disabled):hover { filter: brightness(1.12); }
+
+/* ── Badge ──────────────────────────────── */
+.badge {
+  padding: .2rem .65rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.badge--success { background: rgba(16,185,129,.2); color: var(--success); }
+.badge--neutral { background: rgba(148,163,184,.15); color: var(--text-muted); }
+.badge--warning { background: rgba(245,158,11,.2); color: #f59e0b; }
+
+/* ── Button Demo Section ─────────────────── */
+.button-demo {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.75rem;
+}
+.button-demo h2 { margin-bottom: .5rem; }
+.demo-desc  { color: var(--text-muted); font-size: .9rem; margin-bottom: 1.25rem; }
+.demo-desc code {
+  background: var(--bg);
+  padding: .1rem .4rem;
+  border-radius: 4px;
+  font-size: .9em;
+  color: #93c5fd;
+}
+.button-row { display: flex; gap: .75rem; flex-wrap: wrap; }

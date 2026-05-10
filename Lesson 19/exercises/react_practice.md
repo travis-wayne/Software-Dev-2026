@@ -1,7 +1,13 @@
 # Practice Exercises — Lesson 19: Intro to React
 
 ## ⚙️ Setup
-For these exercises, you can use the `react-playground.html` file provided in the `examples` folder, or create a new React project using Vite.
+Open the provided Vite project for this lesson:
+```bash
+cd "Lesson 19/examples/react-intro-app"
+pnpm install   # only needed the first time
+pnpm dev       # starts the dev server at http://localhost:5173
+```
+All exercises should be done inside this project. You can open `src/App.jsx` and the files inside `src/components/` in VS Code.
 
 ---
 
@@ -166,4 +172,37 @@ function StoreFront() {
 ))}
 ```
 *Note: In React, whenever you map over an array to create elements, you must give each root element a unique `key` prop (usually the database ID). This helps React keep track of the elements efficiently.*
+</details>
+
+---
+
+### Exercise 7: Extend a Real Component — `avatarUrl` Prop
+
+Open `src/components/UserCard.jsx` in the Vite project.
+
+**Your Task:**
+1. Add `avatarUrl` to the destructured props list at the top of the function.
+2. Render an `<img>` tag *above* the `.card-name` heading:
+   ```jsx
+   <img src={avatarUrl} alt={`${name} avatar`} className="card-avatar-img" />
+   ```
+3. Open `src/App.jsx`. Find the `teamMembers` array and add an `avatarUrl` field to each member. Use this free avatar API (change `?u=` for unique images):
+   ```
+   https://i.pravatar.cc/80?u=1
+   https://i.pravatar.cc/80?u=2
+   https://i.pravatar.cc/80?u=3
+   ```
+4. Pass the new prop in the `.map()` call: `<UserCard ... avatarUrl={member.avatarUrl} />`
+
+**Predict before running:**
+```
+// What happens if you forget to pass avatarUrl and it receives `undefined`?
+// Will React throw an error, or will the <img> just show a broken image icon?
+// Answer: _______________________________________________
+```
+
+<details>
+<summary>✅ Answer</summary>
+
+React will NOT throw an error. `<img src={undefined} />` renders a broken image icon — React silently ignores it. This is why default prop values (`avatarUrl = ''`) or conditional rendering (`{avatarUrl && <img ... />}`) are good practices.
 </details>

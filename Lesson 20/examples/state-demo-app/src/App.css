@@ -1,0 +1,210 @@
+/* ─────────────────────────────────────────────────
+   Lesson 20 — state-demo-app — App.css
+   ───────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg:      #0f172a;
+  --surface: #1e293b;
+  --border:  #334155;
+  --text:    #f8fafc;
+  --muted:   #94a3b8;
+  --primary: #3b82f6;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger:  #ef4444;
+  --purple:  #a855f7;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+code {
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(59,130,246,.12);
+  color: #93c5fd;
+  padding: .1em .4em;
+  border-radius: 4px;
+  font-size: .88em;
+}
+
+/* ── Layout ─────────────────────────────── */
+.app { max-width: 820px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+.app-header { text-align: center; margin-bottom: 2rem; }
+.app-header h1 { font-size: 1.8rem; margin-bottom: .4rem; }
+.app-subtitle { color: var(--muted); font-size: .92rem; }
+
+/* ── Tabs ───────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 1rem;
+  margin-bottom: 2rem;
+}
+.tab-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  font-size: .88rem;
+  font-family: inherit;
+  font-weight: 500;
+  padding: .45rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all .2s;
+}
+.tab-btn:hover { background: var(--surface); color: var(--text); }
+.tab-btn--active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+/* ── Demo Card ──────────────────────────── */
+.demo-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 2rem;
+}
+.demo-card h2 { font-size: 1.25rem; margin-bottom: .5rem; }
+.demo-desc { color: var(--muted); font-size: .9rem; margin-bottom: 1.5rem; line-height: 1.7; }
+
+.demo-section { margin-bottom: 1.75rem; padding-bottom: 1.75rem; border-bottom: 1px solid var(--border); }
+.demo-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+.demo-section h3 { font-size: 1rem; margin-bottom: .4rem; }
+
+/* ── Counter display ────────────────────── */
+.counter-display {
+  font-size: 5rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary);
+  margin: 1rem 0;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Button ─────────────────────────────── */
+.btn-row { display: flex; gap: .65rem; flex-wrap: wrap; margin-bottom: 1.25rem; align-items: center; }
+.btn {
+  padding: .5rem 1.1rem;
+  border-radius: 6px;
+  border: none;
+  font-family: inherit;
+  font-size: .92rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: filter .15s;
+}
+.btn:hover { filter: brightness(1.12); }
+.btn-success { background: var(--success); color: #fff; }
+.btn-danger  { background: var(--danger);  color: #fff; }
+.btn-muted   { background: #334155; color: var(--text); }
+
+/* ── Controlled input ───────────────────── */
+.controlled-input {
+  width: 100%;
+  padding: .6rem 1rem;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: #0f172a;
+  color: var(--text);
+  font-size: .95rem;
+  font-family: inherit;
+  margin-bottom: .75rem;
+  outline: none;
+  transition: border-color .15s;
+}
+.controlled-input:focus { border-color: var(--primary); }
+
+/* ── State pill ─────────────────────────── */
+.state-pill {
+  display: inline-block;
+  background: #0f172a;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .3rem 1rem;
+  font-size: .85rem;
+  color: var(--muted);
+  margin-top: .75rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.state-pill strong { color: var(--primary); }
+
+/* ── Message / warning boxes ────────────── */
+.message-box {
+  background: rgba(16,185,129,.1);
+  border: 1px solid rgba(16,185,129,.3);
+  border-radius: 6px;
+  padding: .75rem 1rem;
+  margin-top: .75rem;
+  color: var(--success);
+}
+.warning-box {
+  background: rgba(245,158,11,.1);
+  border: 1px solid rgba(245,158,11,.3);
+  border-radius: 6px;
+  padding: .5rem 1rem;
+  color: var(--warning);
+  font-size: .88rem;
+  margin-top: .5rem;
+}
+
+/* ── Render / Effect log ────────────────── */
+.render-log {
+  background: #000;
+  border-radius: 6px;
+  padding: .75rem 1rem;
+  margin-top: 1.25rem;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.log-label { font-size: .72rem; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-bottom: .5rem; }
+.log-entry { font-family: 'JetBrains Mono', monospace; font-size: .78rem; color: #64748b; padding: .15rem 0; }
+.log-entry--latest { color: var(--success); }
+
+/* ── Concept box ────────────────────────── */
+.concept-box {
+  background: rgba(59,130,246,.08);
+  border: 1px solid rgba(59,130,246,.25);
+  border-radius: 6px;
+  padding: .85rem 1.1rem;
+  font-size: .88rem;
+  color: #93c5fd;
+  margin-top: 1.25rem;
+  line-height: 1.7;
+}
+
+/* ── Fetch demo ─────────────────────────── */
+.post-id-label { font-weight: 700; font-size: 1rem; }
+.fetch-result {
+  background: #000;
+  border-radius: 6px;
+  padding: 1.25rem;
+  min-height: 100px;
+  margin-bottom: 0;
+}
+.state-idle    { color: var(--muted); font-size: .9rem; }
+.state-loading { color: var(--warning); }
+.state-error   { color: var(--danger); }
+.state-success .post-id    { color: var(--muted); font-size: .8rem; margin-bottom: .35rem; }
+.state-success .post-title { color: var(--primary); font-size: 1rem; margin-bottom: .5rem; }
+.state-success .post-body  { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+
+/* ── Clock ──────────────────────────────── */
+.clock-display {
+  font-size: 3.5rem;
+  font-weight: 700;
+  text-align: center;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+  font-family: 'JetBrains Mono', monospace;
+  margin: 1rem 0 .25rem;
+}
+.seconds-counter { text-align: center; color: var(--muted); font-size: .88rem; margin-bottom: 1.25rem; }

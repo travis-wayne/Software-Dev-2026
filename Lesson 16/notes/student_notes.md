@@ -65,6 +65,8 @@ console.log(user.name); // → Travis  (always 1 operation)
 ### 🥈 O(log n) — Logarithmic Time *(Great)*
 The number of operations grows *very slowly* as the input grows. Each step cuts the remaining problem in half. This is the power of **Binary Search**.
 
+> **📌 Lesson 18 Preview:** The code below shows Binary Search so you can see *what* produces O(log n). You will implement it step-by-step, with full tracing and exercises, in **Lesson 18**. For now, focus on understanding the *shape* of the complexity — not the implementation details.
+
 **Analogy:** Finding "Smith" in a sorted phonebook. You don't start at page 1. You open to the exact middle — if you see "M", you know "S" is in the second half. You throw the first half away and repeat. You halve the problem with every single step.
 
 **The Maths:** log₂(1,000,000) ≈ 20. So Binary Search finds any item in a 1-million-item sorted list in at most 20 checks.
