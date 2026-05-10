@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz — Lesson 16: Big O Notation</title>
+<style>
+:root{--bg:#0f172a;--surface:#1e293b;--border:#334155;--text:#f8fafc;--muted:#94a3b8;--primary:#3b82f6;--success:#10b981;--danger:#ef4444;--warning:#f59e0b;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem;}
+.container{max-width:760px;margin:0 auto;}
+h1{font-size:1.7rem;margin-bottom:.3rem;}
+.subtitle{color:var(--muted);margin-bottom:2rem;font-size:.92rem;}
+/* Progress */
+.progress-bar{background:var(--border);border-radius:999px;height:6px;margin-bottom:2rem;overflow:hidden;}
+.progress-fill{background:var(--primary);height:100%;border-radius:999px;transition:width .4s;}
+.progress-label{font-size:.8rem;color:var(--muted);margin-bottom:.5rem;}
+/* Question card */
+.question-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1.75rem;margin-bottom:1.25rem;display:none;animation:fadeIn .25s;}
+.question-card.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.q-number{font-size:.78rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.6rem;}
+.q-text{font-size:1.02rem;line-height:1.65;margin-bottom:1.25rem;}
+.q-text code{background:#0f172a;color:#93c5fd;padding:.1em .4em;border-radius:4px;font-family:'Consolas','Courier New',monospace;font-size:.9em;}
+pre.q-code{background:#000;border:1px solid var(--border);border-radius:6px;padding:1rem;font-family:'Consolas','Courier New',monospace;font-size:.82rem;color:#a5b4fc;margin-bottom:1.25rem;overflow-x:auto;white-space:pre;}
+/* Options */
+.options{display:flex;flex-direction:column;gap:.6rem;}
+.option{background:#0f172a;border:2px solid var(--border);border-radius:8px;padding:.75rem 1rem;cursor:pointer;display:flex;align-items:flex-start;gap:.75rem;transition:border-color .15s,background .15s;font-size:.95rem;line-height:1.5;}
+.option:hover{border-color:var(--primary);background:rgba(59,130,246,.07);}
+.option.selected{border-color:var(--primary);background:rgba(59,130,246,.12);}
+.option.correct{border-color:var(--success)!important;background:rgba(16,185,129,.1)!important;}
+.option.wrong{border-color:var(--danger)!important;background:rgba(239,68,68,.08)!important;}
+.option-key{font-weight:700;color:var(--muted);flex-shrink:0;min-width:18px;}
+.option.selected .option-key{color:var(--primary);}
+.option.correct .option-key{color:var(--success);}
+.option.wrong   .option-key{color:var(--danger);}
+/* Explanation */
+.explanation{background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.25);border-radius:6px;padding:.8rem 1rem;margin-top:1rem;font-size:.88rem;color:#93c5fd;display:none;line-height:1.65;}
+.explanation.show{display:block;}
+/* Buttons */
+.btn-row{display:flex;gap:.75rem;margin-top:1.5rem;flex-wrap:wrap;}
+button{padding:.55rem 1.3rem;border-radius:7px;border:none;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit;transition:filter .15s;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-success{background:var(--success);color:#fff;}
+.btn-muted{background:#334155;color:var(--text);}
+button:hover{filter:brightness(1.1);}
+button:disabled{opacity:.45;cursor:not-allowed;}
+/* Results */
+#results{display:none;text-align:center;padding:2.5rem 1rem;}
+.score-ring{width:140px;height:140px;border-radius:50%;border:6px solid var(--border);display:flex;align-items:center;justify-content:center;flex-direction:column;margin:0 auto 1.5rem;font-size:2.2rem;font-weight:700;}
+.score-ring.great{border-color:var(--success);color:var(--success);}
+.score-ring.ok   {border-color:var(--warning);color:var(--warning);}
+.score-ring.poor {border-color:var(--danger); color:var(--danger);}
+.score-msg{font-size:1.1rem;margin-bottom:.5rem;}
+.score-sub{color:var(--muted);font-size:.9rem;margin-bottom:2rem;}
+.review-list{text-align:left;margin-top:1.5rem;}
+.review-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-bottom:.75rem;}
+.review-item.r-correct{border-left:3px solid var(--success);}
+.review-item.r-wrong  {border-left:3px solid var(--danger);}
+.review-q{font-size:.88rem;margin-bottom:.35rem;}
+.review-a{font-size:.85rem;color:var(--muted);}
+.review-a span{font-weight:600;}
+.review-a .your-ans.wrong{color:var(--danger);}
+.review-a .correct-ans{color:var(--success);}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Quiz — Lesson 16</h1>
+  <p class="subtitle">Big O Notation & Complexity · 10 questions · Select your answer then click Check</p>
+
+  <p class="progress-label" id="prog-label">Question 1 of 10</p>
+  <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:10%"></div></div>
+
+  <div id="quiz-area"></div>
+  <div id="results"></div>
+</div>
+
+<script>
+const QUESTIONS = [
+  {
+    q: "What does Big O Notation measure?",
+    options: ["The exact number of seconds a function takes to run","The rate at which an algorithm's resource usage grows as input size grows","The number of lines of code in a function","The amount of RAM a computer has"],
+    answer: 1,
+    explanation: "Big O measures <em>rate of growth</em>, not exact time. Different computers run at different speeds, so measuring seconds is not useful for comparing algorithms."
+  },
+  {
+    q: "You access an element by its index: <code>arr[42]</code>. What is the Big O?",
+    options: ["O(n)","O(log n)","O(1)","O(n²)"],
+    answer: 2,
+    explanation: "Array index access goes directly to a memory address — it always takes exactly one operation, regardless of array size. That's O(1) — Constant Time."
+  },
+  {
+    q: "Which built-in JavaScript method is <strong>NOT</strong> O(1)?",
+    options: ["arr[0]","obj.name","arr.includes(x)","arr.length"],
+    answer: 2,
+    explanation: "<code>arr.includes(x)</code> loops through every element internally to find a match. It's O(n). The others are direct lookups — O(1)."
+  },
+  {
+    q: "What is the Big O of this function?",
+    code: `function mystery(arr) {\n    for (let x of arr) console.log(x);  // Loop A\n    for (let x of arr) console.log(x);  // Loop B\n}`,
+    options: ["O(n²)","O(2n), which simplifies to O(n)","O(log n)","O(n²) because there are two loops"],
+    answer: 1,
+    explanation: "Two <em>separate</em> (not nested) loops give O(2n). We drop the constant multiplier — the shape of the growth curve is linear, so it simplifies to O(n)."
+  },
+  {
+    q: "What is the Big O of this function?",
+    code: `function pairs(arr) {\n    for (let i of arr) {\n        for (let j of arr) {\n            console.log(i, j);\n        }\n    }\n}`,
+    options: ["O(n)","O(2n)","O(n log n)","O(n²)"],
+    answer: 3,
+    explanation: "A loop INSIDE a loop — for each of the n items in the outer loop, the inner loop runs n times. Total: n × n = n² operations. This is Quadratic Time: O(n²)."
+  },
+  {
+    q: "An algorithm has complexity O(n² + n). After applying simplification rules, what is the final Big O?",
+    options: ["O(n² + n)","O(n)","O(n²)","O(2n²)"],
+    answer: 2,
+    explanation: "We apply the 'Drop Non-Dominant Terms' rule. As n grows very large, n² completely dominates n (e.g., with n=1000, n²=1,000,000 vs n=1,000). So we drop the n."
+  },
+  {
+    q: "Binary Search runs in O(log n). On a sorted array of 1,024 items, what is the maximum number of comparisons needed?",
+    options: ["512","1,024","10","100"],
+    answer: 2,
+    explanation: "log₂(1024) = 10. Binary Search halves the search space each step, so it needs at most 10 comparisons to search 1,024 items. That's the power of O(log n)."
+  },
+  {
+    q: "Which complexity grows the fastest as input size increases?",
+    options: ["O(n)","O(n log n)","O(log n)","O(n²)"],
+    answer: 3,
+    explanation: "Of these four, O(n²) — Quadratic — grows the fastest. With n=1000: O(n)=1,000 ops, O(n log n)≈10,000 ops, O(n²)=1,000,000 ops. O(log n) stays tiny."
+  },
+  {
+    q: "This function returns a new array the same size as its input. What is its Space Complexity?",
+    code: `function doubleAll(arr) {\n    return arr.map(x => x * 2);\n}`,
+    options: ["O(1) — it only calls one method","O(n) — the result array grows with the input","O(n²)","O(log n)"],
+    answer: 1,
+    explanation: "<code>.map()</code> creates a brand new array with one entry for every input item. If the input has 1 million items, the result has 1 million items too. That's O(n) Space."
+  },
+  {
+    q: "You replace a nested loop (O(n²)) with a Set lookup (O(1)) inside a single loop. What is the new time complexity?",
+    options: ["O(n²) — you still have a loop","O(n log n)","O(n) — a single loop with O(1) work inside","O(1)"],
+    answer: 2,
+    explanation: "One loop runs n times. Inside it, we do a Set lookup which is O(1). So the total is n × O(1) = O(n). This is the classic Space-Time trade-off — using a Set eliminates the inner loop."
+  }
+];
+
+let current = 0, score = 0, selected = [], checked = [];
+
+function buildQuiz() {
+  const area = document.getElementById('quiz-area');
+  area.innerHTML = '';
+  QUESTIONS.forEach((q, i) => {
+    const card = document.createElement('div');
+    card.className = 'question-card' + (i === 0 ? ' active' : '');
+    card.id = 'q' + i;
+    let codeBlock = q.code ? `<pre class="q-code">${escHtml(q.code)}</pre>` : '';
+    let opts = q.options.map((o, oi) =>
+      `<div class="option" id="opt-${i}-${oi}" onclick="selectOpt(${i},${oi})">
+        <span class="option-key">${'ABCD'[oi]}</span>
+        <span>${o}</span>
+      </div>`).join('');
+    card.innerHTML = `
+      <div class="q-number">Question ${i+1} of ${QUESTIONS.length}</div>
+      <div class="q-text">${q.q}</div>
+      ${codeBlock}
+      <div class="options">${opts}</div>
+      <div class="explanation" id="exp-${i}">${q.explanation}</div>
+      <div class="btn-row">
+        <button class="btn-primary" id="check-${i}" onclick="checkAnswer(${i})" disabled>Check Answer</button>
+        ${i < QUESTIONS.length-1
+          ? `<button class="btn-muted" id="next-${i}" onclick="nextQ(${i})" style="display:none">Next →</button>`
+          : `<button class="btn-success" id="next-${i}" onclick="showResults()" style="display:none">See Results 🎉</button>`}
+      </div>`;
+    area.appendChild(card);
+  });
+}
+
+function escHtml(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function selectOpt(qi, oi) {
+  if (checked[qi]) return;
+  selected[qi] = oi;
+  document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach(el => el.classList.remove('selected'));
+  document.getElementById(`opt-${qi}-${oi}`).classList.add('selected');
+  document.getElementById(`check-${qi}`).disabled = false;
+}
+
+function checkAnswer(qi) {
+  if (checked[qi]) return;
+  checked[qi] = true;
+  const correct = QUESTIONS[qi].answer;
+  const userAns = selected[qi];
+  if (userAns === correct) score++;
+  document.querySelectorAll(`[id^="opt-${qi}-"]`).forEach((el, oi) => {
+    el.style.pointerEvents = 'none';
+    if (oi === correct) el.classList.add('correct');
+    if (oi === userAns && userAns !== correct) el.classList.add('wrong');
+  });
+  document.getElementById(`exp-${qi}`).classList.add('show');
+  document.getElementById(`check-${qi}`).style.display = 'none';
+  document.getElementById(`next-${qi}`).style.display = 'inline-block';
+}
+
+function nextQ(qi) {
+  document.getElementById('q'+qi).classList.remove('active');
+  current = qi + 1;
+  document.getElementById('q'+current).classList.add('active');
+  updateProgress();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function updateProgress() {
+  const pct = ((current+1)/QUESTIONS.length)*100;
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = `Question ${current+1} of ${QUESTIONS.length}`;
+}
+
+function showResults() {
+  document.getElementById('quiz-area').style.display = 'none';
+  document.getElementById('prog-fill').style.width = '100%';
+  document.getElementById('prog-label').textContent = 'Complete!';
+  const pct = Math.round((score/QUESTIONS.length)*100);
+  const cls = pct>=80?'great':pct>=50?'ok':'poor';
+  const msgs = {great:'Excellent work! 🎉',ok:'Good effort — review the missed ones.',poor:'Keep practising — revisit the lesson notes.'};
+  const reviewItems = QUESTIONS.map((q,i)=>{
+    const ok = selected[i]===q.answer;
+    return `<div class="review-item ${ok?'r-correct':'r-wrong'}">
+      <div class="review-q">${i+1}. ${q.q.replace(/<[^>]+>/g,'')}</div>
+      <div class="review-a">
+        Your answer: <span class="your-ans ${ok?'':'wrong'}">${selected[i]!==undefined?'ABCD'[selected[i]]+') '+q.options[selected[i]]:'Not answered'}</span><br>
+        ${!ok?`Correct answer: <span class="correct-ans">${'ABCD'[q.answer]}) ${q.options[q.answer]}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('results').innerHTML = `
+    <div class="score-ring ${cls}"><span>${score}/${QUESTIONS.length}</span><span style="font-size:.9rem;margin-top:.1rem">${pct}%</span></div>
+    <div class="score-msg">${msgs[cls]}</div>
+    <div class="score-sub">Lesson 16 — Big O Notation & Complexity</div>
+    <button class="btn-primary" onclick="restartQuiz()">↩ Retake Quiz</button>
+    <div class="review-list">${reviewItems}</div>`;
+  document.getElementById('results').style.display = 'block';
+}
+
+function restartQuiz() {
+  current=0; score=0; selected=[]; checked=[];
+  document.getElementById('results').style.display='none';
+  document.getElementById('quiz-area').style.display='block';
+  updateProgress();
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

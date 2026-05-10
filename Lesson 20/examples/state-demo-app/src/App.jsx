@@ -1,14 +1,10 @@
-// src/App.jsx
-// ─────────────────────────────────────────────────
-// Lesson 20 — state-demo-app
-// Tab-based layout that switches between the 4 demos.
-// ─────────────────────────────────────────────────
-
+// src/App.jsx — Lesson 20: state-demo-app
 import { useState } from 'react'
 import CounterDemo from './demos/CounterDemo'
 import ToggleDemo  from './demos/ToggleDemo'
 import FetchDemo   from './demos/FetchDemo'
 import ClockDemo   from './demos/ClockDemo'
+import Quiz        from './Quiz'
 import './App.css'
 
 const TABS = [
@@ -16,7 +12,9 @@ const TABS = [
   { id: 'toggle',  label: '🟡 Toggle & Input',    component: ToggleDemo  },
   { id: 'fetch',   label: '🌐 Data Fetching',      component: FetchDemo   },
   { id: 'clock',   label: '🕐 Cleanup / Clock',   component: ClockDemo   },
+  { id: 'quiz',    label: '📝 Quiz',               component: Quiz        },
 ]
+
 
 function App() {
   const [activeTab, setActiveTab] = useState('counter')
