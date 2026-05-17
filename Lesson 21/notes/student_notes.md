@@ -2,7 +2,7 @@
 
 ## 1. What is Client-Side Routing?
 
-In traditional websites, clicking a link sends a request to the server, the server sends back a brand new HTML file, and the browser completely reloads the page. The screen goes white for a second.
+In traditional websites, clicking a link sends a request to the server, the server sends back a brand new HTML file, and the browser completely reloads the page. The screen goes white for a second, and **all data in memory is lost**.
 
 React is used to build **Single Page Applications (SPAs)**. In an SPA:
 1. You only ever download **one** HTML file (`index.html`).
@@ -11,7 +11,7 @@ React is used to build **Single Page Applications (SPAs)**. In an SPA:
 4. It changes the URL in the address bar.
 5. It instantly removes the old React components and renders the new ones that match the new URL.
 
-This makes the application feel incredibly fast, like a native mobile app.
+**The key benefit:** Because the page never actually reloads, your React state **survives** navigation. A click counter in the navbar stays at its count even as you move between pages.
 
 ---
 
@@ -45,29 +45,36 @@ ReactDOM.createRoot(document.getElementById('root')).render(
 
 ---
 
-## 3. Defining Routes
+## 3. Defining Routes — The App Layout Pattern
 
 Inside your `App.jsx`, you define which components should show up for which URLs using `<Routes>` and `<Route>`.
+
+The most important architectural pattern is this: **put your `<Navbar>` OUTSIDE of `<Routes>`**. This way, the navbar renders on every single page without being re-mounted, and any state it holds (like a cart count) is preserved.
 
 ```jsx
 // src/App.jsx
 import { Routes, Route } from 'react-router-dom';
-import Home from './Home';
-import About from './About';
-import NotFound from './NotFound';
+import Navbar from './components/Navbar';
+import Home from './pages/Home';
+import About from './pages/About';
+import NotFound from './pages/NotFound';
 
 function App() {
   return (
-    <Routes>
-      {/* If the URL is exactly "/", show the Home component */}
-      <Route path="/" element={<Home />} />
-      
-      {/* If the URL is "/about", show the About component */}
-      <Route path="/about" element={<About />} />
-      
-      {/* Catch-All (404 Page). The "*" means "anything else" */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
+    <>
+      {/* Navbar is OUTSIDE Routes — it always renders, on every page */}
+      <Navbar />
+
+      <main>
+        {/* Routes only renders ONE of its children at a time */}
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          {/* Catch-All (404 Page). The "*" means "anything else" */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </>
   );
 }
 ```
@@ -86,7 +93,7 @@ import { Link } from 'react-router-dom';
 function Navigation() {
   return (
     <nav>
-      {/* WRONG: <a href="/about">About</a> */}
+      {/* WRONG: <a href="/about">About</a> ← causes full page reload! */}
       
       {/* CORRECT: */}
       <Link to="/">Home</Link>
@@ -97,13 +104,12 @@ function Navigation() {
 ```
 
 ### `<NavLink>` for Active States
-If you are building a navigation bar and want the link to look different when the user is currently on that page, use `<NavLink>` instead of `<Link>`. It automatically gets an `active` class when the URL matches its `to` prop.
+If you are building a navigation bar and want the link to look different when the user is currently on that page, use `<NavLink>` instead of `<Link>`. It receives an `isActive` boolean automatically.
 
 ```jsx
 import { NavLink } from 'react-router-dom';
 
-// In CSS: .active { font-weight: bold; color: red; }
-<NavLink to="/about" className={({ isActive }) => isActive ? "active" : ""}>
+<NavLink to="/about" className={({ isActive }) => isActive ? "nav-link active" : "nav-link"}>
   About Us
 </NavLink>
 ```
@@ -112,7 +118,7 @@ import { NavLink } from 'react-router-dom';
 
 ## 5. Dynamic Routes (URL Parameters)
 
-Often, you don't know the exact URL in advance. For example, a store might have thousands of products: `/products/123`, `/products/456`, etc. You can't write a `<Route>` for every single number.
+Often, you don't know the exact URL in advance. A store might have thousands of products: `/products/123`, `/products/456`, etc. You can't write a `<Route>` for every single ID.
 
 Instead, you use a **Dynamic Route** with a colon (`:`).
 
@@ -127,18 +133,66 @@ The `:id` tells React Router: "This part of the URL is a variable named `id`".
 Inside the `ProductDetail` component, you use the `useParams` Hook to read that variable from the URL.
 
 ```jsx
-// src/ProductDetail.jsx
+// src/pages/ProductDetail.jsx
 import { useParams } from 'react-router-dom';
 
 function ProductDetail() {
-  // Extract the 'id' from the URL (/products/123 -> id is "123")
+  // If the URL is /products/123, then id === "123"
   const { id } = useParams();
 
   return (
     <div>
-      <h1>Showing details for product number: {id}</h1>
+      <h1>Product #{id}</h1>
       {/* You would usually use this 'id' to fetch data from a database */}
     </div>
   );
 }
+```
+
+---
+
+## 6. Programmatic Navigation (`useNavigate`)
+
+Sometimes you need to navigate to a new route **without** the user clicking a link — for example, after they successfully submit a login form.
+
+For this, we use the `useNavigate` hook.
+
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+function LoginForm() {
+  const navigate = useNavigate();
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    // ... validate credentials ...
+    
+    // After successful login, send the user to the dashboard
+    navigate('/dashboard');
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* ... form fields ... */}
+      <button type="submit">Login</button>
+    </form>
+  );
+}
+```
+
+You can also navigate backwards using `navigate(-1)`, which mimics the browser's back button.
+
+---
+
+## 7. Handling 404 Pages
+
+A `<Route path="*">` catches any URL that doesn't match the routes defined above it. Place it **last** in your `<Routes>` block.
+
+```jsx
+<Routes>
+  <Route path="/" element={<Home />} />
+  <Route path="/about" element={<About />} />
+  {/* This catches EVERYTHING else */}
+  <Route path="*" element={<NotFound />} />
+</Routes>
 ```

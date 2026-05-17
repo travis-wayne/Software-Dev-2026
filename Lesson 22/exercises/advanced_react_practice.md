@@ -7,63 +7,102 @@ cd "Lesson 22/examples/advanced-react-app"
 pnpm install   # only needed the first time
 pnpm dev       # starts the dev server at http://localhost:5173
 ```
-All exercises should be done inside this project. Open the code in VS Code to get started.
+**Read each exercise fully before writing any code.** Check your student notes for reference.
 
 ---
 
-## Exercise 1: Exploring Prop Drilling
+## Exercise 1: Understand Prop Drilling
 
+**Goal:** See the problem before you learn the solution.
+
+1. Switch to the **🕳️ Prop Drilling** tab in the running app.
+2. Open `src/demos/PropDrillingDemo.jsx` in VS Code.
+3. Trace the `user` prop from the `PropDrillingDemo` component (top level) all the way down to `UserProfileBadge` (bottom level).
+
+❓ **Answer these questions in your head (or on paper):**
+- How many components receive the `user` prop?
+- How many of those components actually *use* the `user` data?
+- What would happen if you wanted to rename the prop from `user` to `currentUser`? How many files would you need to change?
+
+---
+
+## Exercise 2: Observe the Context API Solution
+
+**Goal:** See how the same 5-level deep component tree works without passing any props.
+
+1. Switch to the **🌍 Context API** tab in the app.
+2. Open `src/demos/ContextDemo.jsx` in VS Code.
+3. Count the component levels — there are 5, just like in PropDrillingDemo.
+4. Look at `PageLayout`, `ContentSection`, and `ArticleWrapper` — they accept **zero props**.
+5. Look at `ThemedCard` at Level 5. It calls `useContext(ThemeContext)`. No prop was passed to it!
+
+**Now create your own consumer:**
 1. Open `src/demos/PropDrillingDemo.jsx`.
-2. Trace the `user` prop. It originates in `PropDrillingDemo`, passes through `DashboardLayout`, then `Sidebar`, then `UserMenu`, and finally gets used in `UserProfileBadge`.
-3. Notice how `DashboardLayout`, `Sidebar`, and `UserMenu` do absolutely nothing with the `user` prop except pass it down. This is prop drilling!
+2. Import `useContext` from `react` and `ThemeContext` from `../context/ThemeContext`.
+3. Inside `UserProfileBadge`, call: `const { theme } = useContext(ThemeContext);`
+4. Use the theme to change the badge's background: add `style={{ background: theme === 'dark' ? '#1e293b' : '#e2e8f0' }}` to the `.user-badge` div.
+5. Switch back to your browser and toggle the theme (☀️/🌙 button in the Navbar). Watch the badge in the Prop Drilling tab change colour!
 
 ---
 
-## Exercise 2: Consuming the Theme Context
+## Exercise 3: Build Your Own Custom Hook (`useFormInput`)
 
-In `src/context/ThemeContext.jsx`, a `ThemeContext` has been created and provided at the top level of the app.
+**Goal:** Write a custom hook from scratch that manages a text input field.
 
-1. Open `src/demos/ContextDemo.jsx`.
-2. Import `useContext` from React, and `ThemeContext` from `../context/ThemeContext`.
-3. Inside the `ThemedCard` component, call the hook: `const { theme } = useContext(ThemeContext);`
-4. Change the hardcoded className `"card card-light"` to use the dynamic theme: `className={\`card card-\${theme}\`}`.
-5. In your browser, switch to the Context API tab and click the global "Toggle Theme" button in the Navbar. Your `ThemedCard` should now react to the global state change!
-
----
-
-## Exercise 3: Using a Custom Hook (`useToggle`)
-
-1. Open `src/hooks/useToggle.js`. Read the code. Notice how it perfectly encapsulates the repetitive `useState` boilerplate for booleans.
-2. Open `src/demos/HooksDemo.jsx`.
-3. Import `useToggle` from `../hooks/useToggle`.
-4. Inside the `SpoilerAlert` component, replace the standard `useState` implementation with the custom hook:
-   `const [isRevealed, toggleRevealed] = useToggle(false);`
-5. Update the button's onClick handler to use your new `toggleRevealed` function.
-6. Check the browser to ensure the spoiler button still works!
-
----
-
-## Exercise 4: Building Your Own Custom Hook (`useFormInput`)
-
-Let's build a custom hook that manages standard text inputs.
+*(Read Section 3 in your student notes first.)*
 
 1. Create a new file: `src/hooks/useFormInput.js`.
-2. Export a function named `useFormInput(initialValue)`.
-3. Inside the function, set up state: `const [value, setValue] = useState(initialValue);`
-4. Create an onChange handler function: 
+2. Write the hook:
    ```javascript
-   const handleChange = (e) => setValue(e.target.value);
+   import { useState } from 'react';
+
+   export function useFormInput(initialValue) {
+     const [value, setValue] = useState(initialValue);
+     const onChange = (e) => setValue(e.target.value);
+     return { value, onChange };
+   }
    ```
-5. Return an object containing the value and the handler:
-   ```javascript
-   return {
-     value,
-     onChange: handleChange
-   };
+3. Create a new file: `src/demos/FormDemo.jsx` with a simple contact form:
+   ```jsx
+   import { useFormInput } from '../hooks/useFormInput';
+
+   export default function FormDemo() {
+     const nameInput  = useFormInput('');
+     const emailInput = useFormInput('');
+
+     return (
+       <div className="demo-container">
+         <h2>📋 Contact Form</h2>
+         <p>Using useFormInput to manage each field:</p>
+         <input {...nameInput}  placeholder="Your name"  className="hook-input" style={{display:'block',marginBottom:'0.75rem'}} />
+         <input {...emailInput} placeholder="Your email" className="hook-input" style={{display:'block',marginBottom:'0.75rem'}} />
+         <p>Name: <strong>{nameInput.value || '(empty)'}</strong></p>
+         <p>Email: <strong>{emailInput.value || '(empty)'}</strong></p>
+       </div>
+     );
+   }
    ```
-6. **Bonus:** Try using your new `useFormInput` hook in a component to control a `<input type="text" />` tag! You can spread it directly onto the input: `<input {...nameInput} />`
+4. Import `FormDemo` into `src/App.jsx` and add a new tab for it:
+   - In the TABS array: `{ id: 'form', label: '📋 Form Hook' }`
+   - In the render: `{activeTab === 'form' && <FormDemo />}`
+
+✅ Test: Type in both inputs. Notice both work with zero boilerplate in the component itself — the hook handles everything.
+
+---
+
+## Exercise 4: Prove That Hooks Don't Share State
+
+**Goal:** Confirm that two components using the same hook have independent state.
+
+1. Switch to the **🪝 Custom Hooks** tab in the app.
+2. You'll see two spoiler cards, both using `useToggle`.
+3. Click "Reveal Answer" on the **first** card only.
+
+❓ Does the second card also reveal its answer? **No** — they have independent state.
+
+4. Open `src/demos/HooksDemo.jsx` and look at the `SpoilerAlert` component. It uses `useToggle` once. Each time `SpoilerAlert` renders in a page, React creates a **new, separate** instance of the hook's state.
 
 ---
 
 ## 📝 Final Check: Interactive Quiz
-Once you have completed the exercises above, switch to the **📝 Quiz** tab in the running app and test your knowledge of Context and Custom Hooks!
+Once you have completed the exercises above, click the **📝 Quiz** tab in the app!

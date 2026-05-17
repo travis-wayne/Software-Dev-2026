@@ -8,81 +8,92 @@ You have to pass the `user` prop through every intermediate component, even if t
 
 ```jsx
 <App user={user}>
-  <Layout user={user}>
-    <Sidebar user={user}>
-      <UserMenu user={user}>
-        <Avatar user={user} /> {/* Finally used here! */}
+  <Layout user={user}>      {/* ← doesn't use user, just passes it */}
+    <Sidebar user={user}>   {/* ← doesn't use user, just passes it */}
+      <UserMenu user={user}> {/* ← doesn't use user, just passes it */}
+        <Avatar user={user} /> {/* ← FINALLY uses it! */}
       </UserMenu>
     </Sidebar>
   </Layout>
 </App>
 ```
-This is called **Prop Drilling**. It makes code verbose, fragile, and hard to refactor.
+This is called **Prop Drilling**. It makes code verbose, fragile, and hard to refactor. You can see this live in the **🕳️ Prop Drilling** tab of the app.
 
 ---
 
 ## 2. The Solution: React Context API
 
-The Context API allows you to broadcast data globally to any component that asks for it, completely bypassing the middlemen.
+The Context API lets any component in the tree access shared data directly, no matter how deep it is. Think of it like a radio broadcast — one station broadcasts, and any radio anywhere can tune in.
 
 ### Step 1: Create the Context
-Create a file to hold your context.
 ```jsx
+// src/context/ThemeContext.jsx
 import { createContext } from 'react';
 
-// 1. Create the Context (with an optional default value)
-export const ThemeContext = createContext('light');
+export const ThemeContext = createContext();
 ```
 
-### Step 2: Provide the Context
-Wrap the part of your application that needs the data in a Context Provider. You pass the actual data into the `value` prop.
+### Step 2: Create a Provider Component
+The Provider manages the actual state and broadcasts it via the `value` prop.
 ```jsx
-import { ThemeContext } from './ThemeContext';
-
-function App() {
+// Note: we broadcast an OBJECT so consumers can get both the value AND the setter
+export function ThemeProvider({ children }) {
   const [theme, setTheme] = useState('dark');
+  const toggleTheme = () => setTheme(prev => prev === 'dark' ? 'light' : 'dark');
 
   return (
-    // 2. Broadcast the value
-    <ThemeContext.Provider value={theme}>
-      <Layout />
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
     </ThemeContext.Provider>
   );
 }
 ```
 
-### Step 3: Consume the Context
-Any component inside the Provider can use the `useContext` hook to instantly access the broadcasted value.
+### Step 3: Wrap your App
+In `main.jsx`, wrap the entire app so all components can access the context:
+```jsx
+<ThemeProvider>
+  <App />
+</ThemeProvider>
+```
+
+### Step 4: Consume the Context (in any component, any depth)
 ```jsx
 import { useContext } from 'react';
-import { ThemeContext } from './ThemeContext';
+import { ThemeContext } from './context/ThemeContext';
 
 function ThemedButton() {
-  // 3. Tune into the broadcast
-  const theme = useContext(ThemeContext);
+  // We destructure both values from the object broadcast by the Provider
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
-  return <button className={theme === 'dark' ? 'btn-dark' : 'btn-light'}>Click me</button>;
+  return (
+    <button
+      style={{ background: theme === 'dark' ? '#1e293b' : '#f8fafc' }}
+      onClick={toggleTheme}
+    >
+      Current: {theme}
+    </button>
+  );
 }
 ```
 
-> ⚠️ **Rule of Thumb:** Use Context for global data (Theme, Current User, Preferred Language). Use standard props for everything else to keep components reusable.
+> ⚠️ **Rule of Thumb:** Use Context for data that truly needs to be global — Theme, Logged-in User, Language. For local data (is a modal open? what is in this input field?), keep using `useState` and props.
 
 ---
 
 ## 3. Custom Hooks
 
-A custom hook is just a normal JavaScript function that uses other React Hooks inside of it. It allows you to package up complex, repetitive state logic and reuse it across multiple components.
+A custom hook is just a normal JavaScript function that calls other React Hooks inside. It packages up repetitive state logic so you can reuse it cleanly.
 
-### Example: The repetitive way
-You might find yourself writing this toggle logic over and over in different components:
+### The Problem — Repetitive Boilerplate
+You end up writing this toggle logic over and over in different components:
 ```jsx
-const [isVisible, setIsVisible] = useState(false);
-const toggleVisibility = () => setIsVisible(prev => !prev);
+const [isOpen, setIsOpen] = useState(false);
+const toggle = () => setIsOpen(prev => !prev);
 ```
 
-### Example: The Custom Hook way
-Let's abstract that logic into a file called `useToggle.js`. 
-**Rule:** Custom hooks MUST start with the word `use`.
+### The Solution — Extract it into a Custom Hook
+**Rule: Custom hooks MUST start with the word `use`.**
 
 ```jsx
 // src/hooks/useToggle.js
@@ -90,32 +101,49 @@ import { useState } from 'react';
 
 export function useToggle(initialValue = false) {
   const [value, setValue] = useState(initialValue);
-  
-  const toggle = () => {
-    setValue(prev => !prev);
-  };
-
-  // Return the state and the function to change it
-  return [value, toggle]; 
+  const toggle = () => setValue(prev => !prev);
+  return [value, toggle]; // Return like useState does
 }
 ```
 
-Now, any component can use this hook cleanly in a single line:
+Now any component can use this in a single clean line:
+```jsx
+const [isOpen, toggleOpen] = useToggle(false);
+```
+
+### Key Concept: Shared Logic, NOT Shared State
+If component A and component B both call `useToggle`, they each get their own **independent** boolean. Toggling A doesn't affect B. You can see this live in the **🪝 Custom Hooks** tab — two spoiler cards using the same hook, with completely separate revealed/hidden states.
+
+---
+
+## 4. Building a More Complex Hook — `useLocalStorage`
+
+Here's a more powerful example that combines `useState` and `useEffect`:
 
 ```jsx
-import { useToggle } from './hooks/useToggle';
+// src/hooks/useLocalStorage.js
+import { useState, useEffect } from 'react';
 
-function FAQItem() {
-  // Use our custom hook!
-  const [isOpen, toggleOpen] = useToggle(false);
+export function useLocalStorage(key, initialValue) {
+  // Run this function ONCE on first render to read from localStorage
+  const [value, setValue] = useState(() => {
+    const item = window.localStorage.getItem(key);
+    return item ? JSON.parse(item) : initialValue;
+  });
 
-  return (
-    <div>
-      <h3 onClick={toggleOpen}>What is React?</h3>
-      {isOpen && <p>A JavaScript library for building user interfaces.</p>}
-    </div>
-  );
+  // Whenever value changes, write the new value to localStorage
+  useEffect(() => {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  }, [key, value]);
+
+  // It works just like useState from the outside!
+  return [value, setValue];
 }
 ```
 
-Custom hooks allow you to share **logic**, not state. Every component that calls `useToggle` gets its own independent `isOpen` boolean.
+Notice how this hook uses both `useState` AND `useEffect` internally — the component using it never has to know. The complexity is hidden inside the hook.
+
+```jsx
+// From a component's perspective, it's as simple as:
+const [name, setName] = useLocalStorage('user_name', 'Travis');
+```
