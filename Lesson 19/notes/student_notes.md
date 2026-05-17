@@ -132,7 +132,7 @@ function App() {
         <div>
             {/* We are passing a prop called 'name' */}
             <UserCard name="Alice" role="Admin" />
-            <UserCard name="Bob" role="User" />
+            <UserCard name="" role=""   />
         </div>
     );
 }
