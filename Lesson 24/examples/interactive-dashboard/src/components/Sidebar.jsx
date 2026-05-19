@@ -20,14 +20,14 @@ const NAV_LINKS = [
  */
 export default function Sidebar() {
   return (
-    <aside className="w-64 bg-slate-900/60 backdrop-blur-xl border-r border-slate-800/80 flex flex-col flex-shrink-0 z-20">
+    <aside className="w-64 bg-slate-900/60 backdrop-blur-xl border-r border-slate-800/80 flex flex-col shrink-0 z-20">
       {/* Logo */}
       <div className="h-16 flex items-center px-5 border-b border-slate-800/80">
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center border border-indigo-500/30">
             <Zap size={16} className="text-indigo-400" />
           </div>
-          <span className="font-bold text-lg tracking-tight bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
+          <span className="font-bold text-lg tracking-tight bg-linear-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
             ReactDash
           </span>
         </div>
@@ -62,7 +62,7 @@ export default function Sidebar() {
 
       {/* Footer CTA */}
       <div className="p-4 border-t border-slate-800/80">
-        <div className="bg-gradient-to-br from-indigo-500/15 to-violet-500/15 border border-indigo-500/20 rounded-xl p-4 text-center">
+        <div className="bg-linear-to-br from-indigo-500/15 to-violet-500/15 border border-indigo-500/20 rounded-xl p-4 text-center">
           <p className="text-xs font-semibold text-indigo-200 mb-2.5">This is your capstone! 🎓</p>
           <p className="text-xs text-slate-400 leading-relaxed">
             Navigate between pages. Notice the URL changes but the page never reloads — that's the SPA magic!

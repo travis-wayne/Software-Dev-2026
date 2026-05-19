@@ -27,7 +27,7 @@ export default function RecentActivity() {
           const Icon = s.icon;
           return (
             <div key={item.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-700/20 transition-colors">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${s.bg}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${s.bg}`}>
                 <Icon size={15} className={s.color} />
               </div>
               <div className="flex-1 min-w-0">
@@ -36,7 +36,7 @@ export default function RecentActivity() {
                 </p>
                 <p className="text-xs text-slate-500 mt-0.5">{item.time}</p>
               </div>
-              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.color} flex-shrink-0`}>{s.label}</span>
+              <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${s.bg} ${s.color} shrink-0`}>{s.label}</span>
             </div>
           );
         })}

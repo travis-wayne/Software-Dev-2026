@@ -20,7 +20,7 @@ function Toggle({ value, onChange, label, description, icon: Icon }) {
   return (
     <div className="flex items-center justify-between py-4 border-b border-slate-700/40 last:border-0">
       <div className="flex items-start gap-3">
-        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+        <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0 mt-0.5">
           <Icon size={15} className="text-indigo-400" />
         </div>
         <div>
@@ -30,7 +30,7 @@ function Toggle({ value, onChange, label, description, icon: Icon }) {
       </div>
       <button
         onClick={onChange}
-        className={`w-11 h-6 rounded-full relative transition-colors flex-shrink-0 ml-4 ${value ? 'bg-indigo-500' : 'bg-slate-700'}`}
+        className={`w-11 h-6 rounded-full relative transition-colors shrink-0 ml-4 ${value ? 'bg-indigo-500' : 'bg-slate-700'}`}
         aria-label={`Toggle ${label}`}
       >
         <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${value ? 'translate-x-6' : 'translate-x-1'}`}></span>
