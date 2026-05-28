@@ -1,7 +1,8 @@
-import inquirer from 'inquirer';
 import chalk from 'chalk';
-import figlet from 'figlet';
 import boxen from 'boxen';
+import figlet from 'figlet';
+import inquirer from 'inquirer';
+
 
 // 🎓 ES Module imports (modern syntax — same as React)
 import { multiply, divide } from './esm-math.js';
