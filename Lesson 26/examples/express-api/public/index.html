@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 26: Express API Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom Scrollbar for JSON outputs */
+    pre::-webkit-scrollbar { width: 8px; height: 8px; }
+    pre::-webkit-scrollbar-track { background: #1e293b; border-radius: 4px; }
+    pre::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+    .tab-active { @apply border-indigo-500 text-indigo-400; }
+    .tab-inactive { @apply border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 font-sans min-h-screen">
+  
+  <!-- Navigation Header -->
+  <header class="border-b border-slate-800 bg-slate-900/50 backdrop-blur-md sticky top-0 z-10">
+    <div class="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-400">Ex</div>
+        <h1 class="font-bold text-lg">Express API Explorer</h1>
+      </div>
+      <nav class="flex gap-6 h-full">
+        <button id="tab-explorer" class="tab-active border-b-2 font-medium text-sm px-1 h-full transition-colors" onclick="switchTab('explorer')">📡 API Explorer</button>
+        <button id="tab-quiz" class="tab-inactive border-b-2 font-medium text-sm px-1 h-full transition-colors" onclick="switchTab('quiz')">🧠 Lesson Quiz</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-6 py-8">
+    
+    <!-- ========================================== -->
+    <!-- API EXPLORER VIEW                          -->
+    <!-- ========================================== -->
+    <div id="view-explorer" class="block space-y-6">
+      
+      <div class="bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-6">
+        <h2 class="text-xl font-semibold text-indigo-300 mb-2">🎓 How APIs Work</h2>
+        <p class="text-slate-300 leading-relaxed text-sm">
+          You are looking at a frontend client. The code for the API runs on your Node.js server. 
+          When you click a button below, JavaScript (using <code>fetch()</code>) sends an HTTP Request to your Express server.
+          The server processes the request, modifies its array of books, and sends back a JSON Response.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Controls Column -->
+        <div class="space-y-4">
+          
+          <!-- GET All -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex items-center gap-3">
+                <span class="bg-blue-500/20 text-blue-400 font-mono text-xs px-2 py-1 rounded-md font-bold">GET</span>
+                <code class="text-slate-300 text-sm">/api/books</code>
+              </div>
+              <button onclick="fetchAPI('GET', '/api/books')" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border border-slate-700">Send</button>
+            </div>
+            <p class="text-xs text-slate-500">Retrieves the complete list of books from the server.</p>
+          </div>
+
+          <!-- POST New -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+            <div class="flex flex-col mb-3 gap-3">
+              <div class="flex items-center gap-3">
+                <span class="bg-green-500/20 text-green-400 font-mono text-xs px-2 py-1 rounded-md font-bold">POST</span>
+                <code class="text-slate-300 text-sm">/api/books</code>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <input type="text" id="post-title" placeholder="Book Title" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                <input type="text" id="post-author" placeholder="Author Name" class="bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate-500">Creates a new book using the JSON body provided.</p>
+              <button onclick="handlePost()" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border border-slate-700">Send</button>
+            </div>
+          </div>
+
+          <!-- PUT Update -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+            <div class="flex flex-col mb-3 gap-3">
+              <div class="flex items-center gap-3">
+                <span class="bg-yellow-500/20 text-yellow-400 font-mono text-xs px-2 py-1 rounded-md font-bold">PUT</span>
+                <code class="text-slate-300 text-sm">/api/books/:id</code>
+              </div>
+              <div class="flex gap-3">
+                <input type="number" id="put-id" placeholder="ID" class="w-20 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+                <input type="text" id="put-title" placeholder="New Title" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <p class="text-xs text-slate-500">Updates an existing book by its URL parameter ID.</p>
+              <button onclick="handlePut()" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border border-slate-700">Send</button>
+            </div>
+          </div>
+
+          <!-- DELETE -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 hover:border-slate-700 transition-colors">
+            <div class="flex flex-col mb-3 gap-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="bg-red-500/20 text-red-400 font-mono text-xs px-2 py-1 rounded-md font-bold">DELETE</span>
+                  <code class="text-slate-300 text-sm">/api/books/:id</code>
+                </div>
+                <button onclick="handleDelete()" class="bg-slate-800 hover:bg-slate-700 text-sm px-4 py-1.5 rounded-lg font-medium transition-colors border border-slate-700">Send</button>
+              </div>
+              <input type="number" id="delete-id" placeholder="ID to delete" class="w-32 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm focus:border-indigo-500 outline-none">
+            </div>
+            <p class="text-xs text-slate-500">Deletes a book based on the URL parameter ID.</p>
+          </div>
+
+        </div>
+
+        <!-- Output Column -->
+        <div class="bg-[#0f172a] rounded-2xl border border-slate-800 flex flex-col h-[600px] overflow-hidden sticky top-24 shadow-2xl">
+          <div class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-red-500"></div>
+              <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+              <div class="w-3 h-3 rounded-full bg-green-500"></div>
+            </div>
+            <span class="text-xs font-mono text-slate-400 uppercase tracking-wider" id="status-code">Awaiting Request...</span>
+          </div>
+          <div class="p-4 flex-1 overflow-auto">
+            <pre id="json-output" class="text-sm font-mono text-emerald-400">
+{
+  "message": "Click a 'Send' button to make an API request. The JSON response from your Express server will appear here."
+}</pre>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- QUIZ VIEW                                  -->
+    <!-- ========================================== -->
+    <div id="view-quiz" class="hidden max-w-3xl mx-auto space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8">
+        <h2 class="text-2xl font-bold mb-6">Express & API Knowledge Check</h2>
+        <div id="quiz-container" class="space-y-8"></div>
+        <div class="mt-8 pt-6 border-t border-slate-800 flex justify-between items-center hidden" id="quiz-results">
+          <p class="text-lg font-bold" id="quiz-score"></p>
+          <button onclick="renderQuiz()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Retake Quiz</button>
+        </div>
+        <div class="mt-8 pt-6 border-t border-slate-800 flex justify-end" id="quiz-submit-container">
+          <button onclick="submitQuiz()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">Submit Answers</button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // --- TAB LOGIC ---
+    function switchTab(tab) {
+      document.getElementById('view-explorer').classList.toggle('hidden', tab !== 'explorer');
+      document.getElementById('view-quiz').classList.toggle('hidden', tab !== 'quiz');
+      
+      const explorerTab = document.getElementById('tab-explorer');
+      const quizTab = document.getElementById('tab-quiz');
+      
+      if (tab === 'explorer') {
+        explorerTab.className = 'tab-active border-b-2 font-medium text-sm px-1 h-full transition-colors';
+        quizTab.className = 'tab-inactive border-b-2 font-medium text-sm px-1 h-full transition-colors';
+      } else {
+        quizTab.className = 'tab-active border-b-2 font-medium text-sm px-1 h-full transition-colors';
+        explorerTab.className = 'tab-inactive border-b-2 font-medium text-sm px-1 h-full transition-colors';
+      }
+    }
+
+    // --- API EXPLORER LOGIC ---
+    const outputEl = document.getElementById('json-output');
+    const statusEl = document.getElementById('status-code');
+
+    function formatResponse(status, data) {
+      statusEl.textContent = `Status: ${status}`;
+      statusEl.className = `text-xs font-mono tracking-wider font-bold ${status >= 200 && status < 300 ? 'text-green-400' : 'text-red-400'}`;
+      outputEl.textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function fetchAPI(method, url, body = null) {
+      outputEl.textContent = 'Loading...';
+      statusEl.textContent = 'Pending...';
+      statusEl.className = 'text-xs font-mono text-slate-400 uppercase tracking-wider';
+
+      try {
+        const options = { method };
+        if (body) {
+          options.headers = { 'Content-Type': 'application/json' };
+          options.body = JSON.stringify(body);
+        }
+        const res = await fetch(url, options);
+        const data = await res.json();
+        formatResponse(res.status, data);
+      } catch (err) {
+        formatResponse(500, { error: 'Failed to connect to the Express server. Is it running?' });
+      }
+    }
+
+    function handlePost() {
+      const title = document.getElementById('post-title').value;
+      const author = document.getElementById('post-author').value;
+      fetchAPI('POST', '/api/books', { title, author });
+    }
+
+    function handlePut() {
+      const id = document.getElementById('put-id').value;
+      const title = document.getElementById('put-title').value;
+      const author = 'Updated Author'; // hardcoded for simplicity in UI
+      if (!id) return alert('Provide an ID');
+      fetchAPI('PUT', `/api/books/${id}`, { title, author });
+    }
+
+    function handleDelete() {
+      const id = document.getElementById('delete-id').value;
+      if (!id) return alert('Provide an ID');
+      fetchAPI('DELETE', `/api/books/${id}`);
+    }
+
+    // --- QUIZ LOGIC ---
+    const quizQuestions = [
+      {
+        q: "What does the 'req' object represent in an Express route callback?",
+        opts: ["The database response", "The HTTP Request from the client", "The Express configuration", "The JSON file on the server"],
+        ans: 1,
+        exp: "`req` contains all the data coming *from* the client, like `req.body` (data) or `req.params` (URL parameters)."
+      },
+      {
+        q: "Which HTTP method should you use to UPDATE an existing resource?",
+        opts: ["GET", "POST", "PUT", "DELETE"],
+        ans: 2,
+        exp: "PUT (or PATCH) is the standard HTTP method used to update existing data."
+      },
+      {
+        q: "What does `app.use(express.json())` do?",
+        opts: ["Converts the entire app to a JSON API", "Sends a JSON response to the client", "Parses incoming request bodies formatted as JSON", "Connects to a JSON database"],
+        ans: 2,
+        exp: "It is middleware that automatically takes a JSON string sent in a POST/PUT request and turns it into a JavaScript object attached to `req.body`."
+      },
+      {
+        q: "How do you access the '123' in this URL: `/api/users/123` (Route: `/api/users/:id`)",
+        opts: ["req.body.id", "req.params.id", "req.query.id", "res.id"],
+        ans: 1,
+        exp: "The colon `:` in the route definition creates a URL Parameter, which Express places inside the `req.params` object."
+      },
+      {
+        q: "What is the correct way to send a JSON response back to the client?",
+        opts: ["res.json({ success: true })", "req.send({ success: true })", "return { success: true }", "app.json({ success: true })"],
+        ans: 0,
+        exp: "`res` represents the Response. `res.json()` takes a JavaScript object, converts it to JSON, and sends it back to the client with the correct headers."
+      }
+    ];
+
+    let userAnswers = {};
+
+    function renderQuiz() {
+      userAnswers = {};
+      document.getElementById('quiz-results').classList.add('hidden');
+      document.getElementById('quiz-submit-container').classList.remove('hidden');
+      
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = quizQuestions.map((q, qIndex) => `
+        <div class="quiz-item" id="q-${qIndex}">
+          <p class="font-medium text-slate-200 mb-3"><span class="text-indigo-400 mr-2">${qIndex + 1}.</span>${q.q}</p>
+          <div class="space-y-2">
+            ${q.opts.map((opt, oIndex) => `
+              <label class="flex items-center p-3 border border-slate-800 rounded-lg cursor-pointer hover:bg-slate-800/50 transition-colors">
+                <input type="radio" name="q${qIndex}" value="${oIndex}" class="mr-3 accent-indigo-500 w-4 h-4" onchange="userAnswers[${qIndex}] = ${oIndex}">
+                <span class="text-sm text-slate-300">${opt}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div class="mt-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg text-sm text-slate-300 hidden" id="exp-${qIndex}"></div>
+        </div>
+      `).join('');
+    }
+
+    function submitQuiz() {
+      let score = 0;
+      
+      quizQuestions.forEach((q, i) => {
+        const itemEl = document.getElementById(`q-${i}`);
+        const expEl = document.getElementById(`exp-${i}`);
+        const selected = userAnswers[i];
+        
+        // Disable inputs
+        itemEl.querySelectorAll('input').forEach(input => input.disabled = true);
+        
+        if (selected === q.ans) {
+          score++;
+          itemEl.classList.add('border-l-4', 'border-emerald-500', 'pl-4', '-ml-[18px]');
+          expEl.innerHTML = `<span class="text-emerald-400 font-bold">✅ Correct!</span> ${q.exp}`;
+        } else {
+          itemEl.classList.add('border-l-4', 'border-rose-500', 'pl-4', '-ml-[18px]');
+          expEl.innerHTML = `<span class="text-rose-400 font-bold">❌ Incorrect.</span> The correct answer is: <strong>${q.opts[q.ans]}</strong><br><br>${q.exp}`;
+        }
+        expEl.classList.remove('hidden');
+      });
+
+      document.getElementById('quiz-submit-container').classList.add('hidden');
+      const resultsEl = document.getElementById('quiz-results');
+      resultsEl.classList.remove('hidden');
+      document.getElementById('quiz-score').textContent = `You scored ${score} out of ${quizQuestions.length}!`;
+    }
+
+    // Init
+    renderQuiz();
+  </script>
+</body>
+</html>
