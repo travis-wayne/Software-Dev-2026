@@ -1,85 +1,122 @@
-# Tutor Notes — Lesson 25: Intro to Node.js, NPM, Modules
+# Tutor Notes — Lesson 25: Intro to Node.js, NPM & Modules
 
 ---
 
 ## Session Objectives
 
-By the end of this session, the student will be able to:
-1. Explain what Node.js is (a runtime environment, not a language).
-2. Understand the role of NPM and the `package.json` file.
-3. Install third-party packages from the terminal.
-4. Export and Import code using both **CommonJS** (`require`/`module.exports`) and **ES Modules** (`import`/`export`).
-5. Run a JavaScript file using the Node.js CLI.
+By the end of this session the student will be able to:
+1. Articulate what Node.js is and why it enabled JavaScript to become a full-stack language.
+2. Explain the non-blocking, event-driven model at a conceptual level.
+3. Initialise a project with `pnpm init`, install packages, and explain what `package.json` contains.
+4. Write and import a module using both **CommonJS** (`require`/`module.exports`) and **ES Modules** (`import`/`export`).
+5. Navigate the interactive CLI and complete the quiz with ≥ 70%.
 
 ---
 
 ## Pre-Session Setup Checklist
 
-- [ ] Ensure the student has Node.js installed (`node -v` in terminal).
-- [ ] Open `Lesson 25/examples/node-basics`.
-- [ ] Run `pnpm install`.
-- [ ] Verify the interactive CLI works by running `pnpm start`.
+- [ ] `node -v` returns a version ≥ 18 on the student's machine.
+- [ ] `cd "Lesson 25/examples/node-basics" && pnpm install` succeeds.
+- [ ] `pnpm start` launches the CLI without errors (figlet header + menu visible).
+- [ ] VS Code is open to the `node-basics/src/` folder.
 
 ---
 
-## Pedagogical Context: The Backend Shift
+## Pedagogical Context: The Frontend-to-Backend Shift
 
-This is a massive pivot for the student. Until now, JavaScript has meant "making things happen in the browser." The browser provided the `window` object, the `document` (DOM), and `alert()`. 
+This session demands a mental model reset. The student has spent 24 lessons thinking "JavaScript = browser". You must break that assumption concretely and early.
 
-**Node.js has none of those.** Instead, Node provides access to the computer's file system, networks, and operating system. 
+**Use this framing:**
+> "Everything we've built so far runs *inside* a browser — on someone else's computer. Today we flip the script. We write JavaScript that runs on *our* server. Node.js is the tool that makes that possible."
 
-> **Analogy:** "JavaScript is an engine. For the last 24 lessons, that engine was bolted into a car (the browser). Node.js takes that exact same engine and bolts it into a helicopter (the server). The engine works the exact same way, but the vehicle can do completely different things."
+Do not start with code. Do this instead:
+
+1. Open a terminal. Run `node` to enter the REPL.
+2. Type `console.log('Hello from Node.js!')` — explain that no browser is involved.
+3. Type `process.platform` — show that Node gives you access to the OS.
+4. Exit the REPL (`.exit`), then run `node -e "console.log('One-liner!')"`.
+
+This concretely demonstrates: JavaScript is running outside a browser, right now.
 
 ---
 
 ## Lesson Flow (90-minute session)
 
-### Phase 1 — Introduction via Interactive CLI (25 minutes)
-Instead of lecturing, let the CLI do the teaching.
-1. Have the student navigate to `examples/node-basics` in their terminal.
-2. Tell them to run `pnpm install`, then `pnpm start`.
-3. The beautiful `inquirer` and `boxen` CLI will appear. Have the student navigate through the **Read Concept** menus.
-4. **Key Teaching Moment:** Explain that *this entire CLI* is built with JavaScript! Point out how different it feels from a React web app. 
+### Phase 1 — Concept Tour via CLI (25 minutes)
 
-### Phase 2 — NPM and package.json (20 minutes)
-1. Open the `package.json` file in the `node-basics` project.
-2. Explain the `"dependencies"` block. Point out `chalk`, `inquirer`, and `boxen` — these are what make the CLI look cool.
-3. Explain the `node_modules` folder. Tell them to look inside it (it's huge).
-4. **Golden Rule:** Reinforce *why* we never commit `node_modules` to Git. (It's too heavy; `package.json` is the instruction manual to rebuild it).
+Run `pnpm start` together. Navigate the three concept screens:
 
-### Phase 3 — Modules: CommonJS vs ESM (30 minutes)
-This is where students often get confused in modern JS. 
+1. **What is Node.js?** — After reading, pause on the Event Loop section.
+   - **Key question to ask:** *"If Node.js is single-threaded, how can it handle 10,000 simultaneous users?"*
+   - Expected answer: Callbacks + Event Loop. Slow tasks don't block — they register a callback and control returns immediately.
+   
+2. **NPM & package.json** — Open `package.json` in VS Code side-by-side.
+   - Walk through every field: `name`, `version`, `type`, `scripts`, `dependencies`.
+   - Open `node_modules/chalk/` — show that it's just a folder of JavaScript files.
+   - **Demonstrate the Golden Rule:** Run `git status` and show that `node_modules` appears in `.gitignore` and is not staged.
 
-1. Go back to the CLI and run the **"Run Module Demo (CJS vs ESM)"** option.
-2. Open `src/commonjs-math.cjs`. Explain that `module.exports` and `require()` was the original way Node shared code. It is still everywhere.
-3. Open `src/esm-math.js`. Explain that `export` and `import` is the modern standard (which they already know from React).
-4. Show how `package.json` has `"type": "module"` — this is what tells Node to allow the modern `import` syntax.
+3. **CommonJS vs ES Modules** — The concept card gives a clean side-by-side view.
+   - After reading, say: *"Open both files: `commonjs-math.cjs` and `esm-math.js`. What's the only functional difference?"* → The import/export syntax.
 
-### Phase 4 — The Interactive Quiz (15 minutes)
-1. Go back to the CLI main menu.
-2. Have the student select **"Take the Interactive Quiz"**.
-3. Let them answer the 5 questions. If they get one wrong, use the CLI's explanation output as a talking point.
+### Phase 2 — Live Demo (15 minutes)
+
+Select **"🛠  Live Demo — Run CJS & ESM side by side"** from the menu.
+
+Key teaching moments during the demo:
+- `divide(10, 0)` returns `'Cannot divide by zero'` in **red** — ask: *"Why is this good API design?"*
+- Point to `src/index.js` lines 13–15 where `createRequire` is used to load a `.cjs` file inside an ES Module project — explain that this is a real-world pattern students will encounter.
+
+### Phase 3 — The Quiz (20 minutes)
+
+Navigate to **"🧠 Take the Quiz"**.
+- 7 questions with a live progress bar.
+- Every answer — correct or incorrect — now shows a detailed explanation panel.
+- **Let the student answer alone** — resist the urge to hint.
+- After the quiz, revisit any question they got wrong and trace the answer back to the concept card or source file.
+
+### Phase 4 — Exercise Preview (10 minutes)
+
+Open `exercises/nodejs_practice.md`. Walk through exercises 1–2 together (init + install). Assign exercises 3–5 as the post-session task.
 
 ---
 
-## Common Errors & Fixes
+## The CommonJS vs ESM Confusion — How to Resolve It
 
-| Error | Cause | Fix |
+| Student confuses… | Correct explanation |
+|---|---|
+| Thinks `.cjs` extension is mandatory for CommonJS | `.cjs` is only needed when `"type": "module"` is set. In a plain project, `.js` defaults to CommonJS. |
+| Uses `require()` in an ESM file | Only works via `createRequire`. Tell them: "Pick one system per project. ESM for new code." |
+| Forgets the `.js` extension in ESM imports | In Node.js, ESM imports MUST include the file extension. Browser bundlers like Vite resolve it for you, but raw Node does not. |
+| Confused about `devDependencies` vs `dependencies` | Simple rule: If it's only used to *build or develop* the project (nodemon, eslint, vitest), it's a devDependency. If the app needs it to *run in production*, it's a dependency. |
+
+---
+
+## Common CLI Errors & Fixes
+
+| Error message | Cause | Fix |
 |---|---|---|
-| `Cannot use import statement outside a module` | Forgot `"type": "module"` in `package.json` | Add `"type": "module"` to `package.json` |
-| `require is not defined` | Trying to use `require()` in an ES Module | Use `import`, or create a `require` function using `createRequire(import.meta.url)` |
-| `Cannot find module 'chalk'` | Forgot to run `pnpm install` | Run `pnpm install` to download dependencies |
-| `SyntaxError: Unexpected identifier` | Mixing CJS and ESM syntaxes improperly | Ensure `.cjs` extension for CommonJS when inside a `"type": "module"` project |
+| `TypeError: chalk.indigo is not a function` | Using an invalid Chalk colour name | Only use `chalk.hex('#...')` for custom colours or named colours like `chalk.cyan` |
+| `Cannot find package 'inquirer'` | `pnpm install` not run | Run `pnpm install` in the project directory |
+| `SyntaxError: Cannot use import statement` | Missing `"type": "module"` in `package.json` | Add `"type": "module"` |
+| `Error: require is not defined` | Using `require()` in an ESM file | Use `createRequire(import.meta.url)` or switch to `import` syntax |
 
 ---
 
-## Key Questions to Check Understanding
+## Key Analogies to Keep Handy
 
-1. *"If I want to build a React app, do I use Node.js?"* (Answer: Yes, the build tools like Vite run on Node.js, even though the final code runs in the browser.)
-2. *"Why don't we push the `node_modules` folder to GitHub?"* (Answer: It's too big, and `package.json` provides all the instructions needed to recreate it via `npm install`.)
-3. *"What is the modern equivalent of `module.exports = add;`?"* (Answer: `export default add;` or `export { add };`)
+| Concept | Analogy |
+|---|---|
+| Node.js runtime | A car engine — it makes things *run* |
+| V8 Engine | The petrol — the actual power source (same as Chrome's) |
+| NPM packages | Lego bricks — pre-built pieces you add to your project |
+| `package.json` | A recipe card — tells anyone how to recreate the project |
+| `node_modules` | The baked cake — recreatable from the recipe, so you don't post it |
+| Event Loop | A chef juggling multiple dishes — starts each one, checks back when they beep |
 
 ---
 
-## Post-Session Assignment (For Student)
-Direct the student to `Lesson 25/exercises/nodejs_practice.md` where they will initialize their own blank Node.js project, install the `axios` library, and fetch data from a public API.
+## Post-Session Assignment
+
+1. Complete `exercises/nodejs_practice.md` (exercises 3–5 — writing the factorial module and fetching from an API with Axios).
+2. Research: What is the difference between `dependencies` and `devDependencies` in `package.json`? Why does it matter for deployment?
+3. Explore `npmjs.com` — find one package that looks interesting and explain in 2 sentences what it does.

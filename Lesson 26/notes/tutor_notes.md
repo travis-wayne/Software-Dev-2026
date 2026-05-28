@@ -1,71 +1,89 @@
-# Tutor Notes — Lesson 26: Building APIs with Express
+# Tutor Notes — Lesson 26: Building APIs with Express.js
 
 ---
 
 ## Session Objectives
 
-By the end of this session, the student will be able to:
-1. Explain the concept of an API and the Client-Server architecture.
-2. Initialize a basic Express.js server on a specific port.
-3. Define routes using the 4 main HTTP verbs (GET, POST, PUT, DELETE).
-4. Extract data from URL parameters (`req.params`) and request bodies (`req.body`).
-5. Send back structured JSON responses with appropriate HTTP status codes (200, 201, 404).
+By the end of this session the student will be able to:
+1. Explain what an API is using the Restaurant analogy.
+2. Initialise an Express server with the correct middleware order.
+3. Define GET, POST, PUT, and DELETE routes and explain when to use each.
+4. Extract data from `req.params`, `req.body`, and `req.query`.
+5. Return responses with correct HTTP status codes (`200`, `201`, `400`, `404`).
+6. Use the API Explorer UI to test all 5 routes live in the browser.
 
 ---
 
 ## Pre-Session Setup Checklist
 
-- [ ] Ensure `Lesson 26/examples/express-api` has been `pnpm install`'ed.
-- [ ] Run `pnpm dev` in the terminal to start the server via Nodemon.
-- [ ] Open `http://localhost:3000` in the browser to verify the API Explorer UI is working.
+- [ ] `pnpm dev` runs cleanly in `Lesson 26/examples/express-api/`.
+- [ ] `http://localhost:3000` opens the **Concepts** tab without errors.
+- [ ] The **API Explorer** tab can successfully `GET /api/books` and receive the 3 initial books.
+- [ ] VS Code is open to `server.js`.
 
 ---
 
-## Pedagogical Context: The "Invisible" Backend
+## Pedagogical Context: The "Invisible Backend" Problem
 
-The biggest hurdle for students moving to the backend is that **there is no UI by default**. When they write a React component, they see a button. When they write an Express route, they just see terminal text.
+Lesson 26 faces a unique teaching challenge: when a student writes a React component, they see a button. When they write an Express route, they see... nothing — just terminal text.
 
-To bridge this gap, this lesson includes a custom-built **API Explorer UI** served from the `public/` folder. This acts as a lightweight, visual Postman directly in the browser, allowing the student to click "Send" and instantly see the JSON response from the server they are building.
+The **API Explorer UI** embedded in this lesson solves this visually. The UI is served as a static file from the `public/` folder by Express itself, making it a live demonstration of a full-stack request cycle.
+
+**Key framing before any code:**
+> "You are about to build the *other half* of a full-stack application. Your React apps fetch data from somewhere. Today, you are going to be that somewhere."
 
 ---
 
 ## Lesson Flow (90-minute session)
 
-### Phase 1 — The API Concept (15 minutes)
-1. **The Waiter Analogy:** Use the restaurant analogy from the student notes. The React app is the customer, the database is the kitchen, and the Express API is the waiter.
-2. Open the **API Explorer** at `http://localhost:3000`.
-3. Click the `GET /api/books` button. Show the student the JSON array that comes back. 
-4. Ask: *"Where did this data come from?"* Explain that it didn't come from the browser; it came from the Node.js server.
+### Phase 1 — Concepts Tab Tour (20 minutes)
 
-### Phase 2 — Touring the Server Code (25 minutes)
-1. Open `server.js` side-by-side with the API Explorer.
-2. Walk through the setup:
-   - `express()` initialization.
-   - `app.use(express.json())` — **Crucial:** Explain that without this, Express cannot read `req.body` in POST requests.
-3. Look at the `GET /api/books` route. Show how `res.json()` takes a JavaScript array and turns it into text for the network.
-4. Look at the `GET /api/books/:id` route. 
-   - Explain the colon `:` syntax.
-   - Show how `req.params.id` extracts that number.
-   - Demonstrate the `404` status code by editing the route locally to search for a non-existent ID.
+Open `http://localhost:3000` on the **📖 Concepts** tab together. Walk through the three concept cards:
 
-### Phase 3 — Interaction (POST, PUT, DELETE) (20 minutes)
-1. In the API Explorer, fill out the POST form (new title/author) and hit Send.
-2. Look at the `POST /api/books` route in `server.js`.
-   - Explain `req.body`.
-   - Explain the `201 Created` status code.
-3. Have the student click the `GET All` button again in the UI to prove the new book was saved in the server's memory!
-4. Walk through PUT (updating) and DELETE (filtering the array).
+1. **What is an API?** — Use the restaurant analogy. Ask: *"If the API goes down, can the customer get food?"* (No — but the kitchen is still running. That's separation of concerns.)
 
-### Phase 4 — The "Break It" Exercise (10 minutes)
-Stop the `nodemon` server temporarily. Have the student click a button in the UI. 
-- *What happens?* A `Failed to fetch` error.
-- *Why?* Because the waiter went home. The server isn't running.
-Restart the server with `pnpm dev`.
+2. **Express.js route anatomy** — Point to the code card and walk through every part:
+   - `app` — the Express application object.
+   - `.get()` — matches the HTTP method.
+   - `'/api/books'` — the URL pattern (the route).
+   - `(req, res) => {}` — the callback that runs when the route matches.
 
-### Phase 5 — The Interactive Quiz (15 minutes)
-1. In the API Explorer UI, click the **Lesson Quiz** tab.
-2. Have the student answer the 5 questions.
-3. If they miss the question about `app.use(express.json())`, reinforce it visually by commenting out that line in `server.js`, sending a POST request, and watching it crash because `req.body` is undefined.
+3. **Request & Response** — Spend time on the `req` side. Ask: *"Where does `req.body` come from?"* Answer: it doesn't exist naturally — `express.json()` middleware creates it.
+
+4. **CRUD Table** — Ask the student to recite the mapping from memory before you show the table.
+
+5. **Middleware Banner** — Stress this heavily. Run a live demonstration: comment out `app.use(express.json())` in `server.js`, save, send a POST from the Explorer, and show that `req.body` is now `undefined`. Then uncomment it and show it working again.
+
+### Phase 2 — Reading `server.js` (20 minutes)
+
+Open `server.js` side-by-side with the Explorer.
+
+1. Walk through the **middleware setup** (lines 14–16): `cors()` and `express.json()`. Explain the order matters.
+2. Walk through the **books array** — point out it resets on every server restart. *"What problem does this cause?"* (Data is ephemeral — next lesson introduces a real database.)
+3. Walk through **GET all** and **GET by ID** together. Highlight:
+   - `parseInt(req.params.id)` — params are always strings; the books array uses integers.
+   - The `find()` vs `findIndex()` distinction (why POST uses push but PUT uses findIndex).
+
+### Phase 3 — API Explorer (25 minutes)
+
+Switch to the **📡 API Explorer** tab. Work through every endpoint in order:
+
+1. **GET /api/books** — shows the 3 books. Confirm `success: true` wrapper.
+2. **GET /api/books/:id** — get book 1. Then get book 999 — show the `404` response in red in the status bar.
+3. **POST** — add a new book. Switch back to GET all to *prove* it was saved.
+4. **PUT** — update book 1. Fill in all three fields (ID, title, author).
+5. **DELETE** — delete book 2. GET all again to confirm it's gone.
+
+At each step, **point to the Request Log** panel. Every call is logged with method, URL, status code, and response time.
+
+### Phase 4 — Interactive Quiz (15 minutes)
+
+Switch to the **🧠 Quiz** tab. Let the student answer all 7 questions.
+
+The quiz now provides **instant per-answer feedback** — the student selects an option and immediately sees if they're right, with an explanation panel below. Score appears automatically when all questions are answered.
+
+**If they miss the middleware question:** repeat the live `express.json()` demo from Phase 1.
+**If they miss the `req.params` question:** write `/api/books/:id` on a whiteboard and draw an arrow from `:id` to `req.params.id`.
 
 ---
 
@@ -73,13 +91,29 @@ Restart the server with `pnpm dev`.
 
 | Error / Symptom | Cause | Fix |
 |---|---|---|
-| `req.body is undefined` in a POST route | Missing JSON middleware | Add `app.use(express.json())` at the top of the file |
-| Route returns `Cannot GET /api/book` (singular) | URL typo | Ensure the fetch URL exactly matches the `app.get()` string |
-| `TypeError: Assignment to constant variable` | Using `const` for the in-memory array | Change `const books = []` to `let books = []` if reassigning during DELETE |
-| Server doesn't restart on save | Ran `node server.js` instead of `nodemon` | Run `pnpm dev` (which triggers `nodemon server.js`) |
-| Data resets to 3 books when saving code | Nodemon restarted the server | Explain that in-memory arrays wipe on restart; real apps use databases (next lesson!) |
+| `req.body is undefined` | `express.json()` middleware missing or defined after the route | Add `app.use(express.json())` before all route definitions |
+| `Cannot GET /api/book` | URL typo (singular vs plural) | Ensure the fetch URL matches the route string exactly |
+| `books.filter(...)` doesn't work | `const books` is reassigned during DELETE | Change `const books` to `let books` |
+| Explorer shows "Failed to reach server" | Server not running | Run `pnpm dev` in the terminal |
+| Data resets after file save | nodemon restarted the process | Intentional — real databases solve this (next lesson) |
+| `404` on every request | Route defined before `app.use(express.static(...))` path issue | Ensure `server.js` path setup uses `import.meta.url` via `fileURLToPath` |
 
 ---
 
-## Post-Session Assignment (For Student)
-Direct the student to `Lesson 26/exercises/express_practice.md`. They must build a completely new API from scratch for a `Movies` database and implement all 5 CRUD routes. Encourage them to download **Postman** or **Insomnia** to test it, as they won't have the custom UI for their own project.
+## Key Concepts to Reinforce Verbally
+
+1. **`req.params` values are always strings.** Even if the URL has `/api/books/3`, `req.params.id` is `"3"`, not `3`. This is why we `parseInt()`.
+
+2. **Middleware order matters.** `app.use(express.json())` must be defined *before* any routes that use `req.body`.
+
+3. **Status codes are communication, not decoration.** A `201` tells any client *automatically* that the resource was just created. `400` tells them *they* made a mistake. `404` tells them *the resource doesn't exist*.
+
+4. **In-memory data is a stepping stone.** The books array resets every time nodemon restarts. This is fine for learning — but always point students toward the next session (databases) as the real solution.
+
+---
+
+## Post-Session Assignment
+
+Direct the student to `exercises/express_practice.md` — they must build a complete Movies API from scratch on port `5000`. The exercise intentionally has no provided starter UI, which forces them to use Postman or Insomnia for testing (a professional skill).
+
+**Stretch goal:** Add a `GET /api/movies?director=Nolan` route that uses `req.query` to filter movies by director.

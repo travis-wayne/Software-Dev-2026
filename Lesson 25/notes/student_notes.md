@@ -1,108 +1,174 @@
 # Student Notes — Lesson 25: Intro to Node.js, NPM & Modules
 
-> **Open the interactive CLI first!** 
-> 1. Open your terminal in `examples/node-basics`.
-> 2. Run `pnpm install`.
-> 3. Run `pnpm start` to launch the interactive Node.js lesson! 🚀
+> **Launch the interactive CLI first!**
+> ```bash
+> cd examples/node-basics
+> pnpm install   # only needed once
+> pnpm start
+> ```
+> Navigate all 5 menu options before reading these notes — the CLI is the lesson.
 
 ---
 
-## 1. What is Node.js?
+## 1. The Big Shift: JavaScript Leaves the Browser
 
-For a long time, JavaScript could only run in one place: **the web browser**. You couldn't use JavaScript to read files on your computer, connect directly to a database, or build a web server.
+For the first 24 lessons, every line of JavaScript you wrote ran inside a web browser. The browser gave you `document`, `window`, `alert()` — tools for building UIs. That is called **client-side** JavaScript.
 
-In 2009, Ryan Dahl took the V8 JavaScript Engine (the ultra-fast core of Google Chrome) and wrapped it in a C++ program that could run on your computer's operating system. **That is Node.js.**
+**Node.js changes everything.**
 
-Node.js is **NOT** a programming language. It is a **runtime environment** that executes JavaScript code outside a web browser.
+In 2009, Ryan Dahl took the **V8 Engine** — the same lightning-fast JavaScript interpreter that powers Google Chrome — and wrapped it in a standalone program that could run directly on your computer's operating system. No browser required.
 
-### Why is Node.js so popular?
-- **Single Language Full-Stack:** You can write your frontend (React) and your backend (Node.js/Express) using the exact same language.
-- **Event-Driven & Non-Blocking:** Unlike older languages (like PHP) that wait for a database query to finish before doing anything else, Node.js fires off the query and moves on to handle the next user. When the database finishes, Node.js comes back to it. This makes it incredibly fast for web servers.
+The result is **Node.js**: a **runtime environment** that executes JavaScript as a server-side language — capable of reading files, connecting to databases, listening on network ports, and running as a web server.
 
----
-
-## 2. What is NPM?
-
-**NPM (Node Package Manager)** is the default package manager for Node.js. It is two things:
-1. An online repository of open-source JavaScript packages (over 2 million of them!).
-2. A command-line tool you use to install those packages into your project.
-
-### The `package.json` file
-Every Node.js project starts with a `package.json` file. You generate it by running `npm init` (or `pnpm init`). 
-
-This file is your project's **manifest**. It tracks:
-- Your project name and version.
-- Scripts you can run (e.g., `"start": "node src/index.js"`).
-- **Dependencies** — the third-party code your project needs to run.
-
-### The `node_modules` folder
-When you run `pnpm install chalk`, NPM downloads the `chalk` library from the internet and puts it in a folder called `node_modules`. 
-
-> ⚠️ **Golden Rule:** NEVER commit `node_modules` to Git! It's too big. Instead, Git tracks your `package.json`. When another developer downloads your code, they just run `pnpm install`, and NPM looks at `package.json` to download exactly what is needed.
+> 🎓 **Key distinction:** JavaScript is the *language*. Node.js is the *runtime*. It's the same relationship as: Java (language) → JVM (runtime).
 
 ---
 
-## 3. Modules: Sharing Code Between Files
+## 2. Why Node.js Became So Popular
 
-When building real applications, you don't write all your code in one file. You split it into multiple files called **Modules**.
+### Single Language, Full Stack
+Before Node.js, a typical web team might use JavaScript on the frontend and Python, Ruby, or Java on the backend. Node.js means you can be a **full-stack developer** using only one language. Your React skills are directly transferable.
 
-Node.js has two different module systems. You need to know both, as you will see both in the real world.
+### The Event Loop — Non-Blocking I/O
+This is what makes Node.js technically special. Here's the problem it solves:
 
-### A. CommonJS (The Older Node Standard)
-This is how Node.js originally handled modules. You will see this in older codebases or when configuring tools (like `postcss.config.js`).
+Imagine a restaurant server (a traditional, blocking server) who takes your order, walks to the kitchen, and **stands there waiting** until your food is ready before taking another table's order. That's slow.
 
-**Exporting (math.cjs):**
-```javascript
-function add(a, b) {
-  return a + b;
-}
+Node.js works differently. It **never waits**. When it hits a slow operation (like a database query or reading a file), it:
+1. Registers a **callback** function (a "when this is done, run this").
+2. Immediately moves on to handle the next request.
+3. When the database responds, the **Event Loop** picks up the callback and runs it.
 
-// Attach the function to module.exports
-module.exports = {
-  add: add
-};
+This is **non-blocking, event-driven I/O** — why Node.js can handle thousands of simultaneous users on a single thread.
+
 ```
-
-**Importing (app.cjs):**
-```javascript
-// Use require() to bring it in
-const math = require('./math.cjs');
-
-console.log(math.add(5, 5)); // 10
-```
-
-### B. ES Modules (The Modern Standard)
-This is the official JavaScript standard. It is the exact same syntax you use in React. To use this in Node.js, you must add `"type": "module"` to your `package.json`.
-
-**Exporting (math.js):**
-```javascript
-// Use the export keyword
-export function multiply(a, b) {
-  return a * b;
-}
-```
-
-**Importing (app.js):**
-```javascript
-// Use the import keyword
-import { multiply } from './math.js';
-
-console.log(multiply(4, 5)); // 20
+Browser Request ──→  Node.js  ──→  Starts DB query  ──→  Handles other requests...
+                                                ↓
+                              DB responds  ──→  Callback fires  ──→  Sends response
 ```
 
 ---
 
-## 4. Your First Node.js Script
+## 3. NPM: The World's Largest Code Library
 
-In the exercises, you are going to write your own Node.js script. Here are the basic commands you need:
+**NPM (Node Package Manager)** ships with every Node.js installation. It gives you access to over **2 million open-source packages** — collections of pre-written code you can drop into your project.
+
+### Key Commands
 
 | Command | What it does |
 |---|---|
-| `pnpm init` | Creates a new `package.json` file to start a project. |
-| `pnpm install <package>` | Downloads a package from NPM and adds it to your project. |
-| `node filename.js` | Runs your JavaScript file using the Node.js runtime. |
+| `pnpm init` | Creates a `package.json` to start a new project |
+| `pnpm install chalk` | Downloads `chalk` into `node_modules/` and saves it as a dependency |
+| `pnpm install -D nodemon` | Installs as a **dev dependency** (only for development, not production) |
+| `node filename.js` | Runs a file with the Node.js runtime |
+
+### The `package.json` Manifest
+This file is the **single source of truth** for your project. It records:
+- Your project name and version.
+- Run scripts (e.g., `"start": "node src/index.js"`).
+- Every package your project needs — both `dependencies` and `devDependencies`.
+
+### The Golden Rule: Never Commit `node_modules`
+The `node_modules` folder can be hundreds of megabytes. Instead, your `.gitignore` excludes it, and `package.json` acts as the recipe. Any developer who clones your repo just runs `pnpm install` to rebuild `node_modules` exactly.
 
 ---
 
-## Next Steps
-Head over to the `exercises/nodejs_practice.md` file to build your first Node.js module and use third-party NPM packages!
+## 4. Modules: Sharing Code Across Files
+
+Real-world applications are never one file. You split code into **modules** — files that export specific functions, and other files that import what they need.
+
+Node.js supports **two** module systems. You must know both.
+
+### A. CommonJS — The Original Node Standard
+
+```javascript
+// ── FILE: math.cjs ────────────────────────────────────────────────────────
+
+function add(a, b)      { return a + b; }
+function subtract(a, b) { return a - b; }
+
+//  Attach what you want to share to module.exports
+module.exports = { add, subtract };
+```
+
+```javascript
+// ── FILE: app.cjs ─────────────────────────────────────────────────────────
+
+const math = require('./math.cjs'); //  require() brings it in
+
+console.log(math.add(5, 3));      // → 8
+console.log(math.subtract(10, 4)); // → 6
+```
+
+You will see CommonJS everywhere: older codebases, Node tool configs (`postcss.config.cjs`), and libraries that haven't migrated.
+
+### B. ES Modules — The Modern Standard (Same as React!)
+
+```javascript
+// ── FILE: math.js ─────────────────────────────────────────────────────────
+
+//  Named exports — use the export keyword
+export function multiply(a, b) { return a * b; }
+export function divide(a, b)   {
+  if (b === 0) return 'Cannot divide by zero';
+  return a / b;
+}
+```
+
+```javascript
+// ── FILE: app.js ──────────────────────────────────────────────────────────
+
+//  Named imports — destructure from the path
+import { multiply, divide } from './math.js';  // .js extension is required in Node!
+
+console.log(multiply(4, 5)); // → 20
+console.log(divide(20, 4));  // → 5
+```
+
+**To enable ES Modules in Node.js:** add `"type": "module"` to your `package.json`.
+
+### Comparison at a Glance
+
+| Feature | CommonJS | ES Modules |
+|---|---|---|
+| Syntax | `require()` / `module.exports` | `import` / `export` |
+| File extension | `.js` or `.cjs` | `.js` or `.mjs` |
+| Enabled by default in Node? | ✅ Yes | ❌ Need `"type": "module"` |
+| Same syntax as React? | ❌ No | ✅ Yes |
+| Works in browser? | ❌ No | ✅ Yes (natively) |
+
+---
+
+## 5. Running the Live Demo
+
+Inside the CLI app, select **"🛠  Live Demo — Run CJS & ESM side by side"** to see both module systems produce results from the same functions. Then open the source files:
+
+- [`src/commonjs-math.cjs`](../examples/node-basics/src/commonjs-math.cjs) — the CommonJS module
+- [`src/esm-math.js`](../examples/node-basics/src/esm-math.js) — the ES Module
+- [`src/index.js`](../examples/node-basics/src/index.js) — how both are imported together
+
+---
+
+## 6. Exercises
+
+Open [`exercises/nodejs_practice.md`](../exercises/nodejs_practice.md) and work through the 5-exercise project:
+
+| Exercise | Goal | Key concept |
+|---|---|---|
+| 1 | Initialize a blank project | `pnpm init`, `package.json` |
+| 2 | Install `axios` + `chalk` | `pnpm install`, `node_modules` |
+| 3 | Write a `factorial()` module | ES Module `export` |
+| 4 | Build the main script | `import`, `async/await` |
+| 5 | Fetch a live API with Axios | Real HTTP request from Node |
+
+---
+
+## Quick Reference
+
+```bash
+node -v                    # Check Node.js version
+pnpm init                  # Start a new project
+pnpm install <package>     # Install a dependency
+pnpm install -D <package>  # Install a dev dependency
+node index.js              # Run a script
+```

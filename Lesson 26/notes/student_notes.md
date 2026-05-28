@@ -1,124 +1,191 @@
 # Student Notes — Lesson 26: Building APIs with Express.js
 
-> **Start the server!** 
-> 1. Open your terminal in `examples/express-api`.
-> 2. Run `pnpm install` then `pnpm dev`.
-> 3. Open your browser to `http://localhost:3000` to see the **API Explorer UI**!
+> **Start the server, open the Explorer!**
+> ```bash
+> cd examples/express-api
+> pnpm install   # only needed once
+> pnpm dev       # starts Express with nodemon
+> ```
+> Then open **http://localhost:3000** — start on the **📖 Concepts** tab.
 
 ---
 
 ## 1. What is an API?
 
-API stands for **Application Programming Interface**.
+**API** stands for **Application Programming Interface**. It is the contract that defines how two pieces of software communicate with each other.
 
-Think of a restaurant. You sit at a table with a menu (the Frontend/Client), and the kitchen prepares the food (the Backend/Database). But you cannot walk into the kitchen to cook the food yourself. You need a **waiter** to take your order to the kitchen and bring the food back to you.
+In web development, this almost always means a **client** (your React frontend) sending HTTP requests to a **server** (your Express backend) and receiving structured data (JSON) in return.
 
-**An API is the waiter.** It is a set of rules that allows one piece of software (like your React app) to talk to another piece of software (like your Node.js database server).
+### The Restaurant Analogy
+
+| Role | Web equivalent |
+|---|---|
+| Customer (you) | React Frontend |
+| Waiter (takes orders, delivers food) | **Express API** |
+| Kitchen (makes the food) | Database |
+
+You (the customer) never walk into the kitchen. You always go through the waiter. Similarly, your React app never directly reads the database — it always goes through the API.
 
 ---
 
-## 2. Express.js: The Waiter's Uniform
+## 2. Express.js: The Framework
 
-**Express.js** is the most popular framework for building APIs in Node.js. It gives you simple tools to listen for HTTP requests (like `fetch` calls from the browser) and send back responses.
+**Express.js** is a minimal Node.js framework for building web servers and APIs. Writing a server in raw Node.js is possible but painful (dozens of lines to handle one route). Express reduces that to three lines.
 
-Without Express, writing a web server in raw Node.js is incredibly verbose and complicated. Express makes it as simple as:
+### Setting up a server
 
 ```javascript
-import express from 'express';
-const app = express();
+import express from 'express';      // 1. Import Express
+const app = express();               // 2. Create the application
+const PORT = 3000;
 
-// "When someone makes a GET request to /hello, send back a message"
+app.use(express.json());             // 3. CRUCIAL middleware — parses JSON bodies
+
+// 4. Define a route
 app.get('/hello', (req, res) => {
-  res.json({ message: "Hello World!" });
+  res.json({ message: 'Hello World!' });
 });
 
-app.listen(3000, () => console.log('Server is running!'));
+// 5. Start listening for requests
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
 ```
 
 ---
 
-## 3. The Request/Response Cycle
+## 3. The Request / Response Cycle
 
-Every time your frontend talks to your backend, two things happen:
+Every HTTP interaction is a two-step cycle. Express gives you an object for each step:
 
-### 1. The Request (`req`)
-The client asks for something. The `req` object contains all the details of what they want:
-- `req.body`: Data sent by the user (like a filled-out form to create a new book).
-- `req.params`: Variables inside the URL itself (like the `123` in `/api/books/123`).
+### `req` — The Request (what the client sent)
 
-### 2. The Response (`res`)
-The server replies. The `res` object controls what goes back to the client:
-- `res.json()`: Sends data back formatted as JSON.
-- `res.status(404)`: Sets the HTTP status code (e.g., 200 = OK, 404 = Not Found, 500 = Server Error).
+| Property | Contains | Example |
+|---|---|---|
+| `req.params` | URL segment variables | `req.params.id` from `/books/:id` |
+| `req.body` | JSON data in POST/PUT body | `req.body.title` |
+| `req.query` | URL query strings | `req.query.search` from `?search=node` |
+
+### `res` — The Response (what you send back)
+
+| Method | What it does |
+|---|---|
+| `res.json(data)` | Sends a JSON response (sets `Content-Type: application/json`) |
+| `res.status(404)` | Sets the HTTP status code (chainable: `res.status(404).json(...)`) |
+| `res.send('text')` | Sends a plain text response |
 
 ---
 
-## 4. The 4 Main HTTP Methods (CRUD)
+## 4. The 4 HTTP Methods → CRUD
 
-When building an API, we use specific HTTP methods to indicate *what* we want to do to the data. This maps directly to **CRUD** (Create, Read, Update, Delete).
+Every REST API operation is expressed through one of four HTTP methods:
 
-| Method | Express Code | Purpose (CRUD) | Example URL |
+| HTTP Method | CRUD | Purpose | Example |
 |---|---|---|---|
-| **GET** | `app.get()` | **R**ead / Retrieve data | `/api/books` |
-| **POST** | `app.post()` | **C**reate new data | `/api/books` (with JSON body) |
-| **PUT** | `app.put()` | **U**pdate existing data | `/api/books/12` (with JSON body) |
-| **DELETE** | `app.delete()` | **D**elete existing data | `/api/books/12` |
+| `GET` | **R**ead | Retrieve data | `GET /api/books` |
+| `POST` | **C**reate | Create new data | `POST /api/books` + JSON body |
+| `PUT` | **U**pdate | Replace existing data | `PUT /api/books/3` + JSON body |
+| `DELETE` | **D**elete | Remove data | `DELETE /api/books/3` |
 
 ---
 
-## 5. API Example: Managing Books
+## 5. Building the 5 REST Endpoints
 
-Let's look at how the 5 standard endpoints are built in your `server.js` file. Open that file and read along:
+Open [`server.js`](../examples/express-api/server.js) and read each route with these notes:
 
-### GET All Books
+### GET All
 ```javascript
 app.get('/api/books', (req, res) => {
-  res.json({ success: true, data: books });
+  res.json({ success: true, data: books }); // return the whole array
 });
 ```
-*Very simple: just return the entire array as JSON.*
 
-### GET a Single Book by ID
+### GET by ID — Using `req.params`
 ```javascript
 app.get('/api/books/:id', (req, res) => {
-  // Extract the ID from the URL (req.params)
-  const bookId = parseInt(req.params.id); 
-  
-  // Find it in our array
-  const book = books.find(b => b.id === bookId);
-
-  // If not found, return a 404 error
-  if (!book) return res.status(404).json({ error: 'Not found' });
-  
-  // Otherwise, return the book
-  res.json({ data: book });
+  const id = parseInt(req.params.id); // :id in the route becomes req.params.id (string!)
+  const book = books.find(b => b.id === id);
+  if (!book) return res.status(404).json({ error: 'Not found' }); // 404 if missing
+  res.json({ success: true, data: book });
 });
 ```
 
-### POST a New Book
+### POST — Using `req.body`
 ```javascript
-// Note: Requires app.use(express.json()) at the top of your server!
+// Requires app.use(express.json()) — otherwise req.body is undefined!
 app.post('/api/books', (req, res) => {
-  // Extract the data sent by the client (req.body)
-  const { title, author } = req.body; 
-  
-  const newBook = { id: 99, title, author };
+  const { title, author } = req.body;         // data from the client
+  if (!title || !author) return res.status(400).json({ error: 'Required fields missing' });
+  const newBook = { id: nextId++, title, author };
   books.push(newBook);
-  
-  // 201 means "Created successfully"
-  res.status(201).json({ data: newBook });
+  res.status(201).json({ success: true, data: newBook }); // 201 = Created
+});
+```
+
+### PUT — Combining `req.params` + `req.body`
+```javascript
+app.put('/api/books/:id', (req, res) => {
+  const index = books.findIndex(b => b.id === parseInt(req.params.id));
+  if (index === -1) return res.status(404).json({ error: 'Not found' });
+  books[index] = { ...books[index], ...req.body }; // spread = keep old + override
+  res.json({ success: true, data: books[index] });
+});
+```
+
+### DELETE — Filtering the array
+```javascript
+app.delete('/api/books/:id', (req, res) => {
+  const before = books.length;
+  books = books.filter(b => b.id !== parseInt(req.params.id));
+  if (books.length === before) return res.status(404).json({ error: 'Not found' });
+  res.json({ success: true, message: 'Book deleted' });
 });
 ```
 
 ---
 
-## 6. Testing Your API
+## 6. Middleware
 
-Normally, backend developers use tools like **Postman** or **Insomnia** to test their APIs without building a frontend. 
+Middleware is code that runs **between** the incoming request and your route handler. It transforms or validates data before your handler sees it.
 
-For this lesson, we built an **API Explorer UI** directly into your server! Go to `http://localhost:3000` and use the buttons to send real GET, POST, PUT, and DELETE requests to your Express server. Watch the JSON output change!
+```
+Request ──→  express.json() ──→  cors() ──→  Your Route Handler ──→  Response
+             ↑ parses body       ↑ adds CORS headers
+```
+
+```javascript
+app.use(express.json()); // ← Must come BEFORE your route definitions
+app.use(cors());         // ← Lets browsers on other domains call your API
+```
+
+> ⚠️ If you define a route *before* `app.use(express.json())`, that route won't have access to `req.body`.
+
+---
+
+## 7. HTTP Status Codes
+
+Status codes tell the client what happened. Always use the right one:
+
+| Code | Meaning | When to use |
+|---|---|---|
+| `200` | OK | Successful GET, PUT, DELETE |
+| `201` | Created | Successful POST |
+| `400` | Bad Request | Client sent invalid/missing data |
+| `404` | Not Found | Resource doesn't exist |
+| `500` | Internal Server Error | Something broke on your server |
+
+---
+
+## 8. Using the API Explorer
+
+The **📡 API Explorer** tab at `http://localhost:3000` acts as a visual Postman for testing your routes:
+- Each endpoint card shows the method, URL, description, and input fields.
+- Click **Send** — the JSON response appears live with **syntax highlighting**.
+- A **Request Log** tracks every call with method, status code, and response time.
+- Try triggering a `404` by sending a GET to an ID that doesn't exist (e.g., ID 999).
 
 ---
 
 ## Next Steps
-Head over to the `exercises/express_practice.md` file to build your own API for a Movie database from scratch!
+
+Build your own **Movies API** from scratch — see [`exercises/express_practice.md`](../exercises/express_practice.md).
