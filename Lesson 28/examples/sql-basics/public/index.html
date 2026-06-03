@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 28 — SQL & Databases Explorer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' } /* Sky Blue */
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    /* Tab underline animation */
+    .tab-btn { position: relative; transition: color 0.2s; }
+    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
+    .tab-btn.active { color: #38bdf8; }
+    .tab-btn.active::after { background: #0ea5e9; }
+    .tab-btn:not(.active) { color: #64748b; }
+    .tab-btn:not(.active):hover { color: #94a3b8; }
+
+    /* Concept card */
+    .concept-card { transition: border-color 0.2s, transform 0.15s; }
+    .concept-card:hover { border-color: #0ea5e9; transform: translateY(-2px); }
+
+    /* Buttons */
+    .btn { transition: all 0.15s; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
+    .btn:active { transform: translateY(0); }
+
+    /* Quiz option */
+    .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
+    .quiz-opt:hover { background: rgba(56,189,248,0.08); border-color: #0ea5e9; }
+    .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
+    .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
+  </style>
+</head>
+<body class="bg-[#0b1120] text-slate-200 min-h-screen">
+
+  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
+  <header class="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        </div>
+        <div>
+          <span class="font-bold text-sm text-slate-100">SQL Basics Explorer</span>
+          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 28</span>
+        </div>
+      </div>
+      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
+        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
+        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">💾 SQL Playground</button>
+        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  CONCEPTS VIEW                                                       -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-concepts" class="space-y-8">
+
+      <!-- Hero -->
+      <div class="text-center py-8">
+        <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 rounded-full px-4 py-1.5 text-brand-400 text-xs font-medium mb-4">
+          Session 28 · Data Persistence
+        </div>
+        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-sky-400 via-blue-400 to-sky-300 bg-clip-text text-transparent">
+          Relational Databases & SQL
+        </h1>
+        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
+          Learn how to store, query, and manage application data using Structured Query Language (SQL) and Relational Database Systems like PostgreSQL.
+        </p>
+      </div>
+
+      <!-- Core Concepts -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Tables -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <div class="w-10 h-10 bg-indigo-500/15 border border-indigo-500/25 rounded-xl flex items-center justify-center mb-4 text-indigo-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2">Tables</h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            Data is organized into tables (like spreadsheets). Each <strong>Row</strong> is a single record (e.g., one user). Each <strong>Column</strong> is a property (e.g., email).
+          </p>
+        </div>
+        
+        <!-- Primary Key -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-center justify-center mb-4 text-amber-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2">Primary Key</h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            A column (usually <code class="text-amber-400">id</code>) that uniquely identifies every row. No two rows can have the same Primary Key.
+          </p>
+        </div>
+
+        <!-- PostgreSQL -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <div class="w-10 h-10 bg-brand-500/15 border border-brand-500/25 rounded-xl flex items-center justify-center mb-4 text-brand-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2">PostgreSQL</h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            A highly reliable, open-source Relational Database Management System (RDBMS). It runs on a server and responds to SQL queries.
+          </p>
+        </div>
+
+        <!-- Declarative -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <div class="w-10 h-10 bg-emerald-500/15 border border-emerald-500/25 rounded-xl flex items-center justify-center mb-4 text-emerald-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2">Declarative</h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            SQL is declarative: you write <em>what</em> data you want (e.g. "Select users where age > 18"), not <em>how</em> to loop over arrays to find it.
+          </p>
+        </div>
+      </div>
+
+      <!-- CRUD / SQL Methods Table -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+        <h3 class="font-bold text-slate-100 mb-1">The 4 CRUD Operations in SQL</h3>
+        <p class="text-slate-500 text-sm mb-4">Every API route maps to one of these fundamental SQL commands.</p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-800">
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">CRUD</th>
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">SQL Command</th>
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3">Example Syntax</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/60">
+              <!-- Create -->
+              <tr class="hover:bg-slate-800/20 transition-colors">
+                <td class="py-4 pr-4 font-bold text-emerald-400">Create</td>
+                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">INSERT INTO</td>
+                <td class="py-4 font-mono text-xs text-slate-400">
+                  <span class="text-blue-400">INSERT INTO</span> users (name, age) <span class="text-blue-400">VALUES</span> ('Alice', 25);
+                </td>
+              </tr>
+              <!-- Read -->
+              <tr class="hover:bg-slate-800/20 transition-colors">
+                <td class="py-4 pr-4 font-bold text-brand-400">Read</td>
+                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">SELECT</td>
+                <td class="py-4 font-mono text-xs text-slate-400">
+                  <span class="text-blue-400">SELECT</span> * <span class="text-blue-400">FROM</span> users <span class="text-blue-400">WHERE</span> age > 18;
+                </td>
+              </tr>
+              <!-- Update -->
+              <tr class="hover:bg-slate-800/20 transition-colors">
+                <td class="py-4 pr-4 font-bold text-amber-400">Update</td>
+                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">UPDATE</td>
+                <td class="py-4 font-mono text-xs text-slate-400">
+                  <span class="text-blue-400">UPDATE</span> users <span class="text-blue-400">SET</span> age = 26 <span class="text-blue-400">WHERE</span> name = 'Alice';
+                </td>
+              </tr>
+              <!-- Delete -->
+              <tr class="hover:bg-slate-800/20 transition-colors">
+                <td class="py-4 pr-4 font-bold text-rose-400">Delete</td>
+                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">DELETE FROM</td>
+                <td class="py-4 font-mono text-xs text-slate-400">
+                  <span class="text-blue-400">DELETE FROM</span> users <span class="text-blue-400">WHERE</span> id = 1;
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- CTA to Explorer -->
+      <div class="text-center py-4">
+        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Open the SQL Playground
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  SQL PLAYGROUND VIEW                                                 -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-explorer" class="hidden">
+      
+      <div class="bg-slate-800/40 border border-brand-500/30 rounded-xl p-4 mb-6 flex items-start gap-4">
+        <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0 mt-0.5">
+          <span class="text-lg">💡</span>
+        </div>
+        <div>
+          <h3 class="font-bold text-brand-400 text-sm mb-1">Interactive Sandbox</h3>
+          <p class="text-slate-400 text-xs leading-relaxed">
+            This playground connects to an in-memory SQL database. It is pre-seeded with a <code class="text-slate-300">users</code> table. Write standard SQL queries below to manipulate the data. If you break it, just click Reset!
+          </p>
+        </div>
+        <button onclick="resetDb()" class="ml-auto shrink-0 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors">
+          ↺ Reset Database
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[500px]">
+        
+        <!-- LEFT: SQL Editor -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-2.5 flex justify-between items-center">
+            <span class="text-xs font-mono text-slate-400">Query Editor</span>
+            <div class="flex gap-2">
+              <button onclick="insertTemplate('SELECT * FROM users;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">SELECT</button>
+              <button onclick="insertTemplate('INSERT INTO users (name, email, age) VALUES (\'David\', \'david@example.com\', 30);')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">INSERT</button>
+            </div>
+          </div>
+          <div class="flex-1 p-4 relative">
+            <textarea id="sql-input" class="w-full h-full bg-transparent text-sm font-mono text-slate-300 outline-none resize-none" placeholder="Type your SQL query here...
+
+Try:
+SELECT * FROM users;"></textarea>
+          </div>
+          <div class="p-4 border-t border-slate-800/60 bg-slate-950/50 flex justify-end">
+            <button onclick="runQuery()" class="btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2 rounded-lg flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Run Query
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Results -->
+        <div class="bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-3 flex justify-between items-center">
+            <span class="text-xs font-mono text-slate-400">Results</span>
+            <span id="query-status" class="text-xs font-mono text-slate-500">Ready</span>
+          </div>
+          
+          <div class="flex-1 overflow-auto p-0" id="results-container">
+            <div class="flex items-center justify-center h-full text-slate-500 text-sm italic">
+              Run a query to see results.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  QUIZ VIEW                                                            -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold mb-2">SQL Knowledge Check</h2>
+        <p class="text-slate-500 text-sm">7 questions · Select an answer to get instant feedback</p>
+      </div>
+      <div id="quiz-body" class="space-y-6"></div>
+      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
+        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
+        <button onclick="initQuiz()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all btn">Retake Quiz</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  TAB SWITCHER
+  // ═══════════════════════════════════════════════════════════════════════════
+  const TABS = ['concepts', 'explorer', 'quiz'];
+  function switchTab(target) {
+    TABS.forEach(t => {
+      document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
+      document.getElementById(`tab-${t}`).classList.toggle('active', t === target);
+    });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  SQL PLAYGROUND
+  // ═══════════════════════════════════════════════════════════════════════════
+  function insertTemplate(sql) {
+    document.getElementById('sql-input').value = sql;
+  }
+
+  async function resetDb() {
+    try {
+      const res = await fetch('/api/reset', { method: 'POST' });
+      if (res.ok) {
+        document.getElementById('query-status').innerHTML = '<span class="text-emerald-400">Database reset successful.</span>';
+        document.getElementById('results-container').innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-sm italic">Run a query to see results.</div>';
+      }
+    } catch(e) {
+      alert("Failed to reach server. Make sure 'pnpm dev' is running.");
+    }
+  }
+
+  function renderTable(rows) {
+    if (!rows || rows.length === 0) {
+      return '<div class="p-4 text-sm text-slate-400 italic">No rows returned.</div>';
+    }
+    
+    const headers = Object.keys(rows[0]);
+    let html = '<table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-950/80 sticky top-0 border-b border-slate-700">';
+    html += '<tr>' + headers.map(h => `<th class="p-3 font-mono text-xs text-brand-400">${h}</th>`).join('') + '</tr></thead>';
+    html += '<tbody class="divide-y divide-slate-800/60">';
+    
+    rows.forEach(row => {
+      html += '<tr class="hover:bg-slate-800/30">';
+      headers.forEach(h => {
+        const val = row[h] === null ? '<span class="text-slate-500 italic">null</span>' : row[h];
+        html += `<td class="p-3 text-slate-300 font-mono text-xs">${val}</td>`;
+      });
+      html += '</tr>';
+    });
+    
+    html += '</tbody></table>';
+    return html;
+  }
+
+  async function runQuery() {
+    const input = document.getElementById('sql-input').value;
+    const statusEl = document.getElementById('query-status');
+    const resultsEl = document.getElementById('results-container');
+    
+    if (!input.trim()) return;
+
+    statusEl.innerHTML = '<span class="text-amber-400">Executing...</span>';
+    
+    try {
+      const res = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: input })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok || data.error) {
+        statusEl.innerHTML = '<span class="text-rose-400 font-bold">Error</span>';
+        resultsEl.innerHTML = `<div class="p-4 text-rose-400 font-mono text-sm bg-rose-500/10 border-l-4 border-rose-500 h-full">${data.error}</div>`;
+        return;
+      }
+
+      statusEl.innerHTML = '<span class="text-emerald-400 font-bold">Success</span>';
+      
+      if (data.type === 'read') {
+        resultsEl.innerHTML = renderTable(data.data);
+      } else {
+        resultsEl.innerHTML = `<div class="p-6 flex flex-col items-center justify-center h-full text-center">
+          <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-3">✓</div>
+          <p class="text-slate-200 font-medium">${data.message}</p>
+          <p class="text-slate-500 text-sm mt-2">Run <code class="text-brand-400">SELECT * FROM users;</code> to see the changes.</p>
+        </div>`;
+      }
+      
+    } catch(e) {
+      statusEl.innerHTML = '<span class="text-rose-400 font-bold">Network Error</span>';
+      resultsEl.innerHTML = '<div class="p-4 text-rose-400 text-sm">Failed to connect to server. Is it running?</div>';
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  QUIZ
+  // ═══════════════════════════════════════════════════════════════════════════
+  const QUESTIONS = [
+    {
+      q: "What does SQL stand for?",
+      opts: ["Server Query Link", "Structured Query Language", "System Quick Language", "Synchronous Query Logic"],
+      ans: 1,
+      exp: "SQL is the standard programming language specifically designed for storing, retrieving, and manipulating data in relational databases."
+    },
+    {
+      q: "Which command is used to extract data from a database?",
+      opts: ["EXTRACT", "GET", "SELECT", "PULL"],
+      ans: 2,
+      exp: "SELECT is the fundamental read operation in SQL. You use it to specify exactly which columns and rows you want to retrieve."
+    },
+    {
+      q: "What does the '*' mean in the statement: SELECT * FROM users?",
+      opts: ["Multiply", "All rows", "All columns", "Delete all"],
+      ans: 2,
+      exp: "The asterisk (*) is a wildcard that tells the database to return every column available in the table."
+    },
+    {
+      q: "Which clause is crucial when running UPDATE or DELETE to avoid modifying the entire table?",
+      opts: ["WHERE", "ORDER BY", "LIMIT", "WHEN"],
+      ans: 0,
+      exp: "If you run 'DELETE FROM users;' without a WHERE clause, it will delete EVERY row in the table! Always use a WHERE clause to target specific records."
+    },
+    {
+      q: "What is a Primary Key?",
+      opts: ["The most important table in the database", "A password used to connect to the database", "A column (or set of columns) that uniquely identifies each row in a table", "The first column in any table"],
+      ans: 2,
+      exp: "A Primary Key ensures that no two rows can be identical. Usually, it's an auto-incrementing integer (like 'id = 1, 2, 3...')."
+    },
+    {
+      q: "Which CRUD operation does the SQL command 'INSERT INTO' represent?",
+      opts: ["Create", "Read", "Update", "Delete"],
+      ans: 0,
+      exp: "INSERT INTO creates a brand new row in a table."
+    },
+    {
+      q: "PostgreSQL is an example of what type of software?",
+      opts: ["A frontend UI framework", "A Relational Database Management System (RDBMS)", "A NoSQL Document Store", "A cloud hosting provider"],
+      ans: 1,
+      exp: "PostgreSQL is a powerful, open-source RDBMS. Unlike NoSQL databases (like MongoDB) which store JSON documents, it stores data in strict, structured tables."
+    }
+  ];
+
+  let quizAnswers = {};
+  let quizDone = false;
+
+  function initQuiz() {
+    quizAnswers = {};
+    quizDone = false;
+    document.getElementById('quiz-footer').classList.add('hidden');
+    const body = document.getElementById('quiz-body');
+    body.innerHTML = QUESTIONS.map((q, qi) => `
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
+        <p class="font-medium text-slate-100 mb-4 leading-relaxed">
+          <span class="text-brand-400 font-mono mr-2">${qi + 1}.</span>${q.q}
+        </p>
+        <div class="space-y-2" id="qopts-${qi}">
+          ${q.opts.map((opt, oi) => `
+            <button
+              onclick="selectAnswer(${qi}, ${oi})"
+              id="opt-${qi}-${oi}"
+              class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"
+            >
+              <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>
+              ${opt}
+            </button>
+          `).join('')}
+        </div>
+        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
+      </div>
+    `).join('');
+  }
+
+  function selectAnswer(qi, oi) {
+    if (quizDone || quizAnswers[qi] !== undefined) return;
+    quizAnswers[qi] = oi;
+    const q = QUESTIONS[qi];
+    const isCorrect = oi === q.ans;
+
+    for (let i = 0; i < q.opts.length; i++) {
+      const btn = document.getElementById(`opt-${qi}-${i}`);
+      const ico = document.getElementById(`opt-icon-${qi}-${i}`);
+      if (i === q.ans) {
+        btn.classList.add('correct');
+        ico.textContent = '✓';
+        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
+      } else if (i === oi && !isCorrect) {
+        btn.classList.add('wrong');
+        ico.textContent = '✗';
+        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
+      }
+      btn.disabled = true;
+    }
+
+    const expEl = document.getElementById(`exp-${qi}`);
+    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
+    expEl.classList.remove('hidden');
+
+    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
+  }
+
+  function showFinalScore() {
+    quizDone = true;
+    const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
+    const pct   = Math.round(score / QUESTIONS.length * 100);
+    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
+    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
+    document.getElementById('quiz-grade-text').textContent = grade;
+    document.getElementById('quiz-footer').classList.remove('hidden');
+    document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  initQuiz();
+  </script>
+</body>
+</html>
