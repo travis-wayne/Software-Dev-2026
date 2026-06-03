@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 30 — DB Design & Relationships</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' } /* Purple */
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+
+    /* Tab underline animation */
+    .tab-btn { position: relative; transition: color 0.2s; }
+    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
+    .tab-btn.active { color: #a78bfa; }
+    .tab-btn.active::after { background: #8b5cf6; }
+    .tab-btn:not(.active) { color: #64748b; }
+    .tab-btn:not(.active):hover { color: #94a3b8; }
+
+    /* Concept card */
+    .concept-card { transition: border-color 0.2s, transform 0.15s; }
+    .concept-card:hover { border-color: #8b5cf6; transform: translateY(-2px); }
+
+    /* Buttons */
+    .btn { transition: all 0.15s; }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
+    .btn:active { transform: translateY(0); }
+
+    /* Quiz option */
+    .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
+    .quiz-opt:hover { background: rgba(139,92,246,0.08); border-color: #8b5cf6; }
+    .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
+    .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
+
+    .db-table-header { @apply bg-slate-900/80 border-b border-slate-700 font-mono text-xs text-brand-400 p-2; }
+    .db-table-cell { @apply p-2 font-mono text-xs text-slate-300 border-b border-slate-800/50; }
+  </style>
+</head>
+<body class="bg-[#0b1120] text-slate-200 min-h-screen">
+
+  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-fuchsia-500/5 rounded-full blur-3xl"></div>
+  </div>
+
+  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
+  <header class="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+        </div>
+        <div>
+          <span class="font-bold text-sm text-slate-100">Database Design Explorer</span>
+          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 30</span>
+        </div>
+      </div>
+      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
+        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
+        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">🔗 Relationships GUI</button>
+        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  CONCEPTS VIEW                                                       -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-concepts" class="space-y-8">
+
+      <!-- Hero -->
+      <div class="text-center py-8">
+        <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 rounded-full px-4 py-1.5 text-brand-400 text-xs font-medium mb-4">
+          Session 30 · Normalization & JOINs
+        </div>
+        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
+          Database Design
+        </h1>
+        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
+          Learn how to structure tables efficiently using Normalization, and how to link them together using Foreign Keys and the three core Relationship types.
+        </p>
+      </div>
+
+      <!-- Core Concepts -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- 1:1 -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 bg-indigo-500/15 border border-indigo-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-indigo-400 font-bold font-mono">1:1</div>
+          <h3 class="font-bold text-slate-100 mb-2">One-to-One</h3>
+          <p class="text-slate-400 text-xs leading-relaxed text-left">
+            One record in Table A belongs to exactly one record in Table B.
+            <br><br><span class="text-indigo-400 font-mono text-[10px]">Example:</span> User ↔ User Profile
+            <br><span class="text-indigo-400 font-mono text-[10px]">Implementation:</span> Foreign Key with a <code>UNIQUE</code> constraint.
+          </p>
+        </div>
+        
+        <!-- 1:N -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-400 font-bold font-mono">1:N</div>
+          <h3 class="font-bold text-slate-100 mb-2">One-to-Many</h3>
+          <p class="text-slate-400 text-xs leading-relaxed text-left">
+            One record in Table A can have many records in Table B.
+            <br><br><span class="text-amber-400 font-mono text-[10px]">Example:</span> User ↔ Posts
+            <br><span class="text-amber-400 font-mono text-[10px]">Implementation:</span> A standard Foreign Key in the child table.
+          </p>
+        </div>
+
+        <!-- M:N -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+          <div class="w-12 h-12 bg-rose-500/15 border border-rose-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-rose-400 font-bold font-mono">M:N</div>
+          <h3 class="font-bold text-slate-100 mb-2">Many-to-Many</h3>
+          <p class="text-slate-400 text-xs leading-relaxed text-left">
+            Many records in Table A can relate to many in Table B.
+            <br><br><span class="text-rose-400 font-mono text-[10px]">Example:</span> Posts ↔ Tags
+            <br><span class="text-rose-400 font-mono text-[10px]">Implementation:</span> Requires a 3rd <strong>Junction Table</strong> (e.g., <code>post_tags</code>) holding Foreign Keys to both.
+          </p>
+        </div>
+      </div>
+
+      <div class="text-center py-4">
+        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+          Open the Relationships GUI
+        </button>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  RELATIONSHIPS EXPLORER VIEW                                         -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-explorer" class="hidden">
+      
+      <!-- Top: Visual Schema -->
+      <div class="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4" id="tables-container">
+        <!-- Injected via JS -->
+      </div>
+
+      <!-- Bottom: SQL Query Runner -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[400px]">
+        <!-- LEFT: SQL Editor -->
+        <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-2.5 flex justify-between items-center">
+            <span class="text-xs font-mono text-slate-400">JOIN Query Editor</span>
+            <div class="flex gap-2">
+              <button onclick="insertTemplate('SELECT users.username, posts.title\nFROM users\nJOIN posts ON users.id = posts.user_id;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">1:N Join</button>
+              <button onclick="insertTemplate('SELECT posts.title, tags.name\nFROM posts\nJOIN post_tags ON posts.id = post_tags.post_id\nJOIN tags ON post_tags.tag_id = tags.id;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">M:N Join</button>
+            </div>
+          </div>
+          <div class="flex-1 p-4 relative">
+            <textarea id="sql-input" class="w-full h-full bg-transparent text-sm font-mono text-slate-300 outline-none resize-none" placeholder="Write a JOIN query to combine the tables above..."></textarea>
+          </div>
+          <div class="p-4 border-t border-slate-800/60 bg-slate-950/50 flex justify-between items-center">
+            <button onclick="resetDb()" class="text-xs text-slate-500 hover:text-slate-300 underline">Reset Database</button>
+            <button onclick="runQuery()" class="btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2 rounded-lg flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              Run JOIN
+            </button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Results -->
+        <div class="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
+          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-3 flex justify-between items-center">
+            <span class="text-xs font-mono text-slate-400">Query Results</span>
+            <span id="query-status" class="text-xs font-mono text-slate-500">Ready</span>
+          </div>
+          <div class="flex-1 overflow-auto p-0" id="results-container">
+            <div class="flex items-center justify-center h-full text-slate-500 text-sm italic">
+              Run a JOIN query to see combined data.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <!--  QUIZ VIEW                                                            -->
+    <!-- ════════════════════════════════════════════════════════════════════ -->
+    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-bold mb-2">Database Design Check</h2>
+        <p class="text-slate-500 text-sm">7 questions · Select an answer to get instant feedback</p>
+      </div>
+      <div id="quiz-body" class="space-y-6"></div>
+      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
+        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
+        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
+        <button onclick="initQuiz()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all btn">Retake Quiz</button>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  TAB SWITCHER & DATA LOADING
+  // ═══════════════════════════════════════════════════════════════════════════
+  const TABS = ['concepts', 'explorer', 'quiz'];
+  function switchTab(target) {
+    TABS.forEach(t => {
+      document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
+      document.getElementById(`tab-${t}`).classList.toggle('active', t === target);
+    });
+    if(target === 'explorer') loadTables();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  SQL PLAYGROUND & VISUALIZER
+  // ═══════════════════════════════════════════════════════════════════════════
+  function insertTemplate(sql) { document.getElementById('sql-input').value = sql; }
+
+  async function loadTables() {
+    try {
+      const res = await fetch('/api/tables');
+      const { data } = await res.json();
+      const container = document.getElementById('tables-container');
+      container.innerHTML = '';
+
+      Object.keys(data).forEach(tableName => {
+        const rows = data[tableName];
+        if (rows.length === 0) return;
+        
+        const headers = Object.keys(rows[0]);
+        let html = `<div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden flex flex-col max-h-[250px]">
+          <div class="bg-slate-900 py-1.5 px-3 text-xs font-bold text-slate-200 border-b border-slate-800 text-center">${tableName}</div>
+          <div class="overflow-auto flex-1"><table class="w-full text-left">
+          <thead class="sticky top-0 bg-slate-900/90 backdrop-blur"><tr>`;
+        
+        headers.forEach(h => {
+          let color = 'text-slate-500';
+          if (h === 'id') color = 'text-amber-400';
+          if (h.endsWith('_id')) color = 'text-brand-400';
+          html += `<th class="db-table-header ${color}">${h}</th>`;
+        });
+        
+        html += `</tr></thead><tbody>`;
+        rows.forEach(r => {
+          html += `<tr class="hover:bg-slate-800/50">`;
+          headers.forEach(h => {
+             let color = 'text-slate-300';
+             if (h === 'id') color = 'text-amber-400 font-bold';
+             if (h.endsWith('_id')) color = 'text-brand-400 underline decoration-brand-500/50 underline-offset-2 cursor-help';
+             html += `<td class="db-table-cell ${color}" title="${h.endsWith('_id') ? 'Foreign Key pointing to another table' : ''}">${r[h]}</td>`;
+          });
+          html += `</tr>`;
+        });
+        html += `</tbody></table></div></div>`;
+        container.innerHTML += html;
+      });
+    } catch(e) { console.error(e); }
+  }
+
+  function renderTable(rows) {
+    if (!rows || rows.length === 0) return '<div class="p-4 text-sm text-slate-400 italic">No rows returned.</div>';
+    const headers = Object.keys(rows[0]);
+    let html = '<table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-950/80 sticky top-0 border-b border-slate-700"><tr>';
+    html += headers.map(h => `<th class="p-3 font-mono text-xs text-brand-400">${h}</th>`).join('') + '</tr></thead><tbody class="divide-y divide-slate-800/60">';
+    rows.forEach(row => {
+      html += '<tr class="hover:bg-slate-800/30">';
+      headers.forEach(h => {
+        const val = row[h] === null ? '<span class="text-slate-500 italic">null</span>' : row[h];
+        html += `<td class="p-3 text-slate-300 font-mono text-xs">${val}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  async function runQuery() {
+    const input = document.getElementById('sql-input').value;
+    const statusEl = document.getElementById('query-status');
+    const resultsEl = document.getElementById('results-container');
+    if (!input.trim()) return;
+
+    statusEl.innerHTML = '<span class="text-amber-400">Executing...</span>';
+    try {
+      const res = await fetch('/api/execute', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: input })
+      });
+      const data = await res.json();
+      
+      if (!res.ok || data.error) {
+        statusEl.innerHTML = '<span class="text-rose-400 font-bold">Error</span>';
+        resultsEl.innerHTML = `<div class="p-4 text-rose-400 font-mono text-sm bg-rose-500/10 border-l-4 border-rose-500 h-full">${data.error}</div>`;
+        return;
+      }
+
+      statusEl.innerHTML = '<span class="text-emerald-400 font-bold">Success</span>';
+      if (data.type === 'read') {
+        resultsEl.innerHTML = renderTable(data.data);
+      } else {
+        resultsEl.innerHTML = `<div class="p-6 text-emerald-400 font-medium">${data.message}</div>`;
+        loadTables(); // Refresh schema view if they inserted/deleted
+      }
+    } catch(e) {
+      statusEl.innerHTML = '<span class="text-rose-400 font-bold">Network Error</span>';
+    }
+  }
+
+  async function resetDb() {
+    await fetch('/api/reset', { method: 'POST' });
+    loadTables();
+    document.getElementById('results-container').innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-sm italic">Database reset.</div>';
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  QUIZ
+  // ═══════════════════════════════════════════════════════════════════════════
+  const QUESTIONS = [
+    {
+      q: "What is the primary goal of Database Normalization?",
+      opts: ["To make SQL queries run faster", "To reduce data redundancy and improve data integrity", "To convert SQL databases into NoSQL databases", "To encrypt sensitive data"],
+      ans: 1,
+      exp: "Normalization organizes tables to reduce duplicate data. If a user's email address is stored in 5 different places, updating it becomes a nightmare. Normalization ensures it's stored exactly once."
+    },
+    {
+      q: "A User has one Profile. A Profile belongs to one User. What type of relationship is this?",
+      opts: ["One-to-One (1:1)", "One-to-Many (1:N)", "Many-to-Many (M:N)", "Zero-to-One"],
+      ans: 0,
+      exp: "This is a strict 1:1 relationship, typically enforced by putting a UNIQUE constraint on the foreign key (e.g. user_id)."
+    },
+    {
+      q: "A User can author many Posts. A Post is authored by exactly one User. What type of relationship is this?",
+      opts: ["One-to-One (1:1)", "One-to-Many (1:N)", "Many-to-Many (M:N)", "Zero-to-Many"],
+      ans: 1,
+      exp: "This is a 1:N relationship. The 'Posts' table (the child) will hold a 'user_id' foreign key pointing to the 'Users' table."
+    },
+    {
+      q: "A Post can have many Tags. A Tag can belong to many Posts. How do you implement this in a relational database?",
+      opts: ["Store an array of strings in the Posts table", "Store an array of IDs in the Tags table", "Create a third 'Junction Table' containing post_id and tag_id", "You cannot do this in SQL"],
+      ans: 2,
+      exp: "SQL databases do not natively support arrays as relationships. You MUST create a junction table (e.g., 'post_tags') to map the Many-to-Many relationship."
+    },
+    {
+      q: "What does the SQL command 'JOIN' do?",
+      opts: ["Combines two tables into one permanent table", "Combines rows from two or more tables based on a related column between them", "Deletes redundant data", "Creates a new database"],
+      ans: 1,
+      exp: "JOIN is the magic of Relational databases. It temporarily stitches tables together for a query based on their Foreign Keys, allowing you to get a User's name alongside their Post's title."
+    },
+    {
+      q: "What is a Foreign Key?",
+      opts: ["A key used to encrypt the database", "A column in one table that refers to the Primary Key in another table", "A column that cannot contain null values", "A unique identifier generated by the database"],
+      ans: 1,
+      exp: "A Foreign Key is the link that creates a relationship. If the 'posts' table has a 'user_id' column that points to 'users.id', 'user_id' is the foreign key."
+    },
+    {
+      q: "Why might someone intentionally 'Denormalize' a database?",
+      opts: ["Because they don't know how to use JOINs", "To save hard-drive space", "To improve read performance by reducing complex, slow JOIN queries", "To make the database more secure"],
+      ans: 2,
+      exp: "While normalization is best practice for data integrity, sometimes a query that requires joining 10 tables is too slow. Engineers will intentionally duplicate data (denormalize) to speed up reads at the cost of storage and write complexity."
+    }
+  ];
+
+  let quizAnswers = {};
+  let quizDone = false;
+
+  function initQuiz() {
+    quizAnswers = {};
+    quizDone = false;
+    document.getElementById('quiz-footer').classList.add('hidden');
+    const body = document.getElementById('quiz-body');
+    body.innerHTML = QUESTIONS.map((q, qi) => `
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
+        <p class="font-medium text-slate-100 mb-4 leading-relaxed"><span class="text-brand-400 font-mono mr-2">${qi + 1}.</span>${q.q}</p>
+        <div class="space-y-2" id="qopts-${qi}">
+          ${q.opts.map((opt, oi) => `<button onclick="selectAnswer(${qi}, ${oi})" id="opt-${qi}-${oi}" class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"><span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>${opt}</button>`).join('')}
+        </div>
+        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
+      </div>
+    `).join('');
+  }
+
+  function selectAnswer(qi, oi) {
+    if (quizDone || quizAnswers[qi] !== undefined) return;
+    quizAnswers[qi] = oi;
+    const q = QUESTIONS[qi];
+    const isCorrect = oi === q.ans;
+    for (let i = 0; i < q.opts.length; i++) {
+      const btn = document.getElementById(`opt-${qi}-${i}`);
+      const ico = document.getElementById(`opt-icon-${qi}-${i}`);
+      if (i === q.ans) {
+        btn.classList.add('correct'); ico.textContent = '✓'; ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
+      } else if (i === oi && !isCorrect) {
+        btn.classList.add('wrong'); ico.textContent = '✗'; ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
+      }
+      btn.disabled = true;
+    }
+    const expEl = document.getElementById(`exp-${qi}`);
+    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
+    expEl.classList.remove('hidden');
+    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
+  }
+
+  function showFinalScore() {
+    quizDone = true;
+    const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
+    const pct   = Math.round(score / QUESTIONS.length * 100);
+    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
+    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
+    document.getElementById('quiz-grade-text').textContent = grade;
+    document.getElementById('quiz-footer').classList.remove('hidden');
+    document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  initQuiz();
+  </script>
+</body>
+</html>
