@@ -1,97 +1,181 @@
-# Tutor Notes — Lesson 28: SQL Basics & CRUD Operations
+# Lesson 28 — SQL Basics & PostgreSQL
+# Tutor Notes (90-Minute Session)
 
 ---
 
 ## Session Objectives
 
 By the end of this session the student will be able to:
-1. Explain the concepts of Tables, Rows, Columns, and Primary Keys.
-2. Differentiate between Imperative code (JS) and Declarative code (SQL).
-3. Connect to a PostgreSQL database using `psql`.
-4. Write SQL commands for all 4 CRUD operations (`INSERT`, `SELECT`, `UPDATE`, `DELETE`).
-5. Execute raw SQL via the Interactive Sandbox Web UI.
+
+1. **Explain relational databases in plain English** using the spreadsheet analogy — tables, rows, columns, primary keys
+2. **Contrast declarative SQL with imperative JavaScript** and articulate why this distinction matters
+3. **Write correct syntax** for all four CRUD operations: `INSERT INTO`, `SELECT`, `UPDATE`, `DELETE FROM`
+4. **Apply the `WHERE` clause correctly** and explain what happens when it is omitted (the disaster scenario)
+5. **Connect to Neon PostgreSQL** via `DATABASE_URL` and verify the status badge shows Neon vs Local SQLite
 
 ---
 
-## Pre-Session Setup Checklist
+## Pre-Session Checklist
 
-- [ ] `cd Lesson 28/examples/sql-basics`
-- [ ] `pnpm install` (must install `better-sqlite3` native bindings)
-- [ ] `pnpm dev` runs cleanly.
-- [ ] `http://localhost:3000` opens the **Concepts** tab.
-- [ ] Ensure PostgreSQL is installed natively on your/student's machine, or have a Neon connection string ready for `psql`.
+| Item | Detail |
+|------|--------|
+| Server running? | `cd examples/sql-basics && pnpm dev` |
+| Status badge | Should show either "Neon PostgreSQL" or "Local SQLite (fallback)" |
+| `.env` ready? | Copy `.env.example` → `.env`; fill `DATABASE_URL` if using Neon |
+| Browser open? | `http://localhost:3000` — confirm **Concepts** tab loads |
+| VS Code open? | Have `server.js` open to show the Neon vs SQLite branch |
 
----
-
-## Pedagogical Context: The Spreadsheet Analogy
-
-Most students understand Microsoft Excel. This is the best bridge to Relational Databases.
-- An Excel file = The Database (`my_app_db`)
-- A Worksheet Tab = A Table (`users`)
-- A Column Header = The Schema (`id`, `name`, `email`)
-- A Data Row = A Record
-
-**The major difference to highlight:**
-In Excel, you can put a word in a number column, or leave things blank randomly. 
-A SQL Database is **strict**. If a column is an `INTEGER NOT NULL`, you *cannot* put text there, and you *cannot* leave it blank. This strictness is what makes databases reliable.
+> **Neon reuse tip:** If the student already set up Neon in a previous session, they can reuse the same project. Just remind them to open the Neon dashboard if the database is asleep — first query after a cold start takes ~1-2 seconds.
 
 ---
 
-## Lesson Flow (90-minute session)
+## Pedagogical Context — The Spreadsheet Analogy
 
-### Phase 1 — Concepts & Definitions (20 minutes)
+Start here, before any code:
 
-Open `http://localhost:3000` to the **📖 Concepts** tab.
+> *"You've used Excel or Google Sheets. A spreadsheet file is like a database. Each sheet tab inside it is like a table. The column headers define what kind of data goes in each column. Each row is one record."*
+>
+> *"Now here's the key difference: In Excel, you can type 'banana' into a column that's supposed to hold someone's age. Nobody stops you. Your formulas break. You don't know until you check."*
+>
+> *"In a SQL database, that is illegal. When you create a column as `INTEGER NOT NULL`, the database refuses to accept 'banana'. It refuses to accept a blank. It enforces the contract. This is not a restriction — this is the whole point. It's what makes your data trustworthy."*
 
-1. **Tables & Primary Keys:** Walk through the first two cards. Stress the importance of the Primary Key. Ask: *"If I want to delete John Smith, and there are 5 John Smiths, how do I guarantee I only delete the right one?"* (Answer: Delete by ID).
-2. **Declarative Programming:** Contrast it with array filtering in JavaScript. In JS, you write the `for` loop. In SQL, you just say `SELECT * WHERE age > 18`. The DB engine figures out the fastest way to loop.
-3. **The CRUD Table:** Walk through the 4 core commands. Have the student read the "Example Syntax" out loud. It reads like plain English.
-
-### Phase 2 — The SQL Playground (30 minutes)
-
-Switch to the **💾 SQL Playground** tab.
-Explain that we are using a temporary in-memory database to practice safely.
-
-**Guided Exercises:**
-1. **Read:** Ask the student to type and run `SELECT * FROM users;`. Point to the table that renders.
-   - Ask them to filter: `SELECT name FROM users WHERE age > 25;`
-2. **Create:** Ask them to add themselves to the database using `INSERT INTO`. 
-   - Then have them run the `SELECT *` again to prove it worked.
-3. **Update:** Tell them to change their age. 
-   - **CRITICAL MOMENT:** Deliberately have them run `UPDATE users SET age = 99;` (without a WHERE clause).
-   - Have them run `SELECT *` again. Show them that *everyone* is now 99.
-   - Click **↺ Reset Database**. This visceral mistake cements the importance of the `WHERE` clause permanently.
-4. **Delete:** Have them delete 'Bob Smith' by his exact email.
-
-### Phase 3 — Real PostgreSQL via `psql` (25 minutes)
-
-The Playground is great, but they need to use the real tool.
-1. Open a terminal and run `psql` (or `psql -U postgres`).
-2. Open `schema.sql` in VS Code.
-3. Walk through the `CREATE TABLE` syntax together. Explain `SERIAL` (auto-incrementing integer) and `VARCHAR`.
-4. Copy the entire `CREATE TABLE` block and paste it into `psql`.
-5. Copy the `INSERT INTO` block and paste it into `psql`.
-6. Have the student run `SELECT * FROM users;` in the terminal to see the CLI output format.
-
-### Phase 4 — Interactive Quiz (15 minutes)
-
-Switch back to the Web UI and go to the **🧠 Quiz** tab. Let the student answer all 7 questions.
-The most commonly failed question is usually the `UPDATE/DELETE` without `WHERE` clause. Refer back to the deliberate mistake you made in Phase 2 if they stumble.
+Then transition to: "This strictness has a name — it's called **Data Integrity**. And SQL is the language we use to read and write data in a system that enforces it."
 
 ---
 
-## Common Errors & Fixes
+## Phase-by-Phase Lesson Flow (90 min)
 
-| Error | Cause | Fix |
-|---|---|---|
-| `relation "users" does not exist` | Table wasn't created, or they are in the wrong DB | Run the `CREATE TABLE` command or `\c my_app_db` |
-| `syntax error at or near "FROM"` | Typo in the SQL command | Check for missing commas, misspelled keywords, or missing semicolons `;` |
-| `column "Alice" does not exist` | Used double quotes `"` instead of single quotes `'` for strings | SQL uses single quotes for text values! `WHERE name = 'Alice'` |
-| `psql: command not found` | Postgres is not in the system PATH | Reinstall Postgres or add `/bin` to the OS PATH variable |
+---
+
+### Phase 1 — Concepts & Definitions (20 min)
+
+**Goal:** Students can look at a table structure and explain what they see.
+
+**Open browser → Concepts tab.**
+
+1. **The Hero Section** (3 min)
+   - Read the subtitle out loud: *"You describe what you want. The database figures out how to get it."*
+   - This is the difference between SQL and JavaScript. JavaScript is imperative. SQL is declarative.
+
+2. **Walk through the 4 Concept Cards** (10 min)
+   - **"What is SQL?"** — Read the code snippet. Ask: *"In JavaScript, how would you find all users over age 18?"* (`.filter()`) *"Now compare that to SQL. Which is shorter? Which is more readable?"*
+   - **"CRUD Operations"** — Map each to an HTTP method: `INSERT = POST`, `SELECT = GET`, `UPDATE = PUT`, `DELETE = DELETE`. They already know these!
+   - **"SQL Data Types"** — Walk through `INTEGER`, `VARCHAR`, `TEXT`, `BOOLEAN`, `TIMESTAMP`. Ask: *"What type would you use for a product price?"* (DECIMAL, not INTEGER — discuss why)
+   - **"Primary & Foreign Keys"** — Ask: *"If you have two users both named 'Emma', how does the database know which one you want to update?"* Primary Key = the guaranteed unique row address.
+
+3. **The Animated Query Flow Diagram** (5 min)
+   - Walk through: Browser → Express → Neon → rows returned
+   - Point out: "Your JavaScript never touches the database directly. Express is the middleman. It translates your HTTP request into an SQL query."
+   - Ask: *"Where does the `pg` library live in this diagram?"* (Between Express and Neon — it's the adapter)
+
+4. **CTA → Switch to SQL Lab** (2 min)
+   - Click "Launch SQL Lab" button
+   - Confirm the connection badge shows which database is in use
+
+**Formative check:** Ask: *"What's the Primary Key? Why does it matter?"*
+
+---
+
+### Phase 2 — Neon Connection Demo (15 min)
+
+**Goal:** Students see that the same code can talk to local SQLite or a real cloud database.
+
+1. **Status badge walkthrough** (3 min)
+   - If using Neon: point to the green badge "🟢 Neon PostgreSQL"
+   - If using SQLite fallback: "This is the local in-memory database. Your queries work identically — the only difference is that Neon data persists between restarts."
+
+2. **Show the `.env` toggle** (5 min)
+   - In VS Code, open `.env`. Comment out `DATABASE_URL`. Save. Restart server.
+   - Refresh browser. Badge should change to "🟡 Local SQLite (fallback)".
+   - Uncomment `DATABASE_URL`. Restart. Badge goes back to Neon.
+   - **Say:** *"This is exactly how professional apps work. `NODE_ENV=production` reads from Vercel's environment variables. Development reads your local `.env`."*
+
+3. **Run a diagnostic query** (7 min)
+   - Go to SQL Lab. Type: `SELECT version();`
+   - On Neon, this returns the full PostgreSQL version string.
+   - On SQLite, it returns the SQLite version.
+   - This is the "hello world" of database connections.
+   - Ask: *"Why does it matter which database system you're connected to?"* (Syntax differences — SQLite uses `AUTOINCREMENT`, Postgres uses `SERIAL` etc.)
+
+---
+
+### Phase 3 — SQL Lab Hands-On (35 min)
+
+**Goal:** Students write every CRUD operation, see results, make mistakes, and learn from them.
+
+**Recommended progression:**
+
+**READ (10 min):**
+1. Click preset → "SELECT users". Run. Walk through the table: what are the columns? What is the Primary Key?
+2. Click preset → "SELECT posts". Run. Ask: *"What does `user_id` mean in this table?"* (It references `users.id` — this is a Foreign Key!)
+3. Ask student to write their own: `SELECT title FROM posts WHERE user_id = 1;`
+
+**JOIN (10 min):**
+4. Click preset → "JOIN posts ← users". Run. Walk through the query.
+   - *"Why do we write `posts.title` instead of just `title`?"* (Ambiguity — both tables might have a column called that)
+   - *"The `ON` clause is the magic. It says: match the `user_id` on the post to the `id` on the user."*
+5. Ask: *"How would you also include the user's email in these results?"* Let them try.
+
+**CREATE (5 min):**
+6. Click preset → "INSERT user". Run. Check the type — should say "Write operation (1 row affected)".
+7. Then run `SELECT * FROM users;` to prove the new row exists.
+
+**UPDATE (5 min):**
+8. Click preset → "UPDATE user". Run. Then SELECT to verify the change.
+9. **Danger demo (optional but powerful):** Ask the student to write an UPDATE without a WHERE clause. Type it but do NOT run yet. Ask: *"What would happen if we ran this?"* Let them explain, then close the tab without running.
+
+**DELETE (5 min):**
+10. Click preset → "DELETE user". Run. Then SELECT to confirm.
+11. Ask: *"Can we undo a DELETE?"* (No, unless you use transactions — mention `BEGIN/COMMIT/ROLLBACK`)
+
+**Formative check:** Ask: *"You need to change the email of user with id = 2. Write the SQL."*
+
+---
+
+### Phase 4 — Quiz (20 min)
+
+- Students complete the 7-question quiz independently (10 min)
+- Review together (10 min):
+  - Q1 (SQL acronym): Trivial — use it to transition to discussing what "Structured" means
+  - Q3 (Primary Key): Ask *"What happens if two rows have the same Primary Key?"* (Postgres rejects it — unique constraint violation)
+  - Q6 (JOIN): Ask *"Why do we need JOIN if we already have two tables?"* (Because the data is split — normalization separates it, JOIN reunites it for reading)
+  - Q7 (HTTP 201): Bridge back to Lesson 26 — *"When your Express POST route creates a database row, it should return 201, not 200."*
+
+**Expected scores:**
+- 7/7: Ready for Lesson 29 (MongoDB)
+- 5-6/7: Redo the SQL Lab sequence from CREATE onward
+- < 5/7: Return to the Concepts tab, focus on the CRUD table, restart Phase 3
+
+---
+
+## Common Errors Table
+
+| Error | Cause | How to Recognize | Fix |
+|-------|-------|----------------|-----|
+| `relation "X" does not exist` | Table not created yet | Message includes table name | Run `CREATE TABLE` first; for Neon, run schema.sql |
+| `null value in column violates not-null constraint` | Missing required field in INSERT | Error message names the column | Include all required columns in INSERT |
+| `duplicate key value violates unique constraint` | Trying to insert a value that already exists in a UNIQUE column | Error names the constraint | Check if row exists first; use `INSERT ... ON CONFLICT` |
+| `syntax error at or near "X"` | Typo in SQL | PostgreSQL shows line and position | Read the error carefully; check for missing commas, quotes |
+| `SSL SYSCALL error: EOF detected` | Neon database auto-suspended | Happens on first query after idle | Run the query again; Neon wakes up in 1-2 seconds |
+| UPDATE/DELETE affects all rows | Missing WHERE clause | `rowCount` shows unexpectedly high number | Always write WHERE clause; use transactions for safety |
 
 ---
 
 ## Post-Session Assignment
 
-Direct the student to `exercises/sql_practice.md`.
-They will be creating a `blog_db` with two tables (`authors` and `posts`) and establishing a **Foreign Key** relationship between them.
+Direct student to `exercises/sql_practice.md`.
+
+The task: build a Library Management System from scratch in PostgreSQL on Neon:
+- Design and create tables: `authors`, `books`, `members`, `loans`
+- Write CRUD queries for each table
+- Write a JOIN query to list all borrowed books with their borrower's name
+
+---
+
+## Extension Topics (if student finishes early)
+
+- **Indexes:** `CREATE INDEX ON users(email)` — why indexed columns make WHERE clauses much faster
+- **Transactions:** `BEGIN`, `COMMIT`, `ROLLBACK` — the safety net for multi-step operations
+- **`INSERT ... ON CONFLICT`:** How to upsert (insert or update) data idempotently
+- **Parameterized queries:** `SELECT * FROM users WHERE id = $1` — how to prevent SQL injection
+- **pgAdmin / Neon SQL Editor:** Show the visual table browser as a complement to terminal `psql`

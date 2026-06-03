@@ -9,7 +9,7 @@ const __dirname = path.dirname(__filename);
 
 // 1. Initialize the Express Application
 const app = express();
-const PORT = 3000;
+const PORT = 7000;
 
 // 2. Middleware
 app.use(cors()); // Allows other domains to make requests to our API
