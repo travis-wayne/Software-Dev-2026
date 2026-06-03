@@ -1,431 +1,737 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson 30 — DB Design & Relationships</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DB Design Explorer — Lesson 30</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
-          colors: {
-            brand: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed' } /* Purple */
-          }
-        }
-      }
-    };
-  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    body { font-family: 'Inter', sans-serif; }
-    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    * { font-family: 'Inter', sans-serif; }
+    code, pre, textarea, .mono { font-family: 'JetBrains Mono', monospace; }
 
-    /* Scrollbar */
+    body { background-color: #0b1120; }
+
+    /* ── Ambient blobs ─────────────────────────── */
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.18; pointer-events: none; z-index: 0; }
+    .blob-1 { width: 600px; height: 600px; background: #8b5cf6; top: -200px; left: -150px; }
+    .blob-2 { width: 500px; height: 500px; background: #6d28d9; bottom: -180px; right: -120px; }
+    .blob-3 { width: 350px; height: 350px; background: #a78bfa; top: 45%; left: 35%; }
+
+    /* ── Glass card ─────────────────────────────── */
+    .glass { background: rgba(15,23,42,0.7); border: 1px solid rgba(139,92,246,0.18); backdrop-filter: blur(12px); }
+
+    /* ── Tab styles ─────────────────────────────── */
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { background: rgba(139,92,246,0.25); border-color: #8b5cf6; color: #c4b5fd; }
+    .tab-btn:not(.active):hover { background: rgba(139,92,246,0.1); border-color: rgba(139,92,246,0.4); }
+
+    /* ── Glow button ────────────────────────────── */
+    .btn-glow { background: linear-gradient(135deg, #7c3aed, #8b5cf6); transition: all 0.25s; }
+    .btn-glow:hover { background: linear-gradient(135deg, #6d28d9, #7c3aed); box-shadow: 0 0 24px rgba(139,92,246,0.55); transform: translateY(-1px); }
+
+    /* ── Concept cards ─────────────────────────── */
+    .card-11  { border-color: rgba(16,185,129,0.3); }
+    .card-1n  { border-color: rgba(245,158,11,0.3); }
+    .card-mn  { border-color: rgba(139,92,246,0.5); }
+
+    /* ── Smooth show/hide ──────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Table styling ─────────────────────────── */
+    .data-table th { background: rgba(139,92,246,0.15); color: #c4b5fd; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 6px 10px; }
+    .data-table td { padding: 5px 10px; font-size: 0.78rem; border-top: 1px solid rgba(255,255,255,0.04); font-family: 'JetBrains Mono', monospace; }
+    .data-table tr:hover td { background: rgba(139,92,246,0.06); }
+    .fk-col { color: #a78bfa; }
+
+    /* ── Quiz ──────────────────────────────────── */
+    .quiz-opt { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(139,92,246,0.25); }
+    .quiz-opt:hover:not(.answered) { border-color: #8b5cf6; background: rgba(139,92,246,0.12); }
+    .quiz-opt.correct { border-color: #10b981; background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .quiz-opt.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.12); color: #fca5a5; }
+
+    /* ── Query result table ────────────────────── */
+    .result-table th { background: rgba(139,92,246,0.2); color: #c4b5fd; padding: 8px 14px; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; }
+    .result-table td { padding: 8px 14px; font-size:0.8rem; border-top:1px solid rgba(255,255,255,0.05); font-family:'JetBrains Mono',monospace; color:#cbd5e1; }
+    .result-table tr:hover td { background:rgba(139,92,246,0.07); }
+
+    /* ── SVG ER Diagram ────────────────────────── */
+    .er-svg { width: 100%; height: auto; }
+
+    /* ── Scrollbar ─────────────────────────────── */
     ::-webkit-scrollbar { width: 6px; height: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.4); border-radius: 3px; }
 
-    /* Tab underline animation */
-    .tab-btn { position: relative; transition: color 0.2s; }
-    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
-    .tab-btn.active { color: #a78bfa; }
-    .tab-btn.active::after { background: #8b5cf6; }
-    .tab-btn:not(.active) { color: #64748b; }
-    .tab-btn:not(.active):hover { color: #94a3b8; }
-
-    /* Concept card */
-    .concept-card { transition: border-color 0.2s, transform 0.15s; }
-    .concept-card:hover { border-color: #8b5cf6; transform: translateY(-2px); }
-
-    /* Buttons */
-    .btn { transition: all 0.15s; }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(139,92,246,0.3); }
-    .btn:active { transform: translateY(0); }
-
-    /* Quiz option */
-    .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
-    .quiz-opt:hover { background: rgba(139,92,246,0.08); border-color: #8b5cf6; }
-    .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
-    .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
-
-    .db-table-header { @apply bg-slate-900/80 border-b border-slate-700 font-mono text-xs text-brand-400 p-2; }
-    .db-table-cell { @apply p-2 font-mono text-xs text-slate-300 border-b border-slate-800/50; }
+    /* ── Status badge pulse ────────────────────── */
+    @keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .pulse { animation: pulse-dot 2s infinite; }
   </style>
 </head>
-<body class="bg-[#0b1120] text-slate-200 min-h-screen">
+<body class="min-h-screen text-slate-200 relative overflow-x-hidden">
 
-  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-purple-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-fuchsia-500/5 rounded-full blur-3xl"></div>
-  </div>
+  <!-- Ambient blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
 
-  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
-  <header class="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════ -->
+    <header class="glass rounded-2xl px-6 py-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <!-- Linked-circles DB icon -->
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#7c3aed,#8b5cf6)">
+          <svg viewBox="0 0 32 32" fill="none" class="w-7 h-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="16" cy="8"  rx="10" ry="4"/>
+            <path d="M6 8v5c0 2.2 4.5 4 10 4s10-1.8 10-4V8"/>
+            <path d="M6 13v5c0 2.2 4.5 4 10 4s10-1.8 10-4v-5"/>
+            <path d="M6 18v4c0 2.2 4.5 4 10 4s10-1.8 10-4v-4"/>
+          </svg>
         </div>
         <div>
-          <span class="font-bold text-sm text-slate-100">Database Design Explorer</span>
-          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 30</span>
+          <h1 class="text-xl font-bold text-white">DB Design Explorer</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Relationships · Normalization · SQL JOINs</p>
         </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold text-violet-300" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4)">Lesson 30</span>
       </div>
-      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
-        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
-        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">🔗 Relationships GUI</button>
-        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
-      </nav>
-    </div>
-  </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+      <!-- DB Status badge -->
+      <div id="statusBadge" class="flex items-center gap-2 px-4 py-2 rounded-full text-sm glass">
+        <span class="w-2 h-2 rounded-full bg-slate-500 pulse" id="statusDot"></span>
+        <span id="statusText" class="text-slate-400">Connecting…</span>
+      </div>
+    </header>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  CONCEPTS VIEW                                                       -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-concepts" class="space-y-8">
+    <!-- ══════════════════════════════════════════════
+         TAB NAV
+    ══════════════════════════════════════════════ -->
+    <nav class="flex gap-3 mb-6">
+      <button onclick="switchTab('concepts')"  id="tab-concepts"  class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">📖 Concepts</button>
+      <button onclick="switchTab('lab')"       id="tab-lab"       class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🔗 ER Diagram + JOIN Lab</button>
+      <button onclick="switchTab('quiz')"      id="tab-quiz"      class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🧠 Quiz</button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 1 — CONCEPTS
+    ══════════════════════════════════════════════ -->
+    <div id="panel-concepts" class="tab-panel active space-y-8">
 
       <!-- Hero -->
-      <div class="text-center py-8">
-        <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 rounded-full px-4 py-1.5 text-brand-400 text-xs font-medium mb-4">
-          Session 30 · Normalization & JOINs
+      <div class="rounded-2xl p-8 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(109,40,217,0.5),rgba(139,92,246,0.2));border:1px solid rgba(139,92,246,0.3)">
+        <div class="relative z-10">
+          <p class="text-violet-300 font-semibold text-sm uppercase tracking-widest mb-2">Lesson 30</p>
+          <h2 class="text-3xl font-extrabold text-white mb-3">Database Design &amp; Relationships</h2>
+          <p class="text-slate-300 max-w-2xl leading-relaxed">Learn how to structure data across multiple tables so that information is stored <em>once</em>, referenced everywhere — eliminating bugs, saving storage, and making queries blazing fast.</p>
+          <button onclick="switchTab('lab')" class="btn-glow mt-6 px-6 py-3 rounded-xl text-white font-semibold text-sm inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            Launch JOIN Lab
+          </button>
         </div>
-        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-purple-400 via-fuchsia-400 to-purple-300 bg-clip-text text-transparent">
-          Database Design
-        </h1>
-        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-          Learn how to structure tables efficiently using Normalization, and how to link them together using Foreign Keys and the three core Relationship types.
-        </p>
+        <div class="absolute right-0 top-0 w-64 h-64 rounded-full opacity-10" style="background:radial-gradient(circle,#a78bfa,transparent);transform:translate(30%,-30%)"></div>
       </div>
 
-      <!-- Core Concepts -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- 1:1 -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-          <div class="w-12 h-12 bg-indigo-500/15 border border-indigo-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-indigo-400 font-bold font-mono">1:1</div>
-          <h3 class="font-bold text-slate-100 mb-2">One-to-One</h3>
-          <p class="text-slate-400 text-xs leading-relaxed text-left">
-            One record in Table A belongs to exactly one record in Table B.
-            <br><br><span class="text-indigo-400 font-mono text-[10px]">Example:</span> User ↔ User Profile
-            <br><span class="text-indigo-400 font-mono text-[10px]">Implementation:</span> Foreign Key with a <code>UNIQUE</code> constraint.
-          </p>
-        </div>
-        
-        <!-- 1:N -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-          <div class="w-12 h-12 bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-amber-400 font-bold font-mono">1:N</div>
-          <h3 class="font-bold text-slate-100 mb-2">One-to-Many</h3>
-          <p class="text-slate-400 text-xs leading-relaxed text-left">
-            One record in Table A can have many records in Table B.
-            <br><br><span class="text-amber-400 font-mono text-[10px]">Example:</span> User ↔ Posts
-            <br><span class="text-amber-400 font-mono text-[10px]">Implementation:</span> A standard Foreign Key in the child table.
-          </p>
-        </div>
+      <!-- 3 Relationship cards -->
+      <div>
+        <h3 class="text-lg font-bold text-white mb-4">The Three Relationship Types</h3>
+        <div class="grid md:grid-cols-3 gap-5">
 
-        <!-- M:N -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-          <div class="w-12 h-12 bg-rose-500/15 border border-rose-500/25 rounded-xl flex items-center justify-center mx-auto mb-4 text-rose-400 font-bold font-mono">M:N</div>
-          <h3 class="font-bold text-slate-100 mb-2">Many-to-Many</h3>
-          <p class="text-slate-400 text-xs leading-relaxed text-left">
-            Many records in Table A can relate to many in Table B.
-            <br><br><span class="text-rose-400 font-mono text-[10px]">Example:</span> Posts ↔ Tags
-            <br><span class="text-rose-400 font-mono text-[10px]">Implementation:</span> Requires a 3rd <strong>Junction Table</strong> (e.g., <code>post_tags</code>) holding Foreign Keys to both.
-          </p>
-        </div>
-      </div>
-
-      <div class="text-center py-4">
-        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          Open the Relationships GUI
-        </button>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  RELATIONSHIPS EXPLORER VIEW                                         -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-explorer" class="hidden">
-      
-      <!-- Top: Visual Schema -->
-      <div class="mb-6 grid grid-cols-1 md:grid-cols-5 gap-4" id="tables-container">
-        <!-- Injected via JS -->
-      </div>
-
-      <!-- Bottom: SQL Query Runner -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[400px]">
-        <!-- LEFT: SQL Editor -->
-        <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-2.5 flex justify-between items-center">
-            <span class="text-xs font-mono text-slate-400">JOIN Query Editor</span>
-            <div class="flex gap-2">
-              <button onclick="insertTemplate('SELECT users.username, posts.title\nFROM users\nJOIN posts ON users.id = posts.user_id;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">1:N Join</button>
-              <button onclick="insertTemplate('SELECT posts.title, tags.name\nFROM posts\nJOIN post_tags ON posts.id = post_tags.post_id\nJOIN tags ON post_tags.tag_id = tags.id;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">M:N Join</button>
+          <!-- 1:1 -->
+          <div class="glass card-11 rounded-2xl p-6 hover:scale-[1.02] transition-transform">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4)">
+              <span class="text-emerald-400 font-bold text-sm">1:1</span>
+            </div>
+            <h4 class="font-bold text-emerald-300 text-base mb-2">One-to-One</h4>
+            <p class="text-slate-400 text-sm leading-relaxed mb-4">Each row in Table A links to <strong class="text-slate-200">exactly one</strong> row in Table B, and vice versa.</p>
+            <div class="rounded-xl p-3 text-xs mono" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.2)">
+              <p class="text-emerald-400 mb-1">-- The FK is also UNIQUE</p>
+              <p class="text-slate-300">user_profiles(<span class="text-emerald-300">user_id UNIQUE</span>)</p>
+              <p class="text-slate-400 mt-1">↳ 1 user → 1 profile</p>
             </div>
           </div>
-          <div class="flex-1 p-4 relative">
-            <textarea id="sql-input" class="w-full h-full bg-transparent text-sm font-mono text-slate-300 outline-none resize-none" placeholder="Write a JOIN query to combine the tables above..."></textarea>
-          </div>
-          <div class="p-4 border-t border-slate-800/60 bg-slate-950/50 flex justify-between items-center">
-            <button onclick="resetDb()" class="text-xs text-slate-500 hover:text-slate-300 underline">Reset Database</button>
-            <button onclick="runQuery()" class="btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2 rounded-lg flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
-              Run JOIN
-            </button>
-          </div>
-        </div>
 
-        <!-- RIGHT: Results -->
-        <div class="lg:col-span-7 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-3 flex justify-between items-center">
-            <span class="text-xs font-mono text-slate-400">Query Results</span>
-            <span id="query-status" class="text-xs font-mono text-slate-500">Ready</span>
-          </div>
-          <div class="flex-1 overflow-auto p-0" id="results-container">
-            <div class="flex items-center justify-center h-full text-slate-500 text-sm italic">
-              Run a JOIN query to see combined data.
+          <!-- 1:N -->
+          <div class="glass card-1n rounded-2xl p-6 hover:scale-[1.02] transition-transform">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.4)">
+              <span class="text-amber-400 font-bold text-sm">1:N</span>
+            </div>
+            <h4 class="font-bold text-amber-300 text-base mb-2">One-to-Many</h4>
+            <p class="text-slate-400 text-sm leading-relaxed mb-4">One row in Table A can link to <strong class="text-slate-200">many</strong> rows in Table B, but each B row links back to only one A.</p>
+            <div class="rounded-xl p-3 text-xs mono" style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2)">
+              <p class="text-amber-400 mb-1">-- FK in the "many" side table</p>
+              <p class="text-slate-300">posts(<span class="text-amber-300">user_id</span> FK)</p>
+              <p class="text-slate-400 mt-1">↳ 1 user → many posts</p>
             </div>
           </div>
+
+          <!-- M:N -->
+          <div class="glass card-mn rounded-2xl p-6 hover:scale-[1.02] transition-transform">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background:rgba(139,92,246,0.2);border:1px solid rgba(139,92,246,0.4)">
+              <span class="text-violet-300 font-bold text-sm">M:N</span>
+            </div>
+            <h4 class="font-bold text-violet-300 text-base mb-2">Many-to-Many</h4>
+            <p class="text-slate-400 text-sm leading-relaxed mb-4">Many rows in Table A can link to <strong class="text-slate-200">many</strong> rows in Table B. Requires a <em>junction table</em>.</p>
+            <div class="rounded-xl p-3 text-xs mono" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.3)">
+              <p class="text-violet-400 mb-1">-- Junction table = bridge</p>
+              <p class="text-slate-300">post_tags(<span class="text-violet-300">post_id, tag_id</span>)</p>
+              <p class="text-slate-400 mt-1">↳ post ↔ many tags, tag ↔ many posts</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Normalization section -->
+      <div class="glass rounded-2xl p-7">
+        <h3 class="text-lg font-bold text-white mb-1">What is Normalization?</h3>
+        <p class="text-slate-400 text-sm mb-5 leading-relaxed">Normalization is the process of structuring a database to <strong class="text-violet-300">reduce redundancy</strong> and improve data integrity. Think of it as the "DRY principle" for databases.</p>
+
+        <!-- The problem -->
+        <div class="rounded-xl p-5 mb-6" style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25)">
+          <p class="text-red-400 font-semibold text-sm mb-3">❌ The Redundancy Problem — Before Normalization</p>
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs mono border-collapse">
+              <thead><tr class="text-red-300">
+                <th class="px-3 py-2 text-left border border-red-900/40">order_id</th>
+                <th class="px-3 py-2 text-left border border-red-900/40">customer_name</th>
+                <th class="px-3 py-2 text-left border border-red-900/40">customer_email</th>
+                <th class="px-3 py-2 text-left border border-red-900/40">customer_city</th>
+                <th class="px-3 py-2 text-left border border-red-900/40">product</th>
+              </tr></thead>
+              <tbody class="text-slate-400">
+                <tr><td class="px-3 py-1.5 border border-red-900/30">1001</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Alice Smith</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">alice@email.com</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Lagos</td><td class="px-3 py-1.5 border border-red-900/30">Laptop</td></tr>
+                <tr><td class="px-3 py-1.5 border border-red-900/30">1002</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Alice Smith</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">alice@email.com</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Lagos</td><td class="px-3 py-1.5 border border-red-900/30">Keyboard</td></tr>
+                <tr><td class="px-3 py-1.5 border border-red-900/30">1003</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Alice Smith</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">alice@email.com</td><td class="px-3 py-1.5 border border-red-900/30 text-red-300">Lagos</td><td class="px-3 py-1.5 border border-red-900/30">Mouse</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="text-red-400 text-xs mt-3">⚠️ Alice's info is stored 3 times. If she moves cities, you must update 3 rows (and risk inconsistency).</p>
+        </div>
+
+        <!-- The solution -->
+        <div class="rounded-xl p-5 mb-6" style="background:rgba(16,185,129,0.08);border:1px solid rgba(16,185,129,0.25)">
+          <p class="text-emerald-400 font-semibold text-sm mb-3">✅ After Normalization — Data Stored Once</p>
+          <div class="grid md:grid-cols-2 gap-4">
+            <div>
+              <p class="text-emerald-300 text-xs mb-2 font-semibold">customers table</p>
+              <table class="w-full text-xs mono border-collapse">
+                <thead><tr class="text-emerald-300"><th class="px-3 py-2 text-left border border-emerald-900/40">id</th><th class="px-3 py-2 text-left border border-emerald-900/40">name</th><th class="px-3 py-2 text-left border border-emerald-900/40">email</th><th class="px-3 py-2 text-left border border-emerald-900/40">city</th></tr></thead>
+                <tbody class="text-slate-400"><tr><td class="px-3 py-1.5 border border-emerald-900/30">1</td><td class="px-3 py-1.5 border border-emerald-900/30">Alice Smith</td><td class="px-3 py-1.5 border border-emerald-900/30">alice@email.com</td><td class="px-3 py-1.5 border border-emerald-900/30">Lagos</td></tr></tbody>
+              </table>
+            </div>
+            <div>
+              <p class="text-emerald-300 text-xs mb-2 font-semibold">orders table</p>
+              <table class="w-full text-xs mono border-collapse">
+                <thead><tr class="text-emerald-300"><th class="px-3 py-2 text-left border border-emerald-900/40">id</th><th class="px-3 py-2 text-left border border-emerald-900/40">customer_id</th><th class="px-3 py-2 text-left border border-emerald-900/40">product</th></tr></thead>
+                <tbody class="text-slate-400">
+                  <tr><td class="px-3 py-1.5 border border-emerald-900/30">1001</td><td class="px-3 py-1.5 border border-emerald-900/30 text-violet-300">1</td><td class="px-3 py-1.5 border border-emerald-900/30">Laptop</td></tr>
+                  <tr><td class="px-3 py-1.5 border border-emerald-900/30">1002</td><td class="px-3 py-1.5 border border-emerald-900/30 text-violet-300">1</td><td class="px-3 py-1.5 border border-emerald-900/30">Keyboard</td></tr>
+                  <tr><td class="px-3 py-1.5 border border-emerald-900/30">1003</td><td class="px-3 py-1.5 border border-emerald-900/30 text-violet-300">1</td><td class="px-3 py-1.5 border border-emerald-900/30">Mouse</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <p class="text-emerald-400 text-xs mt-3">✅ Alice's city is stored once. Update 1 row → all 3 orders reflect the change instantly.</p>
+        </div>
+
+        <!-- Normal forms summary -->
+        <div class="grid md:grid-cols-3 gap-4">
+          <div class="rounded-xl p-4" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2)">
+            <p class="text-violet-300 font-bold text-sm mb-1">1NF — First Normal Form</p>
+            <p class="text-slate-400 text-xs leading-relaxed">Each column holds <strong class="text-slate-300">atomic</strong> (indivisible) values. No repeating groups or arrays in cells.</p>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2)">
+            <p class="text-violet-300 font-bold text-sm mb-1">2NF — Second Normal Form</p>
+            <p class="text-slate-400 text-xs leading-relaxed">Must be in 1NF. Every non-key column depends on the <strong class="text-slate-300">whole primary key</strong>, not just part of it.</p>
+          </div>
+          <div class="rounded-xl p-4" style="background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.2)">
+            <p class="text-violet-300 font-bold text-sm mb-1">3NF — Third Normal Form</p>
+            <p class="text-slate-400 text-xs leading-relaxed">Must be in 2NF. No <strong class="text-slate-300">transitive dependencies</strong> — non-key columns depend only on the PK, not other non-key columns.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ER Diagram SVG -->
+      <div class="glass rounded-2xl p-7">
+        <h3 class="text-lg font-bold text-white mb-2">Blog Schema — Entity Relationship Diagram</h3>
+        <p class="text-slate-400 text-sm mb-5">The 5-table blog schema used in this lesson. Arrows show Foreign Key relationships.</p>
+        <div class="flex justify-center overflow-x-auto">
+          <svg viewBox="0 0 860 400" class="er-svg max-w-3xl" style="min-width:540px">
+            <defs>
+              <marker id="arrow" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#8b5cf6"/>
+              </marker>
+              <marker id="arrow-amber" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/>
+              </marker>
+              <marker id="arrow-emerald" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#10b981"/>
+              </marker>
+            </defs>
+
+            <!-- users (center-left) -->
+            <g transform="translate(60,140)">
+              <rect width="160" height="110" rx="12" fill="rgba(139,92,246,0.15)" stroke="#8b5cf6" stroke-width="1.5"/>
+              <rect width="160" height="32" rx="12" fill="rgba(139,92,246,0.35)"/>
+              <rect width="160" height="8" y="24" fill="rgba(139,92,246,0.35)"/><!-- square off bottom of header -->
+              <text x="80" y="21" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700" font-family="JetBrains Mono, monospace">users</text>
+              <text x="14" y="52" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">PK</text>
+              <text x="34" y="52" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">id</text>
+              <text x="14" y="70" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">  </text>
+              <text x="34" y="70" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">username</text>
+            </g>
+
+            <!-- user_profiles (far left, lower) -->
+            <g transform="translate(20,310)">
+              <rect width="180" height="110" rx="12" fill="rgba(16,185,129,0.10)" stroke="#10b981" stroke-width="1.5"/>
+              <rect width="180" height="32" rx="12" fill="rgba(16,185,129,0.25)"/>
+              <rect width="180" height="8" y="24" fill="rgba(16,185,129,0.25)"/>
+              <text x="90" y="21" text-anchor="middle" fill="#6ee7b7" font-size="12" font-weight="700" font-family="JetBrains Mono,monospace">user_profiles</text>
+              <text x="14" y="52" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">PK</text>
+              <text x="34" y="52" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">id</text>
+              <text x="14" y="70" fill="#a78bfa" font-size="10" font-family="JetBrains Mono,monospace">FK</text>
+              <text x="34" y="70" fill="#a78bfa" font-size="11" font-family="JetBrains Mono,monospace">user_id UNIQUE</text>
+              <text x="14" y="88" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">  </text>
+              <text x="34" y="88" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">bio</text>
+            </g>
+
+            <!-- posts (center) -->
+            <g transform="translate(320,120)">
+              <rect width="170" height="125" rx="12" fill="rgba(245,158,11,0.10)" stroke="#f59e0b" stroke-width="1.5"/>
+              <rect width="170" height="32" rx="12" fill="rgba(245,158,11,0.25)"/>
+              <rect width="170" height="8" y="24" fill="rgba(245,158,11,0.25)"/>
+              <text x="85" y="21" text-anchor="middle" fill="#fcd34d" font-size="13" font-weight="700" font-family="JetBrains Mono,monospace">posts</text>
+              <text x="14" y="52" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">PK</text>
+              <text x="34" y="52" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">id</text>
+              <text x="14" y="70" fill="#a78bfa" font-size="10" font-family="JetBrains Mono,monospace">FK</text>
+              <text x="34" y="70" fill="#a78bfa" font-size="11" font-family="JetBrains Mono,monospace">user_id</text>
+              <text x="14" y="88" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">  </text>
+              <text x="34" y="88" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">title</text>
+            </g>
+
+            <!-- tags (far right) -->
+            <g transform="translate(680,120)">
+              <rect width="155" height="110" rx="12" fill="rgba(139,92,246,0.12)" stroke="#8b5cf6" stroke-width="1.5"/>
+              <rect width="155" height="32" rx="12" fill="rgba(139,92,246,0.3)"/>
+              <rect width="155" height="8" y="24" fill="rgba(139,92,246,0.3)"/>
+              <text x="77" y="21" text-anchor="middle" fill="#c4b5fd" font-size="13" font-weight="700" font-family="JetBrains Mono,monospace">tags</text>
+              <text x="14" y="52" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">PK</text>
+              <text x="34" y="52" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">id</text>
+              <text x="14" y="70" fill="#64748b" font-size="10" font-family="JetBrains Mono,monospace">  </text>
+              <text x="34" y="70" fill="#e2e8f0" font-size="11" font-family="JetBrains Mono,monospace">name</text>
+            </g>
+
+            <!-- post_tags (junction, bottom center) -->
+            <g transform="translate(500,305)">
+              <rect width="200" height="120" rx="12" fill="rgba(139,92,246,0.15)" stroke="#8b5cf6" stroke-width="2" stroke-dasharray="5,3"/>
+              <rect width="200" height="32" rx="12" fill="rgba(139,92,246,0.3)"/>
+              <rect width="200" height="8" y="24" fill="rgba(139,92,246,0.3)"/>
+              <text x="100" y="21" text-anchor="middle" fill="#c4b5fd" font-size="12" font-weight="700" font-family="JetBrains Mono,monospace">post_tags</text>
+              <text x="8" y="52" fill="#a78bfa" font-size="9" font-family="JetBrains Mono,monospace">PK,FK</text>
+              <text x="52" y="52" fill="#a78bfa" font-size="11" font-family="JetBrains Mono,monospace">post_id</text>
+              <text x="8" y="70" fill="#a78bfa" font-size="9" font-family="JetBrains Mono,monospace">PK,FK</text>
+              <text x="52" y="70" fill="#a78bfa" font-size="11" font-family="JetBrains Mono,monospace">tag_id</text>
+              <text x="14" y="92" fill="#64748b" font-size="9" font-family="Inter,sans-serif">← Junction Table (M:N bridge)</text>
+            </g>
+
+            <!-- Relationship lines -->
+            <!-- users → user_profiles (1:1, emerald) -->
+            <line x1="110" y1="250" x2="110" y2="308" stroke="#10b981" stroke-width="1.5" marker-end="url(#arrow-emerald)"/>
+            <text x="118" y="283" fill="#10b981" font-size="10" font-family="Inter,sans-serif">1:1</text>
+
+            <!-- users → posts (1:N, amber) -->
+            <line x1="220" y1="195" x2="318" y2="183" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+            <text x="253" y="178" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">1:N</text>
+
+            <!-- posts → post_tags (violet) -->
+            <line x1="430" y1="245" x2="570" y2="303" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow)"/>
+            <text x="480" y="280" fill="#a78bfa" font-size="10" font-family="Inter,sans-serif">M:N</text>
+
+            <!-- tags → post_tags (violet) -->
+            <line x1="710" y1="232" x2="680" y2="330" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#arrow)"/>
+          </svg>
+        </div>
+        <p class="text-center text-xs text-slate-500 mt-3">↑ Dashed border = junction table · Purple text = FK columns</p>
+
+        <!-- CTA -->
+        <div class="flex justify-center mt-6">
+          <button onclick="switchTab('lab')" class="btn-glow px-8 py-3 rounded-xl text-white font-semibold text-sm inline-flex items-center gap-2">
+            🔗 Open ER Diagram + JOIN Lab
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /concepts panel -->
+
+
+    <!-- ══════════════════════════════════════════════
+         TAB 2 — ER DIAGRAM + JOIN LAB
+    ══════════════════════════════════════════════ -->
+    <div id="panel-lab" class="tab-panel space-y-6">
+
+      <!-- TOP HALF: Live Table Viewer -->
+      <div class="glass rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-lg font-bold text-white">Live Database Tables</h3>
+            <p class="text-slate-400 text-sm mt-0.5">FK columns are highlighted in <span class="text-violet-300">violet</span>. Data is fetched live from the server.</p>
+          </div>
+          <button onclick="loadTables()" class="px-4 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:bg-violet-900/30 transition-colors" style="border:1px solid rgba(139,92,246,0.35)">
+            ↻ Refresh
+          </button>
+        </div>
+
+        <!-- Tables grid -->
+        <div id="tablesGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="col-span-full text-center text-slate-500 py-8 text-sm">Loading tables…</div>
+        </div>
+      </div>
+
+      <!-- BOTTOM HALF: SQL JOIN Editor -->
+      <div class="glass rounded-2xl p-6">
+        <h3 class="text-lg font-bold text-white mb-1">SQL JOIN Lab</h3>
+        <p class="text-slate-400 text-sm mb-5">Write or pick a preset query. Results render below. Only SELECT queries are allowed.</p>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <!-- Left: editor -->
+          <div class="space-y-3">
+            <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider">SQL Query</label>
+            <textarea id="queryInput" rows="9" spellcheck="false"
+              class="w-full mono text-sm p-4 rounded-xl resize-none focus:outline-none focus:ring-1 focus:ring-violet-500"
+              style="background:rgba(139,92,246,0.07);border:1px solid rgba(139,92,246,0.3);color:#e2e8f0"
+              placeholder="Write your SELECT query here…">SELECT users.username, posts.title
+FROM posts
+INNER JOIN users ON posts.user_id = users.id;</textarea>
+
+            <!-- Preset buttons -->
+            <div class="flex flex-wrap gap-2">
+              <button onclick="setPreset('1n')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-amber-300 hover:bg-amber-900/30 transition-colors" style="border:1px solid rgba(245,158,11,0.3)">1:N Join</button>
+              <button onclick="setPreset('mn')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-violet-300 hover:bg-violet-900/30 transition-colors" style="border:1px solid rgba(139,92,246,0.35)">M:N Join</button>
+              <button onclick="setPreset('left')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-emerald-300 hover:bg-emerald-900/30 transition-colors" style="border:1px solid rgba(16,185,129,0.3)">LEFT JOIN</button>
+              <button onclick="setPreset('11')" class="px-3 py-1.5 rounded-lg text-xs font-medium text-sky-300 hover:bg-sky-900/30 transition-colors" style="border:1px solid rgba(14,165,233,0.3)">1:1 Join</button>
+            </div>
+
+            <div class="flex gap-3">
+              <button onclick="runQuery()" class="btn-glow flex-1 py-3 rounded-xl text-white font-semibold text-sm">▶ Run Query</button>
+              <button onclick="resetDB()" class="px-4 py-3 rounded-xl text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-colors" style="border:1px solid rgba(255,255,255,0.1)">↺ Reset DB</button>
+            </div>
+          </div>
+
+          <!-- Right: results -->
+          <div>
+            <label class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Query Results</label>
+            <div id="queryResults" class="mt-3 rounded-xl overflow-hidden" style="border:1px solid rgba(139,92,246,0.2);min-height:200px">
+              <div class="flex items-center justify-center h-48 text-slate-500 text-sm">Run a query to see results</div>
+            </div>
+            <p id="resultMeta" class="text-xs text-slate-500 mt-2"></p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /lab panel -->
+
+
+    <!-- ══════════════════════════════════════════════
+         TAB 3 — QUIZ
+    ══════════════════════════════════════════════ -->
+    <div id="panel-quiz" class="tab-panel">
+      <div class="glass rounded-2xl p-8 max-w-3xl mx-auto">
+        <h3 class="text-xl font-bold text-white mb-1">Database Design Quiz</h3>
+        <p class="text-slate-400 text-sm mb-7">7 questions · Click an answer for instant feedback · Score appears at the end</p>
+
+        <div id="quizContainer" class="space-y-8"></div>
+
+        <div id="quizScore" class="hidden mt-10 rounded-2xl p-6 text-center" style="background:linear-gradient(135deg,rgba(109,40,217,0.3),rgba(139,92,246,0.15));border:1px solid rgba(139,92,246,0.4)">
+          <p class="text-5xl font-extrabold text-white mb-2" id="scoreDisplay">0/7</p>
+          <p class="text-violet-300 font-medium" id="scoreMsg"></p>
+          <button onclick="resetQuiz()" class="btn-glow mt-5 px-8 py-3 rounded-xl text-white font-semibold text-sm">↺ Retake Quiz</button>
         </div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  QUIZ VIEW                                                            -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
-      <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold mb-2">Database Design Check</h2>
-        <p class="text-slate-500 text-sm">7 questions · Select an answer to get instant feedback</p>
-      </div>
-      <div id="quiz-body" class="space-y-6"></div>
-      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
-        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
-        <button onclick="initQuiz()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all btn">Retake Quiz</button>
-      </div>
-    </div>
-
-  </main>
+  </div><!-- /max-w -->
 
   <script>
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  TAB SWITCHER & DATA LOADING
-  // ═══════════════════════════════════════════════════════════════════════════
-  const TABS = ['concepts', 'explorer', 'quiz'];
-  function switchTab(target) {
-    TABS.forEach(t => {
-      document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
-      document.getElementById(`tab-${t}`).classList.toggle('active', t === target);
+  // ── Preset queries ────────────────────────────────────────────────
+  const PRESETS = {
+    '1n':   `SELECT users.username, posts.title\nFROM posts\nINNER JOIN users ON posts.user_id = users.id;`,
+    'mn':   `SELECT posts.title, tags.name AS tag\nFROM posts\nINNER JOIN post_tags ON posts.id = post_tags.post_id\nINNER JOIN tags     ON post_tags.tag_id = tags.id\nORDER BY posts.title;`,
+    'left': `SELECT users.username, posts.title\nFROM users\nLEFT JOIN posts ON users.id = posts.user_id\nORDER BY users.username;`,
+    '11':   `SELECT users.username, user_profiles.bio\nFROM users\nLEFT JOIN user_profiles ON users.id = user_profiles.user_id;`,
+  };
+
+  function setPreset(key) {
+    document.getElementById('queryInput').value = PRESETS[key];
+  }
+
+  // ── Tab switching ────────────────────────────────────────────────
+  function switchTab(name) {
+    ['concepts','lab','quiz'].forEach(t => {
+      document.getElementById('panel-' + t).classList.toggle('active', t === name);
+      document.getElementById('tab-' + t).classList.toggle('active', t === name);
     });
-    if(target === 'explorer') loadTables();
+    if (name === 'lab') loadTables();
+    if (name === 'quiz') initQuiz();
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  SQL PLAYGROUND & VISUALIZER
-  // ═══════════════════════════════════════════════════════════════════════════
-  function insertTemplate(sql) { document.getElementById('sql-input').value = sql; }
-
-  async function loadTables() {
+  // ── Status badge ─────────────────────────────────────────────────
+  async function checkStatus() {
     try {
-      const res = await fetch('/api/tables');
-      const { data } = await res.json();
-      const container = document.getElementById('tables-container');
-      container.innerHTML = '';
-
-      Object.keys(data).forEach(tableName => {
-        const rows = data[tableName];
-        if (rows.length === 0) return;
-        
-        const headers = Object.keys(rows[0]);
-        let html = `<div class="bg-slate-950 border border-slate-800 rounded-lg overflow-hidden flex flex-col max-h-[250px]">
-          <div class="bg-slate-900 py-1.5 px-3 text-xs font-bold text-slate-200 border-b border-slate-800 text-center">${tableName}</div>
-          <div class="overflow-auto flex-1"><table class="w-full text-left">
-          <thead class="sticky top-0 bg-slate-900/90 backdrop-blur"><tr>`;
-        
-        headers.forEach(h => {
-          let color = 'text-slate-500';
-          if (h === 'id') color = 'text-amber-400';
-          if (h.endsWith('_id')) color = 'text-brand-400';
-          html += `<th class="db-table-header ${color}">${h}</th>`;
-        });
-        
-        html += `</tr></thead><tbody>`;
-        rows.forEach(r => {
-          html += `<tr class="hover:bg-slate-800/50">`;
-          headers.forEach(h => {
-             let color = 'text-slate-300';
-             if (h === 'id') color = 'text-amber-400 font-bold';
-             if (h.endsWith('_id')) color = 'text-brand-400 underline decoration-brand-500/50 underline-offset-2 cursor-help';
-             html += `<td class="db-table-cell ${color}" title="${h.endsWith('_id') ? 'Foreign Key pointing to another table' : ''}">${r[h]}</td>`;
-          });
-          html += `</tr>`;
-        });
-        html += `</tbody></table></div></div>`;
-        container.innerHTML += html;
-      });
-    } catch(e) { console.error(e); }
-  }
-
-  function renderTable(rows) {
-    if (!rows || rows.length === 0) return '<div class="p-4 text-sm text-slate-400 italic">No rows returned.</div>';
-    const headers = Object.keys(rows[0]);
-    let html = '<table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-950/80 sticky top-0 border-b border-slate-700"><tr>';
-    html += headers.map(h => `<th class="p-3 font-mono text-xs text-brand-400">${h}</th>`).join('') + '</tr></thead><tbody class="divide-y divide-slate-800/60">';
-    rows.forEach(row => {
-      html += '<tr class="hover:bg-slate-800/30">';
-      headers.forEach(h => {
-        const val = row[h] === null ? '<span class="text-slate-500 italic">null</span>' : row[h];
-        html += `<td class="p-3 text-slate-300 font-mono text-xs">${val}</td>`;
-      });
-      html += '</tr>';
-    });
-    html += '</tbody></table>';
-    return html;
-  }
-
-  async function runQuery() {
-    const input = document.getElementById('sql-input').value;
-    const statusEl = document.getElementById('query-status');
-    const resultsEl = document.getElementById('results-container');
-    if (!input.trim()) return;
-
-    statusEl.innerHTML = '<span class="text-amber-400">Executing...</span>';
-    try {
-      const res = await fetch('/api/execute', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query: input })
-      });
-      const data = await res.json();
-      
-      if (!res.ok || data.error) {
-        statusEl.innerHTML = '<span class="text-rose-400 font-bold">Error</span>';
-        resultsEl.innerHTML = `<div class="p-4 text-rose-400 font-mono text-sm bg-rose-500/10 border-l-4 border-rose-500 h-full">${data.error}</div>`;
-        return;
-      }
-
-      statusEl.innerHTML = '<span class="text-emerald-400 font-bold">Success</span>';
-      if (data.type === 'read') {
-        resultsEl.innerHTML = renderTable(data.data);
+      const r = await fetch('/api/status');
+      const { connected, service } = await r.json();
+      const dot  = document.getElementById('statusDot');
+      const text = document.getElementById('statusText');
+      if (connected) {
+        dot.className  = 'w-2 h-2 rounded-full bg-emerald-400 pulse';
+        text.className = 'text-emerald-300 font-medium text-sm';
+        text.textContent = '🟢 Connected to ' + service;
       } else {
-        resultsEl.innerHTML = `<div class="p-6 text-emerald-400 font-medium">${data.message}</div>`;
-        loadTables(); // Refresh schema view if they inserted/deleted
+        dot.className  = 'w-2 h-2 rounded-full bg-red-500 pulse';
+        text.className = 'text-red-400 text-sm';
+        text.textContent = '🔴 Offline';
       }
-    } catch(e) {
-      statusEl.innerHTML = '<span class="text-rose-400 font-bold">Network Error</span>';
+    } catch {
+      document.getElementById('statusText').textContent = '🔴 Server offline';
     }
   }
 
-  async function resetDb() {
-    await fetch('/api/reset', { method: 'POST' });
-    loadTables();
-    document.getElementById('results-container').innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-sm italic">Database reset.</div>';
+  // ── FK columns per table ──────────────────────────────────────────
+  const FK_COLS = {
+    users: [],
+    user_profiles: ['user_id'],
+    posts: ['user_id'],
+    tags: [],
+    post_tags: ['post_id','tag_id'],
+  };
+
+  // ── Load tables ───────────────────────────────────────────────────
+  async function loadTables() {
+    const grid = document.getElementById('tablesGrid');
+    grid.innerHTML = '<div class="col-span-full text-center text-slate-500 py-6 text-sm">Loading…</div>';
+    try {
+      const r = await fetch('/api/tables');
+      const { data } = await r.json();
+      grid.innerHTML = '';
+      const tableOrder = ['users', 'user_profiles', 'posts', 'tags', 'post_tags'];
+      tableOrder.forEach(tname => {
+        const rows = data[tname] || [];
+        const cols = rows.length ? Object.keys(rows[0]) : [];
+        const fks  = FK_COLS[tname] || [];
+        const card = document.createElement('div');
+        card.className = 'rounded-xl overflow-hidden';
+        card.style = 'border:1px solid rgba(139,92,246,0.22)';
+
+        let html = `
+          <div class="px-4 py-3 flex items-center justify-between" style="background:rgba(139,92,246,0.18)">
+            <span class="mono font-bold text-violet-200 text-sm">${tname}</span>
+            <span class="text-xs text-slate-400">${rows.length} row${rows.length!==1?'s':''}</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full data-table">
+              <thead><tr>`;
+        cols.forEach(c => {
+          const isFk = fks.includes(c);
+          html += `<th class="${isFk?'text-violet-400':''}">${c}${isFk?' 🔑':''}</th>`;
+        });
+        html += `</tr></thead><tbody>`;
+        rows.forEach(row => {
+          html += '<tr>';
+          cols.forEach(c => {
+            const isFk = fks.includes(c);
+            html += `<td class="${isFk?'fk-col':''}">${row[c] ?? '<span class="text-slate-600">NULL</span>'}</td>`;
+          });
+          html += '</tr>';
+        });
+        html += `</tbody></table></div>`;
+        card.innerHTML = html;
+        grid.appendChild(card);
+      });
+    } catch(e) {
+      grid.innerHTML = `<div class="col-span-full text-center text-red-400 py-6 text-sm">Error loading tables: ${e.message}</div>`;
+    }
   }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  QUIZ
-  // ═══════════════════════════════════════════════════════════════════════════
+  // ── Run query ──────────────────────────────────────────────────────
+  async function runQuery() {
+    const query = document.getElementById('queryInput').value.trim();
+    const resultsDiv = document.getElementById('queryResults');
+    const meta = document.getElementById('resultMeta');
+
+    if (!query) return;
+
+    resultsDiv.innerHTML = '<div class="flex items-center justify-center h-20 text-slate-500 text-sm">Running query…</div>';
+    meta.textContent = '';
+
+    try {
+      const r   = await fetch('/api/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const res = await r.json();
+      if (!res.success) {
+        resultsDiv.innerHTML = `<div class="p-4 text-red-400 text-sm mono whitespace-pre-wrap">${res.error}</div>`;
+        return;
+      }
+      const rows = res.data;
+      if (!rows || rows.length === 0) {
+        resultsDiv.innerHTML = '<div class="flex items-center justify-center h-16 text-slate-500 text-sm">No rows returned.</div>';
+        meta.textContent = '0 rows';
+        return;
+      }
+      const cols = Object.keys(rows[0]);
+      let html = '<div class="overflow-x-auto"><table class="w-full result-table"><thead><tr>';
+      cols.forEach(c => { html += `<th>${c}</th>`; });
+      html += '</tr></thead><tbody>';
+      rows.forEach(row => {
+        html += '<tr>';
+        cols.forEach(c => { html += `<td>${row[c] ?? '<span class="text-slate-600">NULL</span>'}</td>`; });
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      resultsDiv.innerHTML = html;
+      meta.textContent = `${rows.length} row${rows.length!==1?'s':''} returned`;
+    } catch(e) {
+      resultsDiv.innerHTML = `<div class="p-4 text-red-400 text-sm">${e.message}</div>`;
+    }
+  }
+
+  // ── Reset DB ───────────────────────────────────────────────────────
+  async function resetDB() {
+    try {
+      const r   = await fetch('/api/reset', { method: 'POST' });
+      const res = await r.json();
+      if (res.success) {
+        loadTables();
+      } else {
+        alert(res.error || 'Reset failed.');
+      }
+    } catch(e) { alert(e.message); }
+  }
+
+  // ── Quiz ───────────────────────────────────────────────────────────
   const QUESTIONS = [
     {
-      q: "What is the primary goal of Database Normalization?",
-      opts: ["To make SQL queries run faster", "To reduce data redundancy and improve data integrity", "To convert SQL databases into NoSQL databases", "To encrypt sensitive data"],
+      q: "What is the primary goal of normalization?",
+      opts: ["Make queries run faster by duplicating data","Reduce data redundancy and improve integrity","Add more tables to the database","Use as few columns as possible"],
       ans: 1,
-      exp: "Normalization organizes tables to reduce duplicate data. If a user's email address is stored in 5 different places, updating it becomes a nightmare. Normalization ensures it's stored exactly once."
     },
     {
-      q: "A User has one Profile. A Profile belongs to one User. What type of relationship is this?",
-      opts: ["One-to-One (1:1)", "One-to-Many (1:N)", "Many-to-Many (M:N)", "Zero-to-One"],
-      ans: 0,
-      exp: "This is a strict 1:1 relationship, typically enforced by putting a UNIQUE constraint on the foreign key (e.g. user_id)."
-    },
-    {
-      q: "A User can author many Posts. A Post is authored by exactly one User. What type of relationship is this?",
-      opts: ["One-to-One (1:1)", "One-to-Many (1:N)", "Many-to-Many (M:N)", "Zero-to-Many"],
-      ans: 1,
-      exp: "This is a 1:N relationship. The 'Posts' table (the child) will hold a 'user_id' foreign key pointing to the 'Users' table."
-    },
-    {
-      q: "A Post can have many Tags. A Tag can belong to many Posts. How do you implement this in a relational database?",
-      opts: ["Store an array of strings in the Posts table", "Store an array of IDs in the Tags table", "Create a third 'Junction Table' containing post_id and tag_id", "You cannot do this in SQL"],
+      q: "A User has exactly one Profile. A Profile belongs to exactly one User. What relationship type is this?",
+      opts: ["One-to-Many (1:N)","Many-to-Many (M:N)","One-to-One (1:1)","Self-referencing"],
       ans: 2,
-      exp: "SQL databases do not natively support arrays as relationships. You MUST create a junction table (e.g., 'post_tags') to map the Many-to-Many relationship."
     },
     {
-      q: "What does the SQL command 'JOIN' do?",
-      opts: ["Combines two tables into one permanent table", "Combines rows from two or more tables based on a related column between them", "Deletes redundant data", "Creates a new database"],
+      q: "A User can have many Posts. A Post belongs to exactly one User. What type is this?",
+      opts: ["Many-to-Many (M:N)","One-to-One (1:1)","One-to-Many (1:N)","Polymorphic"],
+      ans: 2,
+    },
+    {
+      q: "How do you implement a Many-to-Many relationship in SQL?",
+      opts: ["Store a JSON array of IDs in a column","Create a Junction Table with two Foreign Keys","Add multiple FK columns to both tables","Use a view"],
       ans: 1,
-      exp: "JOIN is the magic of Relational databases. It temporarily stitches tables together for a query based on their Foreign Keys, allowing you to get a User's name alongside their Post's title."
     },
     {
       q: "What is a Foreign Key?",
-      opts: ["A key used to encrypt the database", "A column in one table that refers to the Primary Key in another table", "A column that cannot contain null values", "A unique identifier generated by the database"],
+      opts: ["A special encrypted primary key","A column that references the Primary Key of another table","An index on a frequently-queried column","A key used for sorting rows"],
       ans: 1,
-      exp: "A Foreign Key is the link that creates a relationship. If the 'posts' table has a 'user_id' column that points to 'users.id', 'user_id' is the foreign key."
     },
     {
-      q: "Why might someone intentionally 'Denormalize' a database?",
-      opts: ["Because they don't know how to use JOINs", "To save hard-drive space", "To improve read performance by reducing complex, slow JOIN queries", "To make the database more secure"],
+      q: "What does a SQL JOIN operation do?",
+      opts: ["Deletes duplicate rows across tables","Combines rows from multiple tables based on related columns","Merges two databases into one","Copies data from one table to another"],
+      ans: 1,
+    },
+    {
+      q: "What does ON DELETE CASCADE mean on a Foreign Key?",
+      opts: ["The child row is converted to NULL when the parent is deleted","Deletion of the child is prevented unless the parent is deleted first","If the parent row is deleted, child rows are deleted automatically","The parent row is deleted when a child row is deleted"],
       ans: 2,
-      exp: "While normalization is best practice for data integrity, sometimes a query that requires joining 10 tables is too slow. Engineers will intentionally duplicate data (denormalize) to speed up reads at the cost of storage and write complexity."
-    }
+    },
   ];
 
-  let quizAnswers = {};
-  let quizDone = false;
+  let answered = [];
+  let quizReady = false;
 
   function initQuiz() {
-    quizAnswers = {};
-    quizDone = false;
-    document.getElementById('quiz-footer').classList.add('hidden');
-    const body = document.getElementById('quiz-body');
-    body.innerHTML = QUESTIONS.map((q, qi) => `
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
-        <p class="font-medium text-slate-100 mb-4 leading-relaxed"><span class="text-brand-400 font-mono mr-2">${qi + 1}.</span>${q.q}</p>
-        <div class="space-y-2" id="qopts-${qi}">
-          ${q.opts.map((opt, oi) => `<button onclick="selectAnswer(${qi}, ${oi})" id="opt-${qi}-${oi}" class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"><span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>${opt}</button>`).join('')}
+    if (quizReady) return;
+    quizReady = true;
+    answered = new Array(QUESTIONS.length).fill(false);
+    const container = document.getElementById('quizContainer');
+    container.innerHTML = '';
+    QUESTIONS.forEach((q, qi) => {
+      const div = document.createElement('div');
+      div.className = 'space-y-3';
+      div.innerHTML = `
+        <p class="font-semibold text-slate-100 text-sm leading-relaxed">
+          <span class="text-violet-400 mono font-bold mr-2">Q${qi+1}.</span>${q.q}
+        </p>
+        <div class="space-y-2" id="opts-${qi}">
+          ${q.opts.map((opt, oi) => `
+            <div class="quiz-opt rounded-xl px-4 py-3 text-sm text-slate-300" onclick="pickAnswer(${qi},${oi})">
+              <span class="text-violet-400 mono mr-2">${String.fromCharCode(65+oi)}.</span>${opt}
+            </div>
+          `).join('')}
         </div>
-        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
-      </div>
-    `).join('');
+        <p class="feedback-${qi} text-xs hidden mt-1"></p>
+      `;
+      container.appendChild(div);
+    });
+    document.getElementById('quizScore').classList.add('hidden');
   }
 
-  function selectAnswer(qi, oi) {
-    if (quizDone || quizAnswers[qi] !== undefined) return;
-    quizAnswers[qi] = oi;
-    const q = QUESTIONS[qi];
-    const isCorrect = oi === q.ans;
-    for (let i = 0; i < q.opts.length; i++) {
-      const btn = document.getElementById(`opt-${qi}-${i}`);
-      const ico = document.getElementById(`opt-icon-${qi}-${i}`);
-      if (i === q.ans) {
-        btn.classList.add('correct'); ico.textContent = '✓'; ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
-      } else if (i === oi && !isCorrect) {
-        btn.classList.add('wrong'); ico.textContent = '✗'; ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
-      }
-      btn.disabled = true;
+  function pickAnswer(qi, oi) {
+    if (answered[qi]) return;
+    answered[qi] = true;
+    const q    = QUESTIONS[qi];
+    const opts = document.querySelectorAll(`#opts-${qi} .quiz-opt`);
+    const fb   = document.querySelector(`.feedback-${qi}`);
+
+    opts.forEach((el, i) => {
+      el.classList.add('answered');
+      if (i === q.ans) el.classList.add('correct');
+      else if (i === oi && oi !== q.ans) el.classList.add('wrong');
+    });
+
+    fb.classList.remove('hidden');
+    if (oi === q.ans) {
+      fb.className = `feedback-${qi} text-xs mt-1 text-emerald-400`;
+      fb.textContent = '✅ Correct!';
+    } else {
+      fb.className = `feedback-${qi} text-xs mt-1 text-red-400`;
+      fb.textContent = `❌ The correct answer is: "${q.opts[q.ans]}"`;
     }
-    const expEl = document.getElementById(`exp-${qi}`);
-    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
-    expEl.classList.remove('hidden');
-    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
+
+    if (answered.every(Boolean)) showScore();
   }
 
-  function showFinalScore() {
-    quizDone = true;
-    const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
-    const pct   = Math.round(score / QUESTIONS.length * 100);
-    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
-    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
-    document.getElementById('quiz-grade-text').textContent = grade;
-    document.getElementById('quiz-footer').classList.remove('hidden');
-    document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  function showScore() {
+    const correct = QUESTIONS.reduce((acc, q, i) => {
+      const opts = document.querySelectorAll(`#opts-${i} .quiz-opt`);
+      let got = -1;
+      opts.forEach((el,oi) => { if (el.classList.contains('correct') || el.classList.contains('wrong')) { if(el.classList.contains('correct')) got = oi; } });
+      // simpler: count via answered/correct class
+      const anyWrong = [...opts].some(el => el.classList.contains('wrong'));
+      return acc + (anyWrong ? 0 : 1);
+    }, 0);
+    const score = document.getElementById('quizScore');
+    score.classList.remove('hidden');
+    document.getElementById('scoreDisplay').textContent = `${correct}/7`;
+    const msgs = ['Keep studying! Review the Concepts tab.','Good effort! Almost there.','Great job! You know your DB design! 🎉','Perfect score! You are a database wizard! 🧙'];
+    document.getElementById('scoreMsg').textContent = correct <= 3 ? msgs[0] : correct <= 5 ? msgs[1] : correct === 6 ? msgs[2] : msgs[3];
+    score.scrollIntoView({ behavior: 'smooth' });
   }
 
-  initQuiz();
+  function resetQuiz() {
+    quizReady = false;
+    initQuiz();
+  }
+
+  // ── Boot ───────────────────────────────────────────────────────────
+  checkStatus();
+  setInterval(checkStatus, 15000);
   </script>
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "name": "mongoose-basics-lesson",
   "version": "1.0.0",
-  "description": "Interactive MongoDB & Mongoose Explorer",
+  "description": "Interactive MongoDB & Mongoose Explorer — Lesson 29",
   "main": "server.js",
   "type": "module",
   "scripts": {
@@ -10,9 +10,10 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "express": "^4.19.2",
-    "mongodb-memory-server": "^9.1.6",
-    "mongoose": "^8.3.0"
+    "mongodb-memory-server": "^9.5.0",
+    "mongoose": "^8.24.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

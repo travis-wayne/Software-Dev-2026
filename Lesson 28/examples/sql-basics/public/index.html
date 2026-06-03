@@ -3,194 +3,415 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson 28 — SQL & Databases Explorer</title>
+  <title>Lesson 28 — SQL Playground</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
           colors: {
-            brand: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7' } /* Sky Blue */
+            cyan: {
+              300: '#67e8f9',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              700: '#0e7490',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4,0,0.6,1) infinite',
+            'float': 'float 6s ease-in-out infinite',
           }
         }
       }
     };
   </script>
   <style>
+    * { box-sizing: border-box; }
     body { font-family: 'Inter', sans-serif; }
     code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
 
-    /* Tab underline animation */
-    .tab-btn { position: relative; transition: color 0.2s; }
-    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
-    .tab-btn.active { color: #38bdf8; }
-    .tab-btn.active::after { background: #0ea5e9; }
+    /* Tab button */
+    .tab-btn {
+      position: relative;
+      transition: color 0.2s, background 0.2s;
+    }
+    .tab-btn.active {
+      color: #06b6d4;
+      background: rgba(6,182,212,0.12);
+    }
     .tab-btn:not(.active) { color: #64748b; }
-    .tab-btn:not(.active):hover { color: #94a3b8; }
+    .tab-btn:not(.active):hover { color: #94a3b8; background: rgba(148,163,184,0.05); }
 
     /* Concept card */
-    .concept-card { transition: border-color 0.2s, transform 0.15s; }
-    .concept-card:hover { border-color: #0ea5e9; transform: translateY(-2px); }
+    .concept-card {
+      transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+    }
+    .concept-card:hover {
+      border-color: rgba(6,182,212,0.5);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(6,182,212,0.08);
+    }
 
     /* Buttons */
-    .btn { transition: all 0.15s; }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(14,165,233,0.3); }
-    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      transition: all 0.18s;
+      background: linear-gradient(135deg, #06b6d4, #0891b2);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 24px rgba(6,182,212,0.4);
+      background: linear-gradient(135deg, #22d3ee, #06b6d4);
+    }
+    .btn-primary:active { transform: translateY(0); }
+
+    .btn-ghost {
+      transition: all 0.18s;
+    }
+    .btn-ghost:hover {
+      background: rgba(6,182,212,0.1);
+      border-color: rgba(6,182,212,0.4);
+      color: #22d3ee;
+      transform: translateY(-1px);
+    }
+
+    /* Preset query buttons */
+    .preset-btn {
+      transition: all 0.15s;
+      border: 1px solid rgba(30,41,59,1);
+    }
+    .preset-btn:hover {
+      border-color: rgba(6,182,212,0.4);
+      background: rgba(6,182,212,0.08);
+      color: #22d3ee;
+    }
 
     /* Quiz option */
-    .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
-    .quiz-opt:hover { background: rgba(56,189,248,0.08); border-color: #0ea5e9; }
-    .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
-    .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
+    .quiz-opt {
+      transition: background 0.15s, border-color 0.15s, transform 0.1s;
+      cursor: pointer;
+    }
+    .quiz-opt:hover:not(:disabled) {
+      background: rgba(6,182,212,0.07);
+      border-color: rgba(6,182,212,0.4);
+      transform: translateX(3px);
+    }
+    .quiz-opt.correct {
+      background: rgba(16,185,129,0.09);
+      border-color: rgba(16,185,129,0.5);
+    }
+    .quiz-opt.wrong {
+      background: rgba(239,68,68,0.09);
+      border-color: rgba(239,68,68,0.5);
+    }
+
+    /* SQL keyword coloring in textarea placeholder */
+    .sql-editor::placeholder { color: #475569; }
+
+    /* Animated data-flow diagram */
+    @keyframes flowPulse {
+      0%, 100% { opacity: 0.4; transform: scaleX(1); }
+      50% { opacity: 1; transform: scaleX(1.05); }
+    }
+    .flow-arrow {
+      animation: flowPulse 2s ease-in-out infinite;
+    }
+    .flow-arrow:nth-child(2) { animation-delay: 0.4s; }
+    .flow-arrow:nth-child(3) { animation-delay: 0.8s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+    .float-anim { animation: float 6s ease-in-out infinite; }
+
+    /* Gradient text */
+    .gradient-text {
+      background: linear-gradient(135deg, #67e8f9 0%, #06b6d4 40%, #22d3ee 70%, #a5f3fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Table results */
+    #results-container table { border-collapse: collapse; }
+    #results-container th { position: sticky; top: 0; z-index: 1; }
+
+    /* Status badge pulse */
+    @keyframes statusPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(6,182,212,0.4); }
+      50% { box-shadow: 0 0 0 4px rgba(6,182,212,0); }
+    }
+    .status-connected { animation: statusPulse 2.5s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-[#0b1120] text-slate-200 min-h-screen">
 
-  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-sky-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-3xl"></div>
+  <!-- ── AMBIENT GLOW BLOBS ──────────────────────────────────────────────── -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="absolute -top-40 -left-40 w-[600px] h-[600px] bg-cyan-500/5 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/3 -right-40 w-[500px] h-[500px] bg-sky-600/4 rounded-full blur-3xl"></div>
+    <div class="absolute -bottom-20 left-1/3 w-[400px] h-[400px] bg-cyan-400/3 rounded-full blur-3xl"></div>
   </div>
 
-  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
-  <header class="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+  <!-- ── HEADER ──────────────────────────────────────────────────────────── -->
+  <header class="border-b border-slate-800/80 bg-[#0b1120]/85 backdrop-blur-xl sticky top-0 z-20">
+    <div class="max-w-7xl mx-auto px-5 h-14 flex items-center justify-between gap-4">
+
+      <!-- Logo + Title -->
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="w-8 h-8 rounded-xl bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+            <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+          </svg>
         </div>
-        <div>
-          <span class="font-bold text-sm text-slate-100">SQL Basics Explorer</span>
-          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 28</span>
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sm text-slate-100 tracking-tight">SQL Playground</span>
+          <span class="bg-cyan-500/10 border border-cyan-500/25 text-cyan-400 text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full">Lesson 28</span>
         </div>
       </div>
-      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
+
+      <!-- Nav Tabs -->
+      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/60 backdrop-blur">
         <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
-        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">💾 SQL Playground</button>
+        <button id="tab-lab"      class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('lab')">💻 SQL Lab</button>
         <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
       </nav>
+
+      <!-- DB Status Badge -->
+      <div id="db-status-badge" class="shrink-0 flex items-center gap-2 bg-slate-900/60 border border-slate-800 rounded-full px-3 py-1.5 text-xs">
+        <span id="db-status-dot" class="w-2 h-2 rounded-full bg-slate-600 inline-block"></span>
+        <span id="db-status-text" class="text-slate-500 font-mono">Checking…</span>
+      </div>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+  <main class="max-w-7xl mx-auto px-5 py-8 relative">
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  CONCEPTS VIEW                                                       -->
+    <!--  CONCEPTS TAB                                                        -->
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-concepts" class="space-y-8">
+    <div id="view-concepts" class="space-y-10">
 
       <!-- Hero -->
-      <div class="text-center py-8">
-        <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 rounded-full px-4 py-1.5 text-brand-400 text-xs font-medium mb-4">
-          Session 28 · Data Persistence
+      <div class="text-center pt-6 pb-2">
+        <div class="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4 py-1.5 text-cyan-400 text-xs font-semibold mb-5">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Session 28 · Data Persistence with SQL
         </div>
-        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-sky-400 via-blue-400 to-sky-300 bg-clip-text text-transparent">
-          Relational Databases & SQL
+        <h1 class="text-5xl font-black mb-4 gradient-text leading-tight">
+          Relational Databases<br>& SQL Fundamentals
         </h1>
-        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-          Learn how to store, query, and manage application data using Structured Query Language (SQL) and Relational Database Systems like PostgreSQL.
+        <p class="text-slate-400 text-base max-w-2xl mx-auto leading-relaxed">
+          Learn how to store, query, and manage application data using <span class="text-cyan-400 font-semibold">Structured Query Language</span> and cloud-native databases like <span class="text-cyan-400 font-semibold">Neon PostgreSQL</span>.
         </p>
       </div>
 
-      <!-- Core Concepts -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Tables -->
+      <!-- 4 Concept Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+
+        <!-- Card 1: What is SQL -->
         <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-indigo-500/15 border border-indigo-500/25 rounded-xl flex items-center justify-center mb-4 text-indigo-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+          <div class="w-11 h-11 bg-cyan-500/12 border border-cyan-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">Tables</h3>
+          <h3 class="font-bold text-slate-100 mb-2 text-sm">What is SQL?</h3>
           <p class="text-slate-400 text-xs leading-relaxed">
-            Data is organized into tables (like spreadsheets). Each <strong>Row</strong> is a single record (e.g., one user). Each <strong>Column</strong> is a property (e.g., email).
+            SQL (<strong class="text-slate-300">Structured Query Language</strong>) is a declarative language for managing data in <em>relational databases</em>. You describe <em>what</em> data you want — the database figures out <em>how</em> to get it.
           </p>
-        </div>
-        
-        <!-- Primary Key -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-center justify-center mb-4 text-amber-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+          <div class="mt-4 font-mono text-[10px] bg-slate-950/60 border border-slate-800 rounded-lg p-2.5 text-cyan-400">
+            SELECT * FROM users<br>WHERE age &gt; 18;
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">Primary Key</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            A column (usually <code class="text-amber-400">id</code>) that uniquely identifies every row. No two rows can have the same Primary Key.
-          </p>
         </div>
 
-        <!-- PostgreSQL -->
+        <!-- Card 2: CRUD Operations -->
         <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-brand-500/15 border border-brand-500/25 rounded-xl flex items-center justify-center mb-4 text-brand-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+          <div class="w-11 h-11 bg-emerald-500/12 border border-emerald-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">PostgreSQL</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            A highly reliable, open-source Relational Database Management System (RDBMS). It runs on a server and responds to SQL queries.
-          </p>
+          <h3 class="font-bold text-slate-100 mb-2 text-sm">CRUD Operations</h3>
+          <p class="text-slate-400 text-xs leading-relaxed mb-3">Every database interaction maps to one of four operations:</p>
+          <div class="space-y-1.5 text-[10px] font-mono">
+            <div class="flex items-center gap-2"><span class="text-emerald-400 font-bold w-12">CREATE</span><span class="text-slate-500">→ INSERT INTO</span></div>
+            <div class="flex items-center gap-2"><span class="text-cyan-400 font-bold w-12">READ</span><span class="text-slate-500">→ SELECT</span></div>
+            <div class="flex items-center gap-2"><span class="text-amber-400 font-bold w-12">UPDATE</span><span class="text-slate-500">→ UPDATE SET</span></div>
+            <div class="flex items-center gap-2"><span class="text-rose-400 font-bold w-12">DELETE</span><span class="text-slate-500">→ DELETE FROM</span></div>
+          </div>
         </div>
 
-        <!-- Declarative -->
+        <!-- Card 3: Data Types -->
         <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-emerald-500/15 border border-emerald-500/25 rounded-xl flex items-center justify-center mb-4 text-emerald-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+          <div class="w-11 h-11 bg-violet-500/12 border border-violet-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">Declarative</h3>
+          <h3 class="font-bold text-slate-100 mb-2 text-sm">SQL Data Types</h3>
+          <p class="text-slate-400 text-xs leading-relaxed mb-3">Every column must declare its data type — this enforces data integrity.</p>
+          <div class="space-y-1.5 text-[10px] font-mono">
+            <div class="flex gap-2"><span class="text-violet-400 w-20">INTEGER</span><span class="text-slate-500">Whole numbers</span></div>
+            <div class="flex gap-2"><span class="text-violet-400 w-20">VARCHAR(n)</span><span class="text-slate-500">Text up to n chars</span></div>
+            <div class="flex gap-2"><span class="text-violet-400 w-20">TEXT</span><span class="text-slate-500">Unlimited text</span></div>
+            <div class="flex gap-2"><span class="text-violet-400 w-20">BOOLEAN</span><span class="text-slate-500">true / false</span></div>
+            <div class="flex gap-2"><span class="text-violet-400 w-20">TIMESTAMP</span><span class="text-slate-500">Date + time</span></div>
+          </div>
+        </div>
+
+        <!-- Card 4: Primary & Foreign Keys -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
+          <div class="w-11 h-11 bg-amber-500/12 border border-amber-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2 text-sm">Primary & Foreign Keys</h3>
           <p class="text-slate-400 text-xs leading-relaxed">
-            SQL is declarative: you write <em>what</em> data you want (e.g. "Select users where age > 18"), not <em>how</em> to loop over arrays to find it.
+            A <strong class="text-amber-400">Primary Key</strong> uniquely identifies each row (usually <code class="text-amber-300">id</code>). A <strong class="text-orange-400">Foreign Key</strong> links one table to another — <code class="text-slate-300">posts.user_id</code> references <code class="text-slate-300">users.id</code>, creating a <em>relationship</em>.
           </p>
         </div>
       </div>
 
-      <!-- CRUD / SQL Methods Table -->
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-        <h3 class="font-bold text-slate-100 mb-1">The 4 CRUD Operations in SQL</h3>
-        <p class="text-slate-500 text-sm mb-4">Every API route maps to one of these fundamental SQL commands.</p>
+      <!-- Animated Data-Flow Diagram -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-8">
+        <div class="text-center mb-8">
+          <h3 class="font-bold text-slate-100 text-lg mb-1">How a Query Flows</h3>
+          <p class="text-slate-500 text-sm">From your browser to Neon PostgreSQL and back</p>
+        </div>
+        <div class="flex items-center justify-center gap-2 flex-wrap">
+          <!-- Client -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center gap-1 float-anim">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              <span class="text-[9px] font-mono text-slate-400">Browser</span>
+            </div>
+            <span class="text-[10px] text-slate-500">POST /api/execute</span>
+          </div>
+
+          <!-- Arrow 1 -->
+          <div class="flow-arrow flex flex-col items-center px-2">
+            <span class="text-[9px] text-cyan-500 font-mono mb-1">JSON query</span>
+            <svg width="48" height="16" viewBox="0 0 48 16" fill="none">
+              <path d="M0 8h42" stroke="#06b6d4" stroke-width="1.5"/>
+              <path d="M38 4l6 4-6 4" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Express -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-20 h-20 rounded-2xl bg-slate-800/80 border border-cyan-500/30 flex flex-col items-center justify-center gap-1" style="animation: float 6s ease-in-out infinite; animation-delay: 0.8s;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+              <span class="text-[9px] font-mono text-cyan-400">Express.js</span>
+            </div>
+            <span class="text-[10px] text-slate-500">Validate + route</span>
+          </div>
+
+          <!-- Arrow 2 -->
+          <div class="flow-arrow flex flex-col items-center px-2" style="animation-delay: 0.4s;">
+            <span class="text-[9px] text-cyan-500 font-mono mb-1">pg.query()</span>
+            <svg width="48" height="16" viewBox="0 0 48 16" fill="none">
+              <path d="M0 8h42" stroke="#06b6d4" stroke-width="1.5"/>
+              <path d="M38 4l6 4-6 4" stroke="#06b6d4" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Neon DB -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-20 h-20 rounded-2xl bg-slate-800/80 border border-emerald-500/30 flex flex-col items-center justify-center gap-1" style="animation: float 6s ease-in-out infinite; animation-delay: 1.6s;">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+              <span class="text-[9px] font-mono text-emerald-400">Neon PG</span>
+            </div>
+            <span class="text-[10px] text-slate-500">Execute SQL</span>
+          </div>
+
+          <!-- Arrow 3 (response) -->
+          <div class="flow-arrow flex flex-col items-center px-2" style="animation-delay: 0.8s;">
+            <span class="text-[9px] text-emerald-500 font-mono mb-1">{ data: rows }</span>
+            <svg width="48" height="16" viewBox="0 0 48 16" fill="none">
+              <path d="M48 8H6" stroke="#10b981" stroke-width="1.5"/>
+              <path d="M10 4L4 8l6 4" stroke="#10b981" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+
+          <!-- Response indicator -->
+          <div class="flex flex-col items-center gap-2">
+            <div class="w-20 h-20 rounded-2xl bg-slate-800/80 border border-slate-700 flex flex-col items-center justify-center gap-1">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <span class="text-[9px] font-mono text-amber-400">JSON rows</span>
+            </div>
+            <span class="text-[10px] text-slate-500">Rendered table</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- CRUD Table -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-7">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-8 h-8 bg-cyan-500/12 border border-cyan-500/20 rounded-lg flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-100">The 4 CRUD Operations in SQL</h3>
+            <p class="text-slate-500 text-xs">Every API route maps to one of these fundamental SQL commands.</p>
+          </div>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
               <tr class="border-b border-slate-800">
-                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">CRUD</th>
-                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">SQL Command</th>
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-6 w-24">CRUD</th>
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-6 w-32">SQL Command</th>
+                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-6 w-24">HTTP Method</th>
                 <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3">Example Syntax</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
-              <!-- Create -->
               <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-4 pr-4 font-bold text-emerald-400">Create</td>
-                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">INSERT INTO</td>
+                <td class="py-4 pr-6 font-bold text-emerald-400 text-sm">Create</td>
+                <td class="py-4 pr-6 font-mono font-semibold text-xs text-slate-200">INSERT INTO</td>
+                <td class="py-4 pr-6"><span class="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[10px] px-2 py-0.5 rounded">POST</span></td>
                 <td class="py-4 font-mono text-xs text-slate-400">
-                  <span class="text-blue-400">INSERT INTO</span> users (name, age) <span class="text-blue-400">VALUES</span> ('Alice', 25);
+                  <span class="text-cyan-400">INSERT INTO</span> users (username, email) <span class="text-cyan-400">VALUES</span> ('alice', 'a@x.com');
                 </td>
               </tr>
-              <!-- Read -->
               <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-4 pr-4 font-bold text-brand-400">Read</td>
-                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">SELECT</td>
+                <td class="py-4 pr-6 font-bold text-cyan-400 text-sm">Read</td>
+                <td class="py-4 pr-6 font-mono font-semibold text-xs text-slate-200">SELECT</td>
+                <td class="py-4 pr-6"><span class="bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 font-mono text-[10px] px-2 py-0.5 rounded">GET</span></td>
                 <td class="py-4 font-mono text-xs text-slate-400">
-                  <span class="text-blue-400">SELECT</span> * <span class="text-blue-400">FROM</span> users <span class="text-blue-400">WHERE</span> age > 18;
+                  <span class="text-cyan-400">SELECT</span> * <span class="text-cyan-400">FROM</span> users <span class="text-cyan-400">WHERE</span> id = 1;
                 </td>
               </tr>
-              <!-- Update -->
               <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-4 pr-4 font-bold text-amber-400">Update</td>
-                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">UPDATE</td>
+                <td class="py-4 pr-6 font-bold text-amber-400 text-sm">Update</td>
+                <td class="py-4 pr-6 font-mono font-semibold text-xs text-slate-200">UPDATE…SET</td>
+                <td class="py-4 pr-6"><span class="bg-amber-500/10 border border-amber-500/20 text-amber-400 font-mono text-[10px] px-2 py-0.5 rounded">PUT/PATCH</span></td>
                 <td class="py-4 font-mono text-xs text-slate-400">
-                  <span class="text-blue-400">UPDATE</span> users <span class="text-blue-400">SET</span> age = 26 <span class="text-blue-400">WHERE</span> name = 'Alice';
+                  <span class="text-cyan-400">UPDATE</span> users <span class="text-cyan-400">SET</span> email='b@x.com' <span class="text-cyan-400">WHERE</span> id = 1;
                 </td>
               </tr>
-              <!-- Delete -->
               <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-4 pr-4 font-bold text-rose-400">Delete</td>
-                <td class="py-4 pr-4 font-mono font-bold text-xs text-slate-200">DELETE FROM</td>
+                <td class="py-4 pr-6 font-bold text-rose-400 text-sm">Delete</td>
+                <td class="py-4 pr-6 font-mono font-semibold text-xs text-slate-200">DELETE FROM</td>
+                <td class="py-4 pr-6"><span class="bg-rose-500/10 border border-rose-500/20 text-rose-400 font-mono text-[10px] px-2 py-0.5 rounded">DELETE</span></td>
                 <td class="py-4 font-mono text-xs text-slate-400">
-                  <span class="text-blue-400">DELETE FROM</span> users <span class="text-blue-400">WHERE</span> id = 1;
+                  <span class="text-cyan-400">DELETE FROM</span> users <span class="text-cyan-400">WHERE</span> id = 1;
                 </td>
               </tr>
             </tbody>
@@ -198,90 +419,172 @@
         </div>
       </div>
 
-      <!-- CTA to Explorer -->
-      <div class="text-center py-4">
-        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-          Open the SQL Playground
+      <!-- CTA -->
+      <div class="text-center pb-4">
+        <button onclick="switchTab('lab')" class="btn-primary inline-flex items-center gap-2.5 text-white font-semibold px-7 py-3.5 rounded-xl text-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Launch SQL Lab
         </button>
+        <p class="text-slate-600 text-xs mt-3">Run live queries against your database in seconds</p>
       </div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  SQL PLAYGROUND VIEW                                                 -->
+    <!--  SQL LAB TAB                                                         -->
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-explorer" class="hidden">
-      
-      <div class="bg-slate-800/40 border border-brand-500/30 rounded-xl p-4 mb-6 flex items-start gap-4">
-        <div class="w-8 h-8 rounded-full bg-brand-500/20 flex items-center justify-center shrink-0 mt-0.5">
-          <span class="text-lg">💡</span>
+    <div id="view-lab" class="hidden">
+
+      <!-- Info Banner -->
+      <div class="bg-cyan-500/5 border border-cyan-500/20 rounded-xl p-4 mb-6 flex items-start gap-4">
+        <div class="w-8 h-8 rounded-lg bg-cyan-500/15 flex items-center justify-center shrink-0 mt-0.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#06b6d4" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
-        <div>
-          <h3 class="font-bold text-brand-400 text-sm mb-1">Interactive Sandbox</h3>
+        <div class="flex-1">
+          <h3 class="font-bold text-cyan-400 text-sm mb-1">Interactive SQL Sandbox</h3>
           <p class="text-slate-400 text-xs leading-relaxed">
-            This playground connects to an in-memory SQL database. It is pre-seeded with a <code class="text-slate-300">users</code> table. Write standard SQL queries below to manipulate the data. If you break it, just click Reset!
+            Pre-loaded with <strong class="text-slate-300">users</strong>, <strong class="text-slate-300">posts</strong>, and <strong class="text-slate-300">comments</strong> tables. Use the preset buttons to explore queries, or write your own SQL from scratch.
           </p>
         </div>
-        <button onclick="resetDb()" class="ml-auto shrink-0 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors">
-          ↺ Reset Database
-        </button>
+        <div id="lab-connection-badge" class="shrink-0 flex items-center gap-1.5 bg-slate-900/80 border border-slate-800 rounded-full px-3 py-1 text-[10px] font-mono text-slate-500">
+          <span id="lab-dot" class="w-1.5 h-1.5 rounded-full bg-slate-600"></span>
+          <span id="lab-service">—</span>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 h-[500px]">
-        
+      <!-- Preset Queries -->
+      <div class="mb-4 flex flex-wrap gap-2">
+        <span class="text-xs text-slate-500 font-medium flex items-center">Presets:</span>
+        <button onclick="setPreset('select_users')"    class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">SELECT users</button>
+        <button onclick="setPreset('select_posts')"    class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">SELECT posts</button>
+        <button onclick="setPreset('join_posts_users')" class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">JOIN posts ← users</button>
+        <button onclick="setPreset('join_comments')"   class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">JOIN comments</button>
+        <button onclick="setPreset('insert_user')"     class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">INSERT user</button>
+        <button onclick="setPreset('update_user')"     class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">UPDATE user</button>
+        <button onclick="setPreset('delete_user')"     class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">DELETE user</button>
+        <button onclick="setPreset('where_clause')"    class="preset-btn text-[10px] font-mono text-slate-400 bg-slate-900/60 px-3 py-1.5 rounded-lg">WHERE clause</button>
+      </div>
+
+      <!-- Split Panel -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5" style="min-height: 480px;">
+
         <!-- LEFT: SQL Editor -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-2.5 flex justify-between items-center">
-            <span class="text-xs font-mono text-slate-400">Query Editor</span>
-            <div class="flex gap-2">
-              <button onclick="insertTemplate('SELECT * FROM users;')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">SELECT</button>
-              <button onclick="insertTemplate('INSERT INTO users (name, email, age) VALUES (\'David\', \'david@example.com\', 30);')" class="text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-1 rounded text-slate-400 font-mono">INSERT</button>
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+          <!-- Editor header -->
+          <div class="border-b border-slate-800/60 bg-slate-950/40 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div class="flex gap-1.5">
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-slate-700"></div>
+              </div>
+              <span class="text-[10px] font-mono text-slate-500 ml-1">query.sql</span>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <kbd class="text-[9px] font-mono text-slate-600 bg-slate-800/60 border border-slate-700 px-1.5 py-0.5 rounded">Ctrl</kbd>
+              <span class="text-slate-600 text-[9px]">+</span>
+              <kbd class="text-[9px] font-mono text-slate-600 bg-slate-800/60 border border-slate-700 px-1.5 py-0.5 rounded">Enter</kbd>
+              <span class="text-[9px] text-slate-600 ml-1">to run</span>
             </div>
           </div>
-          <div class="flex-1 p-4 relative">
-            <textarea id="sql-input" class="w-full h-full bg-transparent text-sm font-mono text-slate-300 outline-none resize-none" placeholder="Type your SQL query here...
 
-Try:
-SELECT * FROM users;"></textarea>
+          <!-- Textarea -->
+          <div class="flex-1 p-4 relative">
+            <textarea
+              id="sql-input"
+              class="sql-editor w-full h-full bg-transparent text-sm font-mono text-slate-200 outline-none resize-none leading-relaxed"
+              placeholder="-- Write your SQL query here...
+-- Example:
+SELECT * FROM users;
+
+-- Or try:
+SELECT posts.title, users.username
+FROM posts
+JOIN users ON posts.user_id = users.id;"
+              spellcheck="false"
+            ></textarea>
           </div>
-          <div class="p-4 border-t border-slate-800/60 bg-slate-950/50 flex justify-end">
-            <button onclick="runQuery()" class="btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-6 py-2 rounded-lg flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+
+          <!-- Run Button -->
+          <div class="p-4 border-t border-slate-800/60 bg-slate-950/30 flex items-center justify-between">
+            <span class="text-[10px] text-slate-600 font-mono">SELECT, INSERT, UPDATE, DELETE allowed</span>
+            <button onclick="runQuery()" id="run-btn" class="btn-primary text-white text-sm font-semibold px-5 py-2.5 rounded-xl flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
               Run Query
             </button>
           </div>
         </div>
 
         <!-- RIGHT: Results -->
-        <div class="bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-3 flex justify-between items-center">
-            <span class="text-xs font-mono text-slate-400">Results</span>
-            <span id="query-status" class="text-xs font-mono text-slate-500">Ready</span>
-          </div>
-          
-          <div class="flex-1 overflow-auto p-0" id="results-container">
-            <div class="flex items-center justify-center h-full text-slate-500 text-sm italic">
-              Run a query to see results.
+        <div class="bg-slate-900/70 border border-slate-800 rounded-2xl flex flex-col overflow-hidden">
+          <!-- Results header -->
+          <div class="border-b border-slate-800/60 bg-slate-950/40 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              <span class="text-[10px] font-mono text-slate-500">Results</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span id="row-count-badge" class="hidden text-[10px] font-mono text-slate-500 bg-slate-800/60 px-2 py-0.5 rounded-full"></span>
+              <span id="query-status" class="text-[10px] font-mono text-slate-600">Ready</span>
             </div>
           </div>
-        </div>
 
+          <!-- Results content -->
+          <div class="flex-1 overflow-auto" id="results-container">
+            <div class="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+              <div class="w-12 h-12 rounded-2xl bg-slate-800/60 border border-slate-700 flex items-center justify-center mb-4">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+              </div>
+              <p class="text-slate-500 text-sm">Run a query to see results</p>
+              <p class="text-slate-600 text-xs mt-1">Select a preset above or write your own SQL</p>
+            </div>
+          </div>
+
+          <!-- Status bar -->
+          <div class="border-t border-slate-800/60 bg-slate-950/30 px-4 py-2 flex items-center justify-between">
+            <span id="status-bar-text" class="text-[10px] font-mono text-slate-600">—</span>
+            <span id="exec-time" class="text-[10px] font-mono text-slate-700"></span>
+          </div>
+        </div>
       </div>
     </div>
 
     <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  QUIZ VIEW                                                            -->
+    <!--  QUIZ TAB                                                            -->
     <!-- ════════════════════════════════════════════════════════════════════ -->
     <div id="view-quiz" class="hidden max-w-2xl mx-auto">
       <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold mb-2">SQL Knowledge Check</h2>
-        <p class="text-slate-500 text-sm">7 questions · Select an answer to get instant feedback</p>
+        <div class="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full px-4 py-1.5 text-cyan-400 text-xs font-semibold mb-4">
+          🧠 Knowledge Check
+        </div>
+        <h2 class="text-2xl font-bold mb-2 text-slate-100">SQL Fundamentals Quiz</h2>
+        <p class="text-slate-500 text-sm">7 questions · Select an answer for instant feedback</p>
       </div>
-      <div id="quiz-body" class="space-y-6"></div>
-      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
-        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
-        <button onclick="initQuiz()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all btn">Retake Quiz</button>
+
+      <!-- Progress bar -->
+      <div class="mb-6 bg-slate-800/60 rounded-full h-1.5 overflow-hidden">
+        <div id="quiz-progress" class="h-full bg-gradient-to-r from-cyan-600 to-cyan-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+
+      <div id="quiz-body" class="space-y-5"></div>
+
+      <!-- Final Score -->
+      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-8 text-center">
+        <div id="quiz-score-ring" class="w-24 h-24 rounded-full border-4 border-cyan-500/30 flex items-center justify-center mx-auto mb-4">
+          <div class="text-center">
+            <p id="quiz-score-text" class="text-2xl font-black text-cyan-400"></p>
+            <p class="text-slate-500 text-[10px]">score</p>
+          </div>
+        </div>
+        <p id="quiz-grade-text" class="text-slate-300 font-semibold mb-2"></p>
+        <p id="quiz-subtext" class="text-slate-500 text-sm mb-6"></p>
+        <div class="flex justify-center gap-3">
+          <button onclick="initQuiz()" class="btn-primary text-white px-6 py-2.5 rounded-xl font-semibold text-sm">
+            Retake Quiz
+          </button>
+          <button onclick="switchTab('concepts')" class="btn-ghost text-slate-400 border border-slate-700 px-6 py-2.5 rounded-xl font-semibold text-sm">
+            Review Concepts
+          </button>
+        </div>
       </div>
     </div>
 
@@ -291,7 +594,8 @@ SELECT * FROM users;"></textarea>
   // ═══════════════════════════════════════════════════════════════════════════
   //  TAB SWITCHER
   // ═══════════════════════════════════════════════════════════════════════════
-  const TABS = ['concepts', 'explorer', 'quiz'];
+  const TABS = ['concepts', 'lab', 'quiz'];
+
   function switchTab(target) {
     TABS.forEach(t => {
       document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
@@ -300,163 +604,288 @@ SELECT * FROM users;"></textarea>
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  SQL PLAYGROUND
+  //  DB STATUS CHECK
   // ═══════════════════════════════════════════════════════════════════════════
-  function insertTemplate(sql) {
-    document.getElementById('sql-input').value = sql;
-  }
-
-  async function resetDb() {
+  async function checkDbStatus() {
     try {
-      const res = await fetch('/api/reset', { method: 'POST' });
-      if (res.ok) {
-        document.getElementById('query-status').innerHTML = '<span class="text-emerald-400">Database reset successful.</span>';
-        document.getElementById('results-container').innerHTML = '<div class="flex items-center justify-center h-full text-slate-500 text-sm italic">Run a query to see results.</div>';
+      const res  = await fetch('/api/status');
+      const data = await res.json();
+
+      const dot  = document.getElementById('db-status-dot');
+      const text = document.getElementById('db-status-text');
+      const labDot  = document.getElementById('lab-dot');
+      const labSvc  = document.getElementById('lab-service');
+
+      if (data.connected) {
+        const isNeon = data.service.includes('Neon') || data.service.includes('PostgreSQL');
+        const color  = isNeon ? 'bg-cyan-400 status-connected' : 'bg-amber-400';
+        const icon   = isNeon ? '🟢' : '🟡';
+
+        dot.className  = `w-2 h-2 rounded-full ${color} inline-block`;
+        text.textContent = `${icon} ${data.service}`;
+        text.className = isNeon ? 'text-cyan-400 font-mono text-xs' : 'text-amber-400 font-mono text-xs';
+
+        labDot.className = `w-1.5 h-1.5 rounded-full ${isNeon ? 'bg-cyan-400' : 'bg-amber-400'}`;
+        labSvc.textContent = data.service;
+        labSvc.className   = isNeon ? 'text-cyan-400' : 'text-amber-400';
+      } else {
+        dot.className  = 'w-2 h-2 rounded-full bg-rose-400 inline-block';
+        text.textContent = '🔴 Disconnected';
+        text.className = 'text-rose-400 font-mono text-xs';
       }
-    } catch(e) {
-      alert("Failed to reach server. Make sure 'pnpm dev' is running.");
+    } catch (e) {
+      const dot  = document.getElementById('db-status-dot');
+      const text = document.getElementById('db-status-text');
+      dot.className  = 'w-2 h-2 rounded-full bg-slate-600 inline-block';
+      text.textContent = 'Server offline';
+      text.className = 'text-slate-500 font-mono text-xs';
     }
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  PRESET QUERIES
+  // ═══════════════════════════════════════════════════════════════════════════
+  const PRESETS = {
+    select_users:    `SELECT * FROM users;`,
+    select_posts:    `SELECT * FROM posts;`,
+    join_posts_users: `SELECT
+  posts.id,
+  posts.title,
+  users.username AS author,
+  posts.created_at
+FROM posts
+JOIN users ON posts.user_id = users.id
+ORDER BY posts.created_at DESC;`,
+    join_comments:   `SELECT
+  comments.body,
+  users.username AS commenter,
+  posts.title   AS on_post
+FROM comments
+JOIN users ON comments.user_id = users.id
+JOIN posts ON comments.post_id = posts.id;`,
+    insert_user:     `INSERT INTO users (username, email)
+VALUES ('carol_db', 'carol@example.com');`,
+    update_user:     `UPDATE users
+SET email = 'alice_updated@example.com'
+WHERE username = 'alice_dev';`,
+    delete_user:     `DELETE FROM users
+WHERE username = 'carol_db';`,
+    where_clause:    `SELECT *
+FROM posts
+WHERE user_id = 1
+ORDER BY created_at DESC;`,
+  };
+
+  function setPreset(key) {
+    document.getElementById('sql-input').value = PRESETS[key] || '';
+    document.getElementById('sql-input').focus();
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  RENDER TABLE
+  // ═══════════════════════════════════════════════════════════════════════════
   function renderTable(rows) {
     if (!rows || rows.length === 0) {
-      return '<div class="p-4 text-sm text-slate-400 italic">No rows returned.</div>';
+      return `<div class="flex flex-col items-center justify-center h-full py-10 text-center">
+        <div class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center mb-3 text-lg">📭</div>
+        <p class="text-slate-500 text-sm">No rows returned</p>
+      </div>`;
     }
-    
+
     const headers = Object.keys(rows[0]);
-    let html = '<table class="w-full text-left border-collapse text-sm"><thead class="bg-slate-950/80 sticky top-0 border-b border-slate-700">';
-    html += '<tr>' + headers.map(h => `<th class="p-3 font-mono text-xs text-brand-400">${h}</th>`).join('') + '</tr></thead>';
-    html += '<tbody class="divide-y divide-slate-800/60">';
-    
-    rows.forEach(row => {
-      html += '<tr class="hover:bg-slate-800/30">';
+    let html = `<table class="w-full text-left text-xs">
+      <thead class="bg-slate-950/80 sticky top-0 border-b border-slate-800">
+        <tr>
+          ${headers.map(h => `<th class="px-4 py-3 font-mono font-semibold text-cyan-400 whitespace-nowrap">${escHtml(h)}</th>`).join('')}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-800/50">`;
+
+    rows.forEach((row, idx) => {
+      html += `<tr class="${idx % 2 === 0 ? '' : 'bg-slate-800/10'} hover:bg-cyan-500/5 transition-colors">`;
       headers.forEach(h => {
-        const val = row[h] === null ? '<span class="text-slate-500 italic">null</span>' : row[h];
-        html += `<td class="p-3 text-slate-300 font-mono text-xs">${val}</td>`;
+        const val = row[h] === null || row[h] === undefined
+          ? `<span class="text-slate-600 italic">null</span>`
+          : `<span class="text-slate-200">${escHtml(String(row[h]))}</span>`;
+        html += `<td class="px-4 py-2.5 font-mono whitespace-nowrap">${val}</td>`;
       });
-      html += '</tr>';
+      html += `</tr>`;
     });
-    
-    html += '</tbody></table>';
+
+    html += `</tbody></table>`;
     return html;
   }
 
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  RUN QUERY
+  // ═══════════════════════════════════════════════════════════════════════════
   async function runQuery() {
-    const input = document.getElementById('sql-input').value;
-    const statusEl = document.getElementById('query-status');
-    const resultsEl = document.getElementById('results-container');
-    
+    const input      = document.getElementById('sql-input').value;
+    const statusEl   = document.getElementById('query-status');
+    const resultsEl  = document.getElementById('results-container');
+    const statusBar  = document.getElementById('status-bar-text');
+    const rowBadge   = document.getElementById('row-count-badge');
+    const execTime   = document.getElementById('exec-time');
+    const runBtn     = document.getElementById('run-btn');
+
     if (!input.trim()) return;
 
-    statusEl.innerHTML = '<span class="text-amber-400">Executing...</span>';
-    
+    const t0 = Date.now();
+    runBtn.disabled = true;
+    runBtn.innerHTML = `<svg class="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Running…`;
+    statusEl.innerHTML = `<span class="text-amber-400">Executing…</span>`;
+    rowBadge.classList.add('hidden');
+
     try {
-      const res = await fetch('/api/execute', {
-        method: 'POST',
+      const res  = await fetch('/api/execute', {
+        method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: input })
+        body:    JSON.stringify({ query: input }),
       });
-      
       const data = await res.json();
-      
-      if (!res.ok || data.error) {
-        statusEl.innerHTML = '<span class="text-rose-400 font-bold">Error</span>';
-        resultsEl.innerHTML = `<div class="p-4 text-rose-400 font-mono text-sm bg-rose-500/10 border-l-4 border-rose-500 h-full">${data.error}</div>`;
+      const elapsed = Date.now() - t0;
+
+      runBtn.disabled = false;
+      runBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Query`;
+
+      if (!res.ok || !data.success) {
+        statusEl.innerHTML = `<span class="text-rose-400 font-semibold">Error</span>`;
+        statusBar.innerHTML = `<span class="text-rose-400">${escHtml(data.error || 'Unknown error')}</span>`;
+        resultsEl.innerHTML = `<div class="p-5">
+          <div class="bg-rose-500/8 border border-rose-500/20 rounded-xl p-4">
+            <div class="flex items-start gap-3">
+              <span class="text-rose-400 text-lg mt-0.5">⚠️</span>
+              <div>
+                <p class="text-rose-400 font-semibold text-sm mb-1">SQL Error</p>
+                <code class="text-rose-300 font-mono text-xs leading-relaxed">${escHtml(data.error || 'Unknown error')}</code>
+              </div>
+            </div>
+          </div>
+        </div>`;
         return;
       }
 
-      statusEl.innerHTML = '<span class="text-emerald-400 font-bold">Success</span>';
-      
+      statusEl.innerHTML = `<span class="text-emerald-400 font-semibold">✓ OK</span>`;
+      execTime.textContent = `${elapsed}ms`;
+
       if (data.type === 'read') {
-        resultsEl.innerHTML = renderTable(data.data);
+        const count = data.data.length;
+        statusBar.textContent = `${count} row${count !== 1 ? 's' : ''} returned`;
+        rowBadge.textContent  = `${count} rows`;
+        rowBadge.classList.remove('hidden');
+        resultsEl.innerHTML   = renderTable(data.data);
       } else {
-        resultsEl.innerHTML = `<div class="p-6 flex flex-col items-center justify-center h-full text-center">
-          <div class="w-12 h-12 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl mb-3">✓</div>
-          <p class="text-slate-200 font-medium">${data.message}</p>
-          <p class="text-slate-500 text-sm mt-2">Run <code class="text-brand-400">SELECT * FROM users;</code> to see the changes.</p>
+        const changed = data.rowCount;
+        statusBar.textContent = `${changed} row${changed !== 1 ? 's' : ''} affected`;
+        resultsEl.innerHTML   = `<div class="flex flex-col items-center justify-center h-full text-center px-6 py-12">
+          <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4 text-2xl">✅</div>
+          <p class="text-slate-200 font-semibold mb-1">Query executed successfully</p>
+          <p class="text-slate-500 text-sm">${changed} row${changed !== 1 ? 's' : ''} affected · ${elapsed}ms</p>
+          <p class="text-slate-600 text-xs mt-3">Run <code class="text-cyan-400">SELECT * FROM users;</code> to see changes</p>
         </div>`;
       }
-      
-    } catch(e) {
-      statusEl.innerHTML = '<span class="text-rose-400 font-bold">Network Error</span>';
-      resultsEl.innerHTML = '<div class="p-4 text-rose-400 text-sm">Failed to connect to server. Is it running?</div>';
+    } catch (e) {
+      runBtn.disabled = false;
+      runBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Run Query`;
+      statusEl.innerHTML = `<span class="text-rose-400 font-semibold">Network Error</span>`;
+      statusBar.textContent = 'Could not reach server';
+      resultsEl.innerHTML   = `<div class="flex flex-col items-center justify-center h-full text-center px-6 py-8">
+        <div class="text-3xl mb-3">🔌</div>
+        <p class="text-rose-400 font-semibold text-sm mb-1">Cannot reach server</p>
+        <p class="text-slate-500 text-xs">Make sure <code class="text-slate-300">npm run dev</code> is running in the lesson directory.</p>
+      </div>`;
     }
   }
+
+  // Ctrl+Enter to run query
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      runQuery();
+    }
+  });
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  QUIZ
   // ═══════════════════════════════════════════════════════════════════════════
   const QUESTIONS = [
     {
-      q: "What does SQL stand for?",
-      opts: ["Server Query Link", "Structured Query Language", "System Quick Language", "Synchronous Query Logic"],
-      ans: 1,
-      exp: "SQL is the standard programming language specifically designed for storing, retrieving, and manipulating data in relational databases."
+      q:    'What does SQL stand for?',
+      opts: ['Server Query Link', 'Structured Query Language', 'System Quick Lookup', 'Synchronous Queue Logic'],
+      ans:  1,
+      exp:  'SQL (Structured Query Language) is the standard language for managing and querying data in relational databases. It was developed in the 1970s at IBM and became an ANSI standard in 1986.'
     },
     {
-      q: "Which command is used to extract data from a database?",
-      opts: ["EXTRACT", "GET", "SELECT", "PULL"],
-      ans: 2,
-      exp: "SELECT is the fundamental read operation in SQL. You use it to specify exactly which columns and rows you want to retrieve."
+      q:    'Which SQL command retrieves data from a table?',
+      opts: ['FETCH', 'GET', 'SELECT', 'PULL'],
+      ans:  2,
+      exp:  'SELECT is the fundamental read command in SQL. You specify the columns you want, the table to read from, and optional filters using WHERE.'
     },
     {
-      q: "What does the '*' mean in the statement: SELECT * FROM users?",
-      opts: ["Multiply", "All rows", "All columns", "Delete all"],
-      ans: 2,
-      exp: "The asterisk (*) is a wildcard that tells the database to return every column available in the table."
+      q:    'What is a Primary Key?',
+      opts: ['The most important table in the database', 'A password to access the database', 'A unique identifier for each row in a table', 'The first column in a table'],
+      ans:  2,
+      exp:  'A Primary Key is a column (or combination of columns) that uniquely identifies every row. No two rows can share the same Primary Key value. Usually it\'s an auto-incrementing integer like id = 1, 2, 3…'
     },
     {
-      q: "Which clause is crucial when running UPDATE or DELETE to avoid modifying the entire table?",
-      opts: ["WHERE", "ORDER BY", "LIMIT", "WHEN"],
-      ans: 0,
-      exp: "If you run 'DELETE FROM users;' without a WHERE clause, it will delete EVERY row in the table! Always use a WHERE clause to target specific records."
+      q:    'What does the WHERE clause do?',
+      opts: ['Sorts the result set', 'Creates a new table', 'Filters rows based on a condition', 'Joins two tables together'],
+      ans:  2,
+      exp:  'WHERE filters which rows are included in the result (for SELECT) or affected by the operation (for UPDATE/DELETE). Without it, every row is included!'
     },
     {
-      q: "What is a Primary Key?",
-      opts: ["The most important table in the database", "A password used to connect to the database", "A column (or set of columns) that uniquely identifies each row in a table", "The first column in any table"],
-      ans: 2,
-      exp: "A Primary Key ensures that no two rows can be identical. Usually, it's an auto-incrementing integer (like 'id = 1, 2, 3...')."
+      q:    'Which SQL command adds a new row to a table?',
+      opts: ['ADD ROW', 'INSERT INTO', 'CREATE ROW', 'APPEND'],
+      ans:  1,
+      exp:  'INSERT INTO is the SQL command for the "Create" part of CRUD. You specify the table name, the columns, and the VALUES to insert: INSERT INTO users (username, email) VALUES (\'alice\', \'a@x.com\');'
     },
     {
-      q: "Which CRUD operation does the SQL command 'INSERT INTO' represent?",
-      opts: ["Create", "Read", "Update", "Delete"],
-      ans: 0,
-      exp: "INSERT INTO creates a brand new row in a table."
+      q:    'What does a SQL JOIN do?',
+      opts: ['Deletes duplicate rows', 'Combines rows from two tables based on a related column', 'Creates a backup of a table', 'Sorts data alphabetically'],
+      ans:  1,
+      exp:  'A JOIN links two tables using a shared key (like user_id). For example: SELECT posts.title, users.username FROM posts JOIN users ON posts.user_id = users.id — this returns each post with its author\'s name.'
     },
     {
-      q: "PostgreSQL is an example of what type of software?",
-      opts: ["A frontend UI framework", "A Relational Database Management System (RDBMS)", "A NoSQL Document Store", "A cloud hosting provider"],
-      ans: 1,
-      exp: "PostgreSQL is a powerful, open-source RDBMS. Unlike NoSQL databases (like MongoDB) which store JSON documents, it stores data in strict, structured tables."
-    }
+      q:    'What HTTP status code means a new resource was successfully created?',
+      opts: ['200 OK', '204 No Content', '400 Bad Request', '201 Created'],
+      ans:  3,
+      exp:  '201 Created is the correct response when a POST request successfully creates a new resource. This is what your Express server should return after a successful INSERT INTO operation.'
+    },
   ];
 
   let quizAnswers = {};
-  let quizDone = false;
+  let quizDone    = false;
 
   function initQuiz() {
     quizAnswers = {};
-    quizDone = false;
+    quizDone    = false;
     document.getElementById('quiz-footer').classList.add('hidden');
+    document.getElementById('quiz-progress').style.width = '0%';
+
     const body = document.getElementById('quiz-body');
     body.innerHTML = QUESTIONS.map((q, qi) => `
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
-        <p class="font-medium text-slate-100 mb-4 leading-relaxed">
-          <span class="text-brand-400 font-mono mr-2">${qi + 1}.</span>${q.q}
-        </p>
-        <div class="space-y-2" id="qopts-${qi}">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 transition-all" id="qcard-${qi}">
+        <div class="flex items-start gap-3 mb-4">
+          <span class="w-7 h-7 rounded-lg bg-cyan-500/12 border border-cyan-500/20 flex items-center justify-center text-xs font-bold text-cyan-400 font-mono shrink-0 mt-0.5">${qi + 1}</span>
+          <p class="font-medium text-slate-100 leading-relaxed text-sm">${escHtml(q.q)}</p>
+        </div>
+        <div class="space-y-2 ml-10" id="qopts-${qi}">
           ${q.opts.map((opt, oi) => `
             <button
               onclick="selectAnswer(${qi}, ${oi})"
               id="opt-${qi}-${oi}"
-              class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"
+              class="quiz-opt w-full text-left flex items-center gap-3 px-4 py-3 border border-slate-800 rounded-xl text-sm text-slate-300"
             >
-              <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>
-              ${opt}
+              <span class="w-6 h-6 rounded-md border border-slate-700 flex items-center justify-center text-[10px] font-mono text-slate-500 shrink-0 font-bold" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65 + oi)}</span>
+              <span>${escHtml(opt)}</span>
             </button>
           `).join('')}
         </div>
-        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
+        <div id="exp-${qi}" class="hidden ml-10 mt-4 p-4 rounded-xl border border-slate-700/60 bg-slate-800/30 text-xs text-slate-400 leading-relaxed"></div>
       </div>
     `).join('');
   }
@@ -464,43 +893,80 @@ SELECT * FROM users;"></textarea>
   function selectAnswer(qi, oi) {
     if (quizDone || quizAnswers[qi] !== undefined) return;
     quizAnswers[qi] = oi;
-    const q = QUESTIONS[qi];
+    const q         = QUESTIONS[qi];
     const isCorrect = oi === q.ans;
 
+    // Style options
     for (let i = 0; i < q.opts.length; i++) {
       const btn = document.getElementById(`opt-${qi}-${i}`);
       const ico = document.getElementById(`opt-icon-${qi}-${i}`);
+      btn.disabled = true;
+
       if (i === q.ans) {
         btn.classList.add('correct');
         ico.textContent = '✓';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
+        ico.className   = 'w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
       } else if (i === oi && !isCorrect) {
         btn.classList.add('wrong');
         ico.textContent = '✗';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
+        ico.className   = 'w-6 h-6 rounded-md flex items-center justify-center text-[10px] font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
       }
-      btn.disabled = true;
     }
 
+    // Show explanation
     const expEl = document.getElementById(`exp-${qi}`);
-    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
+    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Not quite.'}</span>  ${escHtml(q.exp)}`;
     expEl.classList.remove('hidden');
 
-    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
+    // Update progress bar
+    const answered = Object.keys(quizAnswers).length;
+    document.getElementById('quiz-progress').style.width = `${(answered / QUESTIONS.length) * 100}%`;
+
+    if (answered === QUESTIONS.length) showFinalScore();
   }
 
   function showFinalScore() {
     quizDone = true;
     const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
-    const pct   = Math.round(score / QUESTIONS.length * 100);
-    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
-    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
+    const pct   = Math.round((score / QUESTIONS.length) * 100);
+
+    let grade, subtext;
+    if (pct >= 86) {
+      grade   = '🏆 Outstanding!';
+      subtext = 'You have a solid grasp of SQL fundamentals. Time to tackle the exercises!';
+    } else if (pct >= 71) {
+      grade   = '👍 Great Work!';
+      subtext = 'You\'re getting there. Review the concepts you missed and try again.';
+    } else if (pct >= 57) {
+      grade   = '📖 Keep Reviewing';
+      subtext = 'Go back through the Concepts tab and spend more time on the SQL Lab.';
+    } else {
+      grade   = '🔄 Start Over';
+      subtext = 'That\'s okay — SQL takes practice. Read through the Concepts tab carefully.';
+    }
+
+    document.getElementById('quiz-score-text').textContent = `${score}/${QUESTIONS.length}`;
     document.getElementById('quiz-grade-text').textContent = grade;
+    document.getElementById('quiz-subtext').textContent    = subtext;
+
+    const ring = document.getElementById('quiz-score-ring');
+    if (pct >= 86)      ring.style.borderColor = 'rgba(16,185,129,0.6)';
+    else if (pct >= 71) ring.style.borderColor = 'rgba(6,182,212,0.5)';
+    else if (pct >= 57) ring.style.borderColor = 'rgba(245,158,11,0.5)';
+    else                ring.style.borderColor = 'rgba(239,68,68,0.4)';
+
     document.getElementById('quiz-footer').classList.remove('hidden');
-    document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(() => {
+      document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════════════════════════
+  checkDbStatus();
   initQuiz();
   </script>
+
 </body>
 </html>

@@ -1,8 +1,7 @@
 {
   "name": "db-design-lesson",
   "version": "1.0.0",
-  "description": "Interactive Database Design & Relationships Explorer",
-  "main": "server.js",
+  "description": "Interactive Database Design & Relationships Explorer — Lesson 30",
   "type": "module",
   "scripts": {
     "start": "node server.js",
@@ -11,7 +10,9 @@
   "dependencies": {
     "better-sqlite3": "^11.1.2",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "dotenv": "^16.6.1",
+    "express": "^4.19.2",
+    "pg": "^8.21.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.0"

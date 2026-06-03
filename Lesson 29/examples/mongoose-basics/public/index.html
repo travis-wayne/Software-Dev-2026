@@ -1,19 +1,47 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson 29 — NoSQL & MongoDB Explorer</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mongoose Explorer — Lesson 29</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
           colors: {
-            brand: { 400: '#10b981', 500: '#059669', 600: '#047857' } /* MongoDB Green */
+            emerald: {
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            }
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'float': 'float 6s ease-in-out infinite',
+            'fade-in': 'fadeIn 0.4s ease-out',
+            'slide-up': 'slideUp 0.4s ease-out',
+          },
+          keyframes: {
+            float: {
+              '0%, 100%': { transform: 'translateY(0px)' },
+              '50%': { transform: 'translateY(-12px)' },
+            },
+            fadeIn: {
+              from: { opacity: '0' },
+              to: { opacity: '1' },
+            },
+            slideUp: {
+              from: { opacity: '0', transform: 'translateY(20px)' },
+              to: { opacity: '1', transform: 'translateY(0)' },
+            },
           }
         }
       }
@@ -21,511 +49,834 @@
   </script>
   <style>
     body { font-family: 'Inter', sans-serif; }
-    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* Glow blobs */
+    .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.12; pointer-events: none; z-index: 0; }
+
+    /* Glassmorphism */
+    .glass {
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(51, 65, 85, 0.6);
+      backdrop-filter: blur(12px);
+    }
+    .glass-lighter {
+      background: rgba(30, 41, 59, 0.5);
+      border: 1px solid rgba(71, 85, 105, 0.4);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Tab active */
+    .tab-btn.active {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+      box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+    }
+    .tab-panel { display: none; animation: fadeIn 0.35s ease-out; }
+    .tab-panel.active { display: block; }
+
+    /* Syntax highlight — static token classes */
+    .tok-kw    { color: #86efac; } /* emerald-300 */
+    .tok-str   { color: #fcd34d; } /* amber-300   */
+    .tok-num   { color: #f9a8d4; } /* pink-300    */
+    .tok-fn    { color: #93c5fd; } /* blue-300    */
+    .tok-com   { color: #64748b; font-style: italic; }
+    .tok-punc  { color: #94a3b8; }
+    .tok-obj   { color: #c4b5fd; } /* violet-300  */
+
+    /* JSON display */
+    .json-key   { color: #86efac; }
+    .json-str   { color: #fcd34d; }
+    .json-num   { color: #f9a8d4; }
+    .json-bool  { color: #93c5fd; }
+    .json-null  { color: #94a3b8; }
+    .json-punc  { color: #94a3b8; }
+
+    /* Quiz */
+    .quiz-opt { cursor: pointer; transition: all 0.2s; }
+    .quiz-opt:hover { border-color: #10b981; background: rgba(16,185,129,0.08); }
+    .quiz-opt.correct { background: rgba(16,185,129,0.15); border-color: #10b981; }
+    .quiz-opt.wrong   { background: rgba(239,68,68,0.12); border-color: #ef4444; }
+    .quiz-opt.disabled { pointer-events: none; }
 
     /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0f172a; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #10b981; }
 
-    /* Tab underline animation */
-    .tab-btn { position: relative; transition: color 0.2s; }
-    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
-    .tab-btn.active { color: #10b981; }
-    .tab-btn.active::after { background: #059669; }
-    .tab-btn:not(.active) { color: #64748b; }
-    .tab-btn:not(.active):hover { color: #94a3b8; }
-
-    /* Concept card */
-    .concept-card { transition: border-color 0.2s, transform 0.15s; }
-    .concept-card:hover { border-color: #059669; transform: translateY(-2px); }
-
-    /* Buttons */
-    .btn { transition: all 0.15s; }
-    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
-    .btn:active { transform: translateY(0); }
-
-    /* Quiz option */
-    .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
-    .quiz-opt:hover { background: rgba(16,185,129,0.08); border-color: #059669; }
-    .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
-    .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
-    
-    .json-key { color: #38bdf8; }
-    .json-string { color: #a3e635; }
-    .json-number { color: #f472b6; }
-    .json-boolean { color: #fbbf24; }
+    /* Status dot pulse */
+    @keyframes statusPulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+      50% { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+    }
+    .status-dot { animation: statusPulse 2s ease-in-out infinite; }
   </style>
 </head>
-<body class="bg-[#0b1120] text-slate-200 min-h-screen">
+<body class="bg-[#0b1120] text-slate-200 min-h-screen relative overflow-x-hidden">
 
-  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-emerald-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-green-500/5 rounded-full blur-3xl"></div>
-  </div>
+  <!-- ════════════ AMBIENT GLOW BLOBS ════════════ -->
+  <div class="blob w-[600px] h-[600px] bg-emerald-500 top-[-200px] left-[-200px]"></div>
+  <div class="blob w-[500px] h-[500px] bg-teal-600 bottom-[-100px] right-[-150px]"></div>
+  <div class="blob w-[300px] h-[300px] bg-emerald-400 top-[40%] left-[50%]"></div>
 
-  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
-  <header class="border-b border-slate-800/80 bg-[#0b1120]/80 backdrop-blur-xl sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C7.5 2 4 5.5 4 10s5 10 8 12c3-2 8-7.5 8-12s-3.5-8-8-8z"/><path d="M12 2v20"/></svg>
+  <!-- ════════════ HEADER ════════════ -->
+  <header class="relative z-10 glass border-b border-slate-800 sticky top-0">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 gap-4 flex-wrap">
+
+        <!-- Brand -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3s0 3 5 3 5-3 5-3M5 21s0-3 5-3 5 3 5 3M5 12s0-3 5-3 5 3 5 3M5 3v18M15 3v18"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-lg font-bold text-white leading-tight">Mongoose Explorer</h1>
+            <p class="text-xs text-slate-400 leading-tight">MongoDB &amp; Mongoose ODM</p>
+          </div>
+          <span class="ml-2 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            Lesson 29
+          </span>
         </div>
-        <div>
-          <span class="font-bold text-sm text-slate-100">NoSQL & Mongoose Explorer</span>
-          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 29</span>
+
+        <!-- Tab Nav -->
+        <nav class="flex items-center gap-1 bg-slate-900/60 rounded-xl p-1 border border-slate-800">
+          <button onclick="switchTab('concepts')" data-tab="concepts" class="tab-btn active px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+            📖 Concepts
+          </button>
+          <button onclick="switchTab('playground')" data-tab="playground" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all duration-200">
+            🍃 CRUD Playground
+          </button>
+          <button onclick="switchTab('quiz')" data-tab="quiz" class="tab-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white transition-all duration-200">
+            🧠 Quiz
+          </button>
+        </nav>
+
+        <!-- DB Status Badge -->
+        <div id="db-status" class="flex items-center gap-2 px-3 py-1.5 rounded-lg glass-lighter text-xs font-mono flex-shrink-0">
+          <div class="w-2 h-2 rounded-full bg-slate-500"></div>
+          <span class="text-slate-400">Checking DB…</span>
         </div>
+
       </div>
-      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
-        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
-        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">🍃 Mongoose CRUD</button>
-        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
-      </nav>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+  <!-- ════════════ MAIN CONTENT ════════════ -->
+  <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  CONCEPTS VIEW                                                       -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-concepts" class="space-y-8">
+
+    <!-- ══════════════════════════════════════════
+         TAB 1 — CONCEPTS
+    ══════════════════════════════════════════ -->
+    <div id="tab-concepts" class="tab-panel active">
 
       <!-- Hero -->
-      <div class="text-center py-8">
-        <div class="inline-flex items-center gap-2 bg-brand-500/10 border border-brand-500/20 rounded-full px-4 py-1.5 text-brand-400 text-xs font-medium mb-4">
-          Session 29 · Flexible Data
+      <div class="relative rounded-3xl overflow-hidden mb-10 p-10 text-center"
+           style="background: linear-gradient(135deg, rgba(16,185,129,0.15) 0%, rgba(5,150,105,0.08) 50%, rgba(11,17,32,0) 100%); border: 1px solid rgba(16,185,129,0.2);">
+        <div class="animate-float inline-block mb-4">
+          <div class="w-20 h-20 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-2xl shadow-emerald-500/30">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-11 h-11 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3s0 3 5 3 5-3 5-3M5 21s0-3 5-3 5 3 5 3M5 12s0-3 5-3 5 3 5 3M5 3v18M15 3v18"/>
+            </svg>
+          </div>
         </div>
-        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-300 bg-clip-text text-transparent">
-          MongoDB & Mongoose
-        </h1>
-        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-          Learn how to break free from strict tables. Store your data as flexible JSON documents, and use Mongoose to bring structure back when you need it.
+        <h2 class="text-4xl font-extrabold text-white mb-3">MongoDB &amp; Mongoose</h2>
+        <p class="text-slate-300 text-lg max-w-2xl mx-auto mb-6">
+          Move beyond rigid tables. Store data as flexible JSON documents, validated and shaped by Mongoose schemas.
         </p>
+        <button onclick="switchTab('playground')"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/30 hover:scale-105 transition-all duration-200">
+          🍃 Launch CRUD Playground
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        </button>
       </div>
 
-      <!-- Core Concepts -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <!-- Documents -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-indigo-500/15 border border-indigo-500/25 rounded-xl flex items-center justify-center mb-4 text-indigo-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          </div>
-          <h3 class="font-bold text-slate-100 mb-2">Documents (Not Rows)</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            Instead of rows in a table, MongoDB stores data in BSON (Binary JSON) documents. It looks and feels exactly like a JavaScript Object.
+      <!-- Concept Cards -->
+      <div class="grid md:grid-cols-3 gap-6 mb-10">
+
+        <!-- Card 1 -->
+        <div class="glass rounded-2xl p-6 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mb-4 text-2xl">🆚</div>
+          <h3 class="text-lg font-bold text-white mb-2">NoSQL vs SQL</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            SQL stores data in fixed tables with rigid schemas. MongoDB stores <span class="text-emerald-400 font-medium">flexible JSON documents</span> — fields can vary per record, and nesting is natural.
           </p>
-        </div>
-        
-        <!-- Collections -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-amber-500/15 border border-amber-500/25 rounded-xl flex items-center justify-center mb-4 text-amber-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <div class="mt-4 pt-4 border-t border-slate-800">
+            <p class="text-xs text-slate-500 font-mono">NoSQL = <span class="text-emerald-400">"Not Only SQL"</span></p>
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">Collections (Not Tables)</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            Instead of rigid tables, documents are grouped into <strong>Collections</strong>. One document in a collection can have completely different fields than another!
-          </p>
         </div>
 
-        <!-- _id -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-brand-500/15 border border-brand-500/25 rounded-xl flex items-center justify-center mb-4 text-brand-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <h3 class="font-bold text-slate-100 mb-2">The _id Field</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            MongoDB automatically generates a unique identifier called <code class="text-brand-400">_id</code> for every document. No need to worry about auto-incrementing integers.
+        <!-- Card 2 -->
+        <div class="glass rounded-2xl p-6 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mb-4 text-2xl">📄</div>
+          <h3 class="text-lg font-bold text-white mb-2">Documents &amp; Collections</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            A <span class="text-emerald-400 font-medium">Document</span> is a single JSON-like record (equivalent to a row). A <span class="text-emerald-400 font-medium">Collection</span> is a group of documents (equivalent to a table).
           </p>
+          <div class="mt-4 pt-4 border-t border-slate-800">
+            <p class="text-xs text-slate-500 font-mono">Collection = <span class="text-emerald-400">products</span>, Document = <span class="text-emerald-400">{…}</span></p>
+          </div>
         </div>
 
-        <!-- Mongoose -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-sky-500/15 border border-sky-500/25 rounded-xl flex items-center justify-center mb-4 text-sky-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"></polygon></svg>
-          </div>
-          <h3 class="font-bold text-slate-100 mb-2">Mongoose (ODM)</h3>
-          <p class="text-slate-400 text-xs leading-relaxed">
-            While MongoDB is schema-less, total freedom causes bugs. Mongoose adds schemas and validation directly into your Node.js code.
+        <!-- Card 3 -->
+        <div class="glass rounded-2xl p-6 hover:border-emerald-500/40 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10">
+          <div class="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mb-4 text-2xl">🧱</div>
+          <h3 class="text-lg font-bold text-white mb-2">Schema &amp; Models</h3>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            <span class="text-emerald-400 font-medium">Mongoose</span> adds a validation layer on top of MongoDB. A <span class="text-emerald-400 font-medium">Schema</span> defines the shape; a <span class="text-emerald-400 font-medium">Model</span> is the interface you query.
           </p>
+          <div class="mt-4 pt-4 border-t border-slate-800">
+            <p class="text-xs text-slate-500 font-mono">mongoose.<span class="text-emerald-400">model</span>(<span class="json-str">'Product'</span>, schema)</p>
+          </div>
         </div>
       </div>
 
-      <!-- Mongoose Syntax Translation -->
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-        <h3 class="font-bold text-slate-100 mb-1">Mongoose Cheat Sheet</h3>
-        <p class="text-slate-500 text-sm mb-4">How SQL queries translate to Mongoose Object methods in JavaScript.</p>
+      <!-- SQL vs MongoDB Comparison Table -->
+      <div class="glass rounded-2xl p-8 mb-10">
+        <h3 class="text-xl font-bold text-white mb-6 flex items-center gap-2">
+          <span class="text-emerald-400">⚡</span> SQL vs MongoDB — Terminology
+        </h3>
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
             <thead>
-              <tr class="border-b border-slate-800">
-                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">SQL Equivalent</th>
-                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3 pr-4">Mongoose Syntax</th>
-                <th class="text-left text-slate-500 font-medium text-xs uppercase tracking-wider pb-3">What it does</th>
+              <tr class="border-b border-slate-700">
+                <th class="text-left py-3 px-4 text-slate-300 font-semibold">SQL Concept</th>
+                <th class="text-left py-3 px-4 text-emerald-400 font-semibold">MongoDB Equivalent</th>
+                <th class="text-left py-3 px-4 text-slate-300 font-semibold">Description</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/60">
-              <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-3 pr-4 font-mono text-xs text-slate-400">INSERT INTO</td>
-                <td class="py-3 pr-4 font-mono font-bold text-xs text-brand-400">Product.create({...})</td>
-                <td class="py-3 text-xs text-slate-400">Validates object against Schema and saves to DB.</td>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Database</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Database</td>
+                <td class="py-3 px-4 text-slate-400">Top-level container for all data</td>
               </tr>
-              <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-3 pr-4 font-mono text-xs text-slate-400">SELECT * FROM</td>
-                <td class="py-3 pr-4 font-mono font-bold text-xs text-brand-400">Product.find()</td>
-                <td class="py-3 text-xs text-slate-400">Returns an array of all matching documents.</td>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Table</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Collection</td>
+                <td class="py-3 px-4 text-slate-400">Groups related documents/rows</td>
               </tr>
-              <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-3 pr-4 font-mono text-xs text-slate-400">SELECT * WHERE id=1</td>
-                <td class="py-3 pr-4 font-mono font-bold text-xs text-brand-400">Product.findById(id)</td>
-                <td class="py-3 text-xs text-slate-400">Returns a single document by its unique _id.</td>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Row</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Document</td>
+                <td class="py-3 px-4 text-slate-400">A single record of data</td>
               </tr>
-              <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-3 pr-4 font-mono text-xs text-slate-400">UPDATE x WHERE id=1</td>
-                <td class="py-3 pr-4 font-mono font-bold text-xs text-brand-400">Product.findByIdAndUpdate(id, data)</td>
-                <td class="py-3 text-xs text-slate-400">Finds document by ID and applies updates.</td>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Column</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Field</td>
+                <td class="py-3 px-4 text-slate-400">A single key-value pair in a document</td>
               </tr>
-              <tr class="hover:bg-slate-800/20 transition-colors">
-                <td class="py-3 pr-4 font-mono text-xs text-slate-400">DELETE FROM WHERE id=1</td>
-                <td class="py-3 pr-4 font-mono font-bold text-xs text-brand-400">Product.findByIdAndDelete(id)</td>
-                <td class="py-3 text-xs text-slate-400">Removes the document entirely.</td>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Primary Key</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">_id (ObjectId)</td>
+                <td class="py-3 px-4 text-slate-400">Unique identifier — auto-generated</td>
+              </tr>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">JOIN</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">$lookup / embed</td>
+                <td class="py-3 px-4 text-slate-400">Link data — or just embed it in the document</td>
+              </tr>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">INDEX</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Index</td>
+                <td class="py-3 px-4 text-slate-400">Speed up queries on specific fields</td>
+              </tr>
+              <tr class="hover:bg-emerald-500/5 transition-colors">
+                <td class="py-3 px-4 font-mono text-blue-300">Schema</td>
+                <td class="py-3 px-4 font-mono text-emerald-400">Mongoose Schema</td>
+                <td class="py-3 px-4 text-slate-400">Optional but recommended — enforced by Mongoose</td>
               </tr>
             </tbody>
           </table>
         </div>
       </div>
 
-      <div class="text-center py-4">
-        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-brand-500 hover:bg-brand-600 text-white font-semibold px-6 py-3 rounded-xl btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-          Open the Mongoose Explorer
+      <!-- Mongoose Schema Code Snippet -->
+      <div class="glass rounded-2xl p-8 mb-10">
+        <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+          <span class="text-emerald-400">📝</span> Mongoose Schema &amp; Model
+        </h3>
+        <p class="text-slate-400 text-sm mb-6">The Sheriff: defines rules before any data reaches MongoDB.</p>
+
+        <div class="bg-slate-950/80 rounded-xl p-6 border border-slate-800 overflow-x-auto">
+          <pre class="text-sm leading-7 font-mono"><span class="tok-kw">import</span> mongoose <span class="tok-kw">from</span> <span class="tok-str">'mongoose'</span><span class="tok-punc">;</span>
+
+<span class="tok-com">// 1. Define the shape (Schema)</span>
+<span class="tok-kw">const</span> productSchema <span class="tok-punc">=</span> <span class="tok-kw">new</span> mongoose<span class="tok-punc">.</span><span class="tok-fn">Schema</span><span class="tok-punc">({</span>
+  name<span class="tok-punc">:</span> <span class="tok-punc">{</span>
+    type<span class="tok-punc">:</span>     <span class="tok-obj">String</span><span class="tok-punc">,</span>
+    required<span class="tok-punc">:</span> <span class="tok-punc">[</span><span class="tok-num">true</span><span class="tok-punc">,</span> <span class="tok-str">'Product name is required'</span><span class="tok-punc">],</span>
+    trim<span class="tok-punc">:</span>     <span class="tok-num">true</span><span class="tok-punc">,</span>
+  <span class="tok-punc">},</span>
+  price<span class="tok-punc">:</span> <span class="tok-punc">{</span>
+    type<span class="tok-punc">:</span>     <span class="tok-obj">Number</span><span class="tok-punc">,</span>
+    required<span class="tok-punc">:</span> <span class="tok-num">true</span><span class="tok-punc">,</span>
+    min<span class="tok-punc">:</span>      <span class="tok-punc">[</span><span class="tok-num">0</span><span class="tok-punc">,</span> <span class="tok-str">'Price cannot be negative'</span><span class="tok-punc">],</span>
+  <span class="tok-punc">},</span>
+  description<span class="tok-punc">:</span> <span class="tok-punc">{</span>
+    type<span class="tok-punc">:</span>    <span class="tok-obj">String</span><span class="tok-punc">,</span>
+    default<span class="tok-punc">:</span> <span class="tok-str">''</span><span class="tok-punc">,</span>
+  <span class="tok-punc">},</span>
+  inStock<span class="tok-punc">:</span> <span class="tok-punc">{</span>
+    type<span class="tok-punc">:</span>    <span class="tok-obj">Boolean</span><span class="tok-punc">,</span>
+    default<span class="tok-punc">:</span> <span class="tok-num">true</span><span class="tok-punc">,</span>
+  <span class="tok-punc">},</span>
+<span class="tok-punc">},</span> <span class="tok-punc">{</span> timestamps<span class="tok-punc">:</span> <span class="tok-num">true</span> <span class="tok-punc">});</span>  <span class="tok-com">// adds createdAt & updatedAt automatically</span>
+
+<span class="tok-com">// 2. Compile into a Model (the query interface)</span>
+<span class="tok-kw">const</span> Product <span class="tok-punc">=</span> mongoose<span class="tok-punc">.</span><span class="tok-fn">model</span><span class="tok-punc">(</span><span class="tok-str">'Product'</span><span class="tok-punc">,</span> productSchema<span class="tok-punc">);</span>
+
+<span class="tok-com">// 3. Use it — Mongoose validates before hitting MongoDB</span>
+<span class="tok-kw">const</span> laptop <span class="tok-punc">=</span> <span class="tok-kw">await</span> Product<span class="tok-punc">.</span><span class="tok-fn">create</span><span class="tok-punc">({</span> name<span class="tok-punc">:</span> <span class="tok-str">'Laptop'</span><span class="tok-punc">,</span> price<span class="tok-punc">:</span> <span class="tok-num">999.99</span> <span class="tok-punc">});</span>
+<span class="tok-kw">const</span> all     <span class="tok-punc">=</span> <span class="tok-kw">await</span> Product<span class="tok-punc">.</span><span class="tok-fn">find</span><span class="tok-punc">();</span>
+<span class="tok-kw">await</span> Product<span class="tok-punc">.</span><span class="tok-fn">findByIdAndUpdate</span><span class="tok-punc">(</span>id<span class="tok-punc">,</span> <span class="tok-punc">{</span> price<span class="tok-punc">:</span> <span class="tok-num">849</span> <span class="tok-punc">},</span> <span class="tok-punc">{</span> new<span class="tok-punc">:</span> <span class="tok-num">true</span><span class="tok-punc">,</span> runValidators<span class="tok-punc">:</span> <span class="tok-num">true</span> <span class="tok-punc">});</span>
+<span class="tok-kw">await</span> Product<span class="tok-punc">.</span><span class="tok-fn">findByIdAndDelete</span><span class="tok-punc">(</span>id<span class="tok-punc">);</span></pre>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="text-center">
+        <button onclick="switchTab('playground')"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-bold rounded-2xl hover:shadow-2xl hover:shadow-emerald-500/30 hover:scale-105 transition-all duration-200 text-lg">
+          🍃 Try It Live — CRUD Playground
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  MONGOOSE EXPLORER VIEW                                              -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-explorer" class="hidden">
-      
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[550px]">
-        
-        <!-- LEFT: Controls -->
-        <div class="lg:col-span-5 bg-slate-900/80 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-950/50 px-4 py-3">
-            <span class="text-xs font-mono text-slate-400 font-bold uppercase tracking-wider">Mongoose Schema: Product</span>
-          </div>
-          
-          <div class="p-4 bg-slate-950/30 text-xs font-mono text-slate-400 border-b border-slate-800/60">
-<span class="text-brand-400">name</span>: String (Required)<br>
-<span class="text-brand-400">price</span>: Number (Required, Min: 0)<br>
-<span class="text-brand-400">description</span>: String (Default: "No description...")<br>
-<span class="text-brand-400">inStock</span>: Boolean (Default: true)
-          </div>
 
-          <div class="flex-1 p-4 overflow-y-auto space-y-6">
-            
-            <!-- Create Form -->
+    <!-- ══════════════════════════════════════════
+         TAB 2 — CRUD PLAYGROUND
+    ══════════════════════════════════════════ -->
+    <div id="tab-playground" class="tab-panel">
+
+      <!-- Page title row -->
+      <div class="flex items-center justify-between mb-8 flex-wrap gap-4">
+        <div>
+          <h2 class="text-2xl font-bold text-white">🍃 CRUD Playground</h2>
+          <p class="text-slate-400 text-sm mt-1">Create, read, update, and delete products in real time.</p>
+        </div>
+        <button onclick="resetDatabase()"
+          class="flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 text-sm font-medium hover:border-red-500/50 hover:text-red-400 transition-all duration-200">
+          ↺ Reset Database
+        </button>
+      </div>
+
+      <!-- Status Message -->
+      <div id="status-msg" class="hidden mb-6 px-5 py-3 rounded-xl text-sm font-mono border transition-all duration-300"></div>
+
+      <!-- Top row: CREATE + PRODUCTS LIST -->
+      <div class="grid lg:grid-cols-2 gap-6 mb-6">
+
+        <!-- CREATE FORM -->
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-base font-semibold text-white mb-5 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs text-emerald-400 font-bold">C</span>
+            Create Product
+          </h3>
+          <form onsubmit="createProduct(event)" class="space-y-4">
             <div>
-              <h4 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                Create New Product
-              </h4>
-              <div class="space-y-2">
-                <input type="text" id="add-name" placeholder="Name *" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-brand-500">
-                <input type="number" id="add-price" placeholder="Price *" step="0.01" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 outline-none focus:border-brand-500">
-                <button onclick="createProduct()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold py-2 rounded-lg transition-colors border border-slate-700">Product.create()</button>
-                <p class="text-[10px] text-slate-500 italic">Try creating without a name, or with a negative price to see Mongoose Validation errors!</p>
-              </div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Product Name <span class="text-red-400">*</span></label>
+              <input id="create-name" type="text" placeholder="e.g. Gaming Mouse" required
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all" />
             </div>
-
-            <!-- Delete Form -->
-            <div class="pt-4 border-t border-slate-800/60">
-              <h4 class="text-sm font-bold text-slate-200 mb-3 flex items-center gap-2">
-                <span class="w-2 h-2 rounded-full bg-rose-500"></span>
-                Delete Product
-              </h4>
-              <div class="flex gap-2">
-                <input type="text" id="del-id" placeholder="Paste _id here" class="flex-1 bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-sm text-slate-200 font-mono outline-none focus:border-rose-500">
-                <button onclick="deleteProduct()" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 text-xs font-bold px-3 py-2 rounded-lg transition-colors border border-rose-500/30">Delete</button>
-              </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Price (USD) <span class="text-red-400">*</span></label>
+              <input id="create-price" type="number" step="0.01" min="0" placeholder="e.g. 49.99" required
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all" />
             </div>
-
-          </div>
-
-          <div class="p-4 border-t border-slate-800/60 bg-slate-950/50 flex justify-between items-center">
-             <button onclick="resetDb()" class="text-xs text-slate-500 hover:text-slate-300 underline">Reset Database</button>
-             <button onclick="fetchProducts()" class="btn bg-brand-500 hover:bg-brand-600 text-white text-sm font-semibold px-4 py-2 rounded-lg flex items-center gap-2">
-              ↻ Refresh (Product.find)
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Description</label>
+              <textarea id="create-desc" rows="2" placeholder="Optional description…"
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 transition-all resize-none"></textarea>
+            </div>
+            <div class="flex items-center gap-3">
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input id="create-instock" type="checkbox" checked class="sr-only peer" />
+                <div class="w-9 h-5 bg-slate-700 peer-focus:ring-2 peer-focus:ring-emerald-500/30 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+              <span class="text-sm text-slate-300">In Stock</span>
+            </div>
+            <button type="submit"
+              class="w-full py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] transition-all duration-200 text-sm">
+              + Create Product
             </button>
-          </div>
+          </form>
         </div>
 
-        <!-- RIGHT: Results JSON -->
-        <div class="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-xl flex flex-col overflow-hidden">
-          <div class="border-b border-slate-800/60 bg-slate-900/50 px-4 py-3 flex justify-between items-center">
-            <span class="text-xs font-mono text-slate-400" id="json-title">Database State (MongoDB Collection)</span>
-            <span id="req-status" class="text-xs font-mono text-emerald-400">200 OK</span>
+        <!-- PRODUCTS LIST -->
+        <div class="glass rounded-2xl p-6 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-base font-semibold text-white flex items-center gap-2">
+              <span class="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-xs text-emerald-400 font-bold">R</span>
+              Current Products
+            </h3>
+            <button onclick="loadProducts()" class="text-xs text-slate-500 hover:text-emerald-400 transition-colors font-mono">⟳ Refresh</button>
           </div>
-          
-          <div class="flex-1 overflow-auto p-4">
-            <pre id="json-output" class="text-xs font-mono leading-relaxed break-all whitespace-pre-wrap text-slate-300"></pre>
+          <div id="products-list" class="flex-1 bg-slate-950/60 rounded-xl p-4 overflow-auto max-h-80 text-xs font-mono border border-slate-800">
+            <span class="text-slate-500">Loading…</span>
           </div>
         </div>
+      </div>
 
+      <!-- Bottom row: UPDATE + DELETE -->
+      <div class="grid lg:grid-cols-2 gap-6">
+
+        <!-- UPDATE FORM -->
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-base font-semibold text-white mb-5 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-xs text-blue-400 font-bold">U</span>
+            Update Product
+          </h3>
+          <form onsubmit="updateProduct(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Product _id <span class="text-red-400">*</span></label>
+              <input id="update-id" type="text" placeholder="Paste the _id from the list above" required
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all font-mono" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">New Price</label>
+              <input id="update-price" type="number" step="0.01" min="0" placeholder="e.g. 79.99"
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">New Name</label>
+              <input id="update-name" type="text" placeholder="Leave blank to keep existing"
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 transition-all" />
+            </div>
+            <button type="submit"
+              class="w-full py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] transition-all duration-200 text-sm">
+              ✎ Update Product
+            </button>
+          </form>
+        </div>
+
+        <!-- DELETE FORM -->
+        <div class="glass rounded-2xl p-6">
+          <h3 class="text-base font-semibold text-white mb-5 flex items-center gap-2">
+            <span class="w-7 h-7 rounded-lg bg-red-500/20 border border-red-500/30 flex items-center justify-center text-xs text-red-400 font-bold">D</span>
+            Delete Product
+          </h3>
+          <form onsubmit="deleteProduct(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1.5">Product _id <span class="text-red-400">*</span></label>
+              <input id="delete-id" type="text" placeholder="Paste the _id to delete" required
+                class="w-full bg-slate-900/80 border border-slate-700 rounded-lg px-3 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500/30 transition-all font-mono" />
+            </div>
+            <div class="p-3 rounded-lg bg-red-500/8 border border-red-500/20">
+              <p class="text-xs text-red-300">⚠️ This action is permanent. The document will be removed from the database.</p>
+            </div>
+            <button type="submit"
+              class="w-full py-2.5 bg-gradient-to-r from-red-600 to-red-700 text-white font-semibold rounded-lg hover:shadow-lg hover:shadow-red-500/20 hover:scale-[1.02] transition-all duration-200 text-sm">
+              🗑 Delete Product
+            </button>
+          </form>
+        </div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  QUIZ VIEW                                                            -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
-      <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold mb-2">MongoDB & Mongoose Check</h2>
-        <p class="text-slate-500 text-sm">7 questions · Select an answer to get instant feedback</p>
-      </div>
-      <div id="quiz-body" class="space-y-6"></div>
-      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
-        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
-        <button onclick="initQuiz()" class="bg-brand-500 hover:bg-brand-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all btn">Retake Quiz</button>
+
+    <!-- ══════════════════════════════════════════
+         TAB 3 — QUIZ
+    ══════════════════════════════════════════ -->
+    <div id="tab-quiz" class="tab-panel">
+
+      <div class="max-w-3xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-10">
+          <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-4 shadow-xl shadow-emerald-500/25 text-3xl">🧠</div>
+          <h2 class="text-3xl font-extrabold text-white mb-2">Knowledge Check</h2>
+          <p class="text-slate-400">7 questions on MongoDB &amp; Mongoose. Get instant feedback on every answer.</p>
+        </div>
+
+        <!-- Progress bar -->
+        <div class="glass rounded-2xl px-6 py-4 mb-8 flex items-center gap-4">
+          <span class="text-sm text-slate-400 font-medium whitespace-nowrap">Progress</span>
+          <div class="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div id="quiz-progress-bar" class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full transition-all duration-500" style="width:0%"></div>
+          </div>
+          <span id="quiz-progress-text" class="text-sm font-mono text-emerald-400 whitespace-nowrap">0 / 7</span>
+        </div>
+
+        <!-- Questions -->
+        <div id="quiz-container" class="space-y-6"></div>
+
+        <!-- Results -->
+        <div id="quiz-results" class="hidden mt-10 glass rounded-2xl p-8 text-center border-emerald-500/30">
+          <div id="quiz-trophy" class="text-6xl mb-4"></div>
+          <h3 class="text-2xl font-bold text-white mb-2" id="quiz-score-label"></h3>
+          <p class="text-slate-400 mb-6" id="quiz-score-sub"></p>
+          <div class="flex justify-center gap-4">
+            <button onclick="restartQuiz()"
+              class="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl hover:scale-105 hover:shadow-lg hover:shadow-emerald-500/25 transition-all duration-200">
+              ↺ Retake Quiz
+            </button>
+            <button onclick="switchTab('playground')"
+              class="px-6 py-3 glass rounded-xl text-slate-300 font-medium hover:text-white hover:border-emerald-500/40 transition-all duration-200">
+              🍃 Try Playground
+            </button>
+          </div>
+        </div>
       </div>
     </div>
 
   </main>
 
+  <!-- ════════════ SCRIPTS ════════════ -->
   <script>
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  TAB SWITCHER
-  // ═══════════════════════════════════════════════════════════════════════════
-  const TABS = ['concepts', 'explorer', 'quiz'];
-  function switchTab(target) {
-    TABS.forEach(t => {
-      document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
-      document.getElementById(`tab-${t}`).classList.toggle('active', t === target);
-    });
-    if(target === 'explorer') fetchProducts();
-  }
-
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  MONGOOSE EXPLORER LOGIC
-  // ═══════════════════════════════════════════════════════════════════════════
-  function syntaxHighlight(json) {
-    if (typeof json != 'string') {
-         json = JSON.stringify(json, undefined, 2);
-    }
-    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
-        var cls = 'json-number';
-        if (/^"/.test(match)) {
-            if (/:$/.test(match)) {
-                cls = 'json-key';
-            } else {
-                cls = 'json-string';
-            }
-        } else if (/true|false/.test(match)) {
-            cls = 'json-boolean';
-        } else if (/null/.test(match)) {
-            cls = 'text-slate-500';
-        }
-        return '<span class="' + cls + '">' + match + '</span>';
-    });
-  }
-
-  function setStatus(status, isError = false) {
-    const el = document.getElementById('req-status');
-    el.textContent = status;
-    el.className = `text-xs font-mono ${isError ? 'text-rose-400 font-bold' : 'text-emerald-400'}`;
-  }
-
-  async function fetchProducts() {
-    setStatus('Fetching...');
-    try {
-      const res = await fetch('/api/products');
-      const data = await res.json();
-      document.getElementById('json-output').innerHTML = syntaxHighlight(data);
-      setStatus(res.ok ? '200 OK (Product.find)' : `Error ${res.status}`, !res.ok);
-    } catch(e) {
-      setStatus('Network Error', true);
-    }
-  }
-
-  async function createProduct() {
-    const name = document.getElementById('add-name').value;
-    const price = document.getElementById('add-price').value;
-    
-    setStatus('Creating...');
-    try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name ? name : undefined, price: price ? parseFloat(price) : undefined })
+    // ── Tab switching ──────────────────────────────────────────
+    function switchTab(name) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active');
+        b.classList.add('text-slate-400');
+        b.classList.remove('text-white');
       });
-      const data = await res.json();
-      
-      document.getElementById('json-output').innerHTML = syntaxHighlight(data);
-      setStatus(res.ok ? '201 Created' : `400 Bad Request (Validation Error)`, !res.ok);
-      
-      if(res.ok) {
-        document.getElementById('add-name').value = '';
-        document.getElementById('add-price').value = '';
-        setTimeout(fetchProducts, 2000);
+      document.getElementById(`tab-${name}`).classList.add('active');
+      const btn = document.querySelector(`[data-tab="${name}"]`);
+      btn.classList.add('active');
+      btn.classList.remove('text-slate-400');
+      if (name === 'playground') loadProducts();
+    }
+
+    // ── DB Status ──────────────────────────────────────────────
+    async function loadStatus() {
+      try {
+        const res  = await fetch('/api/status');
+        const body = await res.json();
+        const el   = document.getElementById('db-status');
+        if (body.success && body.data.connected) {
+          const isAtlas = body.data.service.includes('Atlas');
+          el.innerHTML = `
+            <div class="w-2 h-2 rounded-full ${isAtlas ? 'bg-emerald-400 status-dot' : 'bg-yellow-400'}" ></div>
+            <span class="${isAtlas ? 'text-emerald-400' : 'text-yellow-400'}">
+              ${isAtlas ? '🟢' : '🟡'} ${body.data.service}
+              ${body.data.dbName ? `<span class="text-slate-500"> / ${body.data.dbName}</span>` : ''}
+            </span>`;
+        } else {
+          el.innerHTML = `<div class="w-2 h-2 rounded-full bg-red-400"></div><span class="text-red-400">🔴 Disconnected</span>`;
+        }
+      } catch {
+        document.getElementById('db-status').innerHTML = `<div class="w-2 h-2 rounded-full bg-red-400"></div><span class="text-red-400">🔴 Server offline</span>`;
       }
-    } catch(e) {
-      setStatus('Network Error', true);
     }
-  }
 
-  async function deleteProduct() {
-    const id = document.getElementById('del-id').value;
-    if (!id) return;
+    // ── JSON Highlight ─────────────────────────────────────────
+    function highlightJSON(obj) {
+      const json = JSON.stringify(obj, null, 2);
+      return json
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+        .replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>')
+        .replace(/: (true|false)/g, ': <span class="json-bool">$1</span>')
+        .replace(/: null/g, ': <span class="json-null">null</span>')
+        .replace(/: (-?\d+\.?\d*)/g, ': <span class="json-num">$1</span>');
+    }
 
-    setStatus('Deleting...');
-    try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
-      const data = await res.json();
-      
-      document.getElementById('json-output').innerHTML = syntaxHighlight(data);
-      setStatus(res.ok ? '200 OK (Deleted)' : `404 Not Found`, !res.ok);
-      
-      if(res.ok) {
-        document.getElementById('del-id').value = '';
-        setTimeout(fetchProducts, 2000);
+    // ── Products List ──────────────────────────────────────────
+    async function loadProducts() {
+      const el = document.getElementById('products-list');
+      el.innerHTML = '<span class="text-slate-500">Fetching…</span>';
+      try {
+        const res  = await fetch('/api/products');
+        const body = await res.json();
+        if (body.success && body.data.length > 0) {
+          el.innerHTML = body.data.map(p => `
+            <div class="mb-4 pb-4 border-b border-slate-800 last:border-0 last:mb-0 last:pb-0">
+              <pre class="whitespace-pre-wrap break-all leading-5">${highlightJSON(p)}</pre>
+            </div>`).join('');
+        } else if (body.success && body.data.length === 0) {
+          el.innerHTML = '<span class="text-slate-500">No products yet. Create one!</span>';
+        } else {
+          el.innerHTML = `<span class="text-red-400">${body.error}</span>`;
+        }
+      } catch (err) {
+        el.innerHTML = `<span class="text-red-400">Error: ${err.message}</span>`;
       }
-    } catch(e) {
-      setStatus('Network Error', true);
     }
-  }
 
-  async function resetDb() {
-    setStatus('Resetting...');
-    try {
-      await fetch('/api/reset', { method: 'POST' });
-      fetchProducts();
-    } catch(e) {
-      setStatus('Network Error', true);
+    // ── Status Message ─────────────────────────────────────────
+    function showStatus(msg, ok = true) {
+      const el = document.getElementById('status-msg');
+      el.textContent = msg;
+      el.className = `mb-6 px-5 py-3 rounded-xl text-sm font-mono border transition-all duration-300 block
+        ${ok
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+          : 'bg-red-500/10 border-red-500/30 text-red-400'}`;
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => el.classList.add('hidden'), 6000);
     }
-  }
 
-  // ═══════════════════════════════════════════════════════════════════════════
-  //  QUIZ
-  // ═══════════════════════════════════════════════════════════════════════════
-  const QUESTIONS = [
-    {
-      q: "Which format does MongoDB use to store data?",
-      opts: ["Tabular Rows and Columns", "XML Documents", "BSON (Binary JSON) Documents", "CSV Files"],
-      ans: 2,
-      exp: "MongoDB stores data in BSON, which is a binary representation of JSON. It looks and behaves exactly like JavaScript objects."
-    },
-    {
-      q: "In MongoDB, what is the equivalent of a SQL 'Table'?",
-      opts: ["A Cluster", "A Database", "A Document", "A Collection"],
-      ans: 3,
-      exp: "A Collection is a grouping of MongoDB documents. It's the NoSQL equivalent of an SQL table."
-    },
-    {
-      q: "What is Mongoose?",
-      opts: ["A competitor to MongoDB", "An Object Data Modeling (ODM) library for MongoDB and Node.js", "A frontend UI framework", "A cloud hosting provider for databases"],
-      ans: 1,
-      exp: "Mongoose provides a straight-forward, schema-based solution to model your application data and provides built-in type casting, validation, and query building."
-    },
-    {
-      q: "Why do we use Mongoose if MongoDB is 'schema-less'?",
-      opts: ["Because MongoDB cannot run without Mongoose", "To add structure, validation, and prevent bad data from entering the database", "To convert MongoDB into a SQL database", "Because it makes queries run faster"],
-      ans: 1,
-      exp: "While MongoDB's flexibility is great, application code usually expects a certain structure. Mongoose Schemas ensure that users cannot insert invalid data (like text in a number field, or missing required fields)."
-    },
-    {
-      q: "What is the automatically generated primary key field in MongoDB?",
-      opts: ["id", "uid", "primary_key", "_id"],
-      ans: 3,
-      exp: "MongoDB automatically assigns a unique Object ID to the '_id' field for every new document created."
-    },
-    {
-      q: "Which Mongoose method translates roughly to SQL's 'INSERT INTO'?",
-      opts: ["Model.find()", "Model.update()", "Model.create()", "Model.select()"],
-      ans: 2,
-      exp: "Model.create() validates the data against your schema, and if it passes, inserts it into the MongoDB collection."
-    },
-    {
-      q: "What happens if you try to save a document using Mongoose but it fails Schema validation?",
-      opts: ["MongoDB crashes", "Mongoose fixes the data automatically", "Mongoose throws an error and the document is NOT saved", "It saves the document anyway because MongoDB is schema-less"],
-      ans: 2,
-      exp: "This is the entire point of Mongoose! It intercepts the bad data, blocks the save operation, and returns an error explaining exactly which validation rule failed."
-    }
-  ];
+    // ── CREATE ─────────────────────────────────────────────────
+    async function createProduct(e) {
+      e.preventDefault();
+      const name    = document.getElementById('create-name').value.trim();
+      const price   = parseFloat(document.getElementById('create-price').value);
+      const desc    = document.getElementById('create-desc').value.trim();
+      const inStock = document.getElementById('create-instock').checked;
 
-  let quizAnswers = {};
-  let quizDone = false;
-
-  function initQuiz() {
-    quizAnswers = {};
-    quizDone = false;
-    document.getElementById('quiz-footer').classList.add('hidden');
-    const body = document.getElementById('quiz-body');
-    body.innerHTML = QUESTIONS.map((q, qi) => `
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
-        <p class="font-medium text-slate-100 mb-4 leading-relaxed">
-          <span class="text-brand-400 font-mono mr-2">${qi + 1}.</span>${q.q}
-        </p>
-        <div class="space-y-2" id="qopts-${qi}">
-          ${q.opts.map((opt, oi) => `
-            <button
-              onclick="selectAnswer(${qi}, ${oi})"
-              id="opt-${qi}-${oi}"
-              class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"
-            >
-              <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>
-              ${opt}
-            </button>
-          `).join('')}
-        </div>
-        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
-      </div>
-    `).join('');
-  }
-
-  function selectAnswer(qi, oi) {
-    if (quizDone || quizAnswers[qi] !== undefined) return;
-    quizAnswers[qi] = oi;
-    const q = QUESTIONS[qi];
-    const isCorrect = oi === q.ans;
-
-    for (let i = 0; i < q.opts.length; i++) {
-      const btn = document.getElementById(`opt-${qi}-${i}`);
-      const ico = document.getElementById(`opt-icon-${qi}-${i}`);
-      if (i === q.ans) {
-        btn.classList.add('correct');
-        ico.textContent = '✓';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
-      } else if (i === oi && !isCorrect) {
-        btn.classList.add('wrong');
-        ico.textContent = '✗';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
+      try {
+        const res  = await fetch('/api/products', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, price, description: desc, inStock }),
+        });
+        const body = await res.json();
+        if (body.success) {
+          showStatus(`✅ Created "${body.data.name}" — _id: ${body.data._id}`, true);
+          e.target.reset();
+          document.getElementById('create-instock').checked = true;
+          loadProducts();
+        } else {
+          showStatus(`❌ ${body.error}`, false);
+        }
+      } catch (err) {
+        showStatus(`❌ Network error: ${err.message}`, false);
       }
-      btn.disabled = true;
     }
 
-    const expEl = document.getElementById(`exp-${qi}`);
-    expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
-    expEl.classList.remove('hidden');
+    // ── UPDATE ─────────────────────────────────────────────────
+    async function updateProduct(e) {
+      e.preventDefault();
+      const id    = document.getElementById('update-id').value.trim();
+      const price = document.getElementById('update-price').value;
+      const name  = document.getElementById('update-name').value.trim();
 
-    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
-  }
+      const updates = {};
+      if (price !== '') updates.price = parseFloat(price);
+      if (name  !== '') updates.name  = name;
 
-  function showFinalScore() {
-    quizDone = true;
-    const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
-    const pct   = Math.round(score / QUESTIONS.length * 100);
-    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
-    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
-    document.getElementById('quiz-grade-text').textContent = grade;
-    document.getElementById('quiz-footer').classList.remove('hidden');
-    document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+      if (Object.keys(updates).length === 0) {
+        showStatus('❌ Provide at least one field to update.', false);
+        return;
+      }
 
-  initQuiz();
+      try {
+        const res  = await fetch(`/api/products/${id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(updates),
+        });
+        const body = await res.json();
+        if (body.success) {
+          showStatus(`✅ Updated "${body.data.name}" — new price: $${body.data.price}`, true);
+          e.target.reset();
+          loadProducts();
+        } else {
+          showStatus(`❌ ${body.error}`, false);
+        }
+      } catch (err) {
+        showStatus(`❌ Network error: ${err.message}`, false);
+      }
+    }
+
+    // ── DELETE ─────────────────────────────────────────────────
+    async function deleteProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('delete-id').value.trim();
+
+      try {
+        const res  = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        const body = await res.json();
+        if (body.success) {
+          showStatus(`✅ ${body.message}`, true);
+          e.target.reset();
+          loadProducts();
+        } else {
+          showStatus(`❌ ${body.error}`, false);
+        }
+      } catch (err) {
+        showStatus(`❌ Network error: ${err.message}`, false);
+      }
+    }
+
+    // ── RESET ──────────────────────────────────────────────────
+    async function resetDatabase() {
+      try {
+        const res  = await fetch('/api/reset', { method: 'POST' });
+        const body = await res.json();
+        showStatus(body.success ? `✅ ${body.message}` : `❌ ${body.error}`, body.success);
+        loadProducts();
+      } catch (err) {
+        showStatus(`❌ Network error: ${err.message}`, false);
+      }
+    }
+
+
+    // ════════════════════════════════════════════
+    // QUIZ ENGINE
+    // ════════════════════════════════════════════
+    const QUESTIONS = [
+      {
+        q: 'What does "NoSQL" stand for?',
+        options: ['New Server Query Language', 'Not Only SQL', 'Non-Standard Query Logic', 'No Schema Query Layer'],
+        answer: 1,
+        explain: 'NoSQL = "Not Only SQL". It means these databases aren\'t limited to relational tables — they support documents, graphs, key-value stores, and more.',
+      },
+      {
+        q: 'What is a MongoDB Document?',
+        options: [
+          'A row in a SQL table',
+          'A PDF file stored on disk',
+          'A JSON-like record stored in a Collection',
+          'A Mongoose Schema definition',
+        ],
+        answer: 2,
+        explain: 'Documents are the basic unit of data in MongoDB, stored as BSON (Binary JSON). Each document lives inside a Collection.',
+      },
+      {
+        q: "What is Mongoose's primary purpose?",
+        options: [
+          'To replace MongoDB entirely',
+          'To enforce a Schema/validation layer on top of MongoDB',
+          'To convert SQL queries into MongoDB queries',
+          'To provide a GUI for MongoDB Atlas',
+        ],
+        answer: 1,
+        explain: 'Mongoose is an Object Document Mapper (ODM). It adds schema validation, type casting, and query helpers on top of the MongoDB Node.js driver.',
+      },
+      {
+        q: 'Which Mongoose method creates AND saves a new document in a single call?',
+        options: ['Model.save()', 'Model.insert()', 'Model.create()', 'Model.new()'],
+        answer: 2,
+        explain: 'Model.create(data) is shorthand for new Model(data) + .save(). It validates and persists in one line.',
+      },
+      {
+        q: "What does the 'required: true' validator do in a Schema?",
+        options: [
+          'Adds a default value if the field is missing',
+          'Makes the field read-only',
+          'Prevents saving a document without that field',
+          'Generates the field value automatically',
+        ],
+        answer: 2,
+        explain: 'required: true throws a ValidationError if you try to save/create a document without providing that field. You can also pass a custom message: required: [true, "Name is required"].',
+      },
+      {
+        q: 'What is a Collection in MongoDB equivalent to in SQL?',
+        options: ['A Database', 'A Table', 'A Row', 'An Index'],
+        answer: 1,
+        explain: 'SQL Table → MongoDB Collection. SQL Row → MongoDB Document. SQL Column → MongoDB Field. SQL JOIN → MongoDB $lookup or embedded documents.',
+      },
+      {
+        q: 'Why must you pass { runValidators: true } to findByIdAndUpdate()?',
+        options: [
+          'To speed up the update query',
+          'To return the updated document instead of the original',
+          'To ensure schema validators run on updates, not just on create',
+          'To prevent the document from being deleted',
+        ],
+        answer: 2,
+        explain: 'By default, Mongoose only runs validators on Model.create(). To apply them on update operations too, you must explicitly pass { runValidators: true }.',
+      },
+    ];
+
+    let answered = 0;
+
+    function buildQuiz() {
+      answered = 0;
+      updateProgress();
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = '';
+      document.getElementById('quiz-results').classList.add('hidden');
+
+      QUESTIONS.forEach((q, qi) => {
+        const card = document.createElement('div');
+        card.className = 'glass rounded-2xl p-6';
+        card.id = `q-${qi}`;
+        card.innerHTML = `
+          <p class="text-sm text-emerald-400 font-mono mb-2">Question ${qi + 1} of ${QUESTIONS.length}</p>
+          <p class="text-base font-semibold text-white mb-5">${q.q}</p>
+          <div class="space-y-3" id="opts-${qi}">
+            ${q.options.map((opt, oi) => `
+              <button
+                onclick="selectAnswer(${qi}, ${oi})"
+                class="quiz-opt w-full text-left px-4 py-3 rounded-xl border border-slate-700 text-sm text-slate-300 font-medium"
+                id="opt-${qi}-${oi}">
+                <span class="inline-block w-6 h-6 rounded-md bg-slate-800 text-center text-xs font-bold mr-3 leading-6">${['A','B','C','D'][oi]}</span>
+                ${opt}
+              </button>`).join('')}
+          </div>
+          <div id="explain-${qi}" class="hidden mt-4 p-3 rounded-lg bg-slate-900/60 border border-slate-700 text-xs text-slate-400 leading-relaxed"></div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function selectAnswer(qi, selected) {
+      const q = QUESTIONS[qi];
+      const opts = document.querySelectorAll(`#opts-${qi} .quiz-opt`);
+      opts.forEach(btn => btn.classList.add('disabled'));
+
+      opts[selected].classList.add(selected === q.answer ? 'correct' : 'wrong');
+      if (selected !== q.answer) opts[q.answer].classList.add('correct');
+
+      // Show explanation
+      const explEl = document.getElementById(`explain-${qi}`);
+      explEl.textContent = `💡 ${q.explain}`;
+      explEl.classList.remove('hidden');
+
+      answered++;
+      updateProgress();
+      if (answered === QUESTIONS.length) showResults();
+    }
+
+    function updateProgress() {
+      const pct = (answered / QUESTIONS.length) * 100;
+      document.getElementById('quiz-progress-bar').style.width = `${pct}%`;
+      document.getElementById('quiz-progress-text').textContent = `${answered} / ${QUESTIONS.length}`;
+    }
+
+    function showResults() {
+      let score = 0;
+      QUESTIONS.forEach((q, qi) => {
+        const correct = document.getElementById(`opt-${qi}-${q.answer}`);
+        if (correct && correct.classList.contains('correct') && !document.querySelectorAll(`#opts-${qi} .wrong`).length) score++;
+      });
+      // Recalculate correctly
+      score = 0;
+      QUESTIONS.forEach((q, qi) => {
+        for (let oi = 0; oi < q.options.length; oi++) {
+          const btn = document.getElementById(`opt-${qi}-${oi}`);
+          if (btn && btn.classList.contains('correct') && oi === q.answer) score++;
+          if (btn && btn.classList.contains('wrong') && oi === q.answer) { /* missed */ }
+        }
+      });
+      // Simple scoring: count correct answers
+      score = 0;
+      QUESTIONS.forEach((q, qi) => {
+        const correctBtn = document.getElementById(`opt-${qi}-${q.answer}`);
+        if (correctBtn && correctBtn.classList.contains('correct')) {
+          const wrongsInThisQ = document.querySelectorAll(`#opts-${qi} .wrong`);
+          if (wrongsInThisQ.length === 0) score++;
+        }
+      });
+
+      const pct = Math.round((score / QUESTIONS.length) * 100);
+      const trophy = score === 7 ? '🏆' : score >= 5 ? '🥇' : score >= 3 ? '🥈' : '📚';
+      const label  = score === 7 ? 'Perfect Score!' : score >= 5 ? 'Great Job!' : score >= 3 ? 'Good Effort!' : 'Keep Studying!';
+      const sub    = `You got ${score} out of ${QUESTIONS.length} correct (${pct}%).`;
+
+      document.getElementById('quiz-trophy').textContent = trophy;
+      document.getElementById('quiz-score-label').textContent = label;
+      document.getElementById('quiz-score-sub').textContent = sub;
+      document.getElementById('quiz-results').classList.remove('hidden');
+      document.getElementById('quiz-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function restartQuiz() {
+      buildQuiz();
+      document.getElementById('quiz-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ── Init ───────────────────────────────────────────────────
+    loadStatus();
+    buildQuiz();
+    // Pre-load products so first switch to playground is instant
+    loadProducts();
   </script>
 </body>
 </html>

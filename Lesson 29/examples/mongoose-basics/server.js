@@ -1,7 +1,7 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -19,50 +19,78 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ==========================================================
-// 1. DATABASE CONNECTION (Using In-Memory MongoDB for Learning)
+// 1. DATABASE CONNECTION
+//    Tries MongoDB Atlas first, falls back to in-memory
 // ==========================================================
-let mongoServer;
+let connectionInfo = { service: 'Disconnected', connected: false, dbName: null };
 
 const connectDB = async () => {
-  try {
-    // Spin up a fake MongoDB server in memory
-    mongoServer = await MongoMemoryServer.create();
-    const uri = mongoServer.getUri();
+  const mongoURI = process.env.MONGODB_URI;
 
-    // Connect Mongoose to the fake server
-    await mongoose.connect(uri);
-    console.log(`✅ Connected to In-Memory MongoDB at: ${uri}`);
-    
-    // Seed some initial data
-    await seedDatabase();
-  } catch (err) {
-    console.error('Failed to connect to MongoDB', err);
-    process.exit(1);
+  if (mongoURI) {
+    await mongoose.connect(mongoURI);
+    const dbName = mongoose.connection.db.databaseName;
+    connectionInfo = { service: 'MongoDB Atlas', connected: true, dbName };
+    console.log(`✅ Connected to MongoDB Atlas — database: "${dbName}"`);
+  } else {
+    console.warn('⚠️  MONGODB_URI not set. Using in-memory MongoDB (data will NOT persist between restarts).');
+    const { MongoMemoryServer } = await import('mongodb-memory-server');
+    const mongoServer = await MongoMemoryServer.create();
+    await mongoose.connect(mongoServer.getUri());
+    const dbName = mongoose.connection.db.databaseName;
+    connectionInfo = { service: 'Local In-Memory MongoDB', connected: true, dbName };
+    console.log(`✅ Connected to In-Memory MongoDB — database: "${dbName}"`);
   }
 };
 
 const seedDatabase = async () => {
-  await Product.deleteMany({}); // Clear existing
+  await Product.deleteMany({});
   await Product.create([
-    { name: 'Laptop', price: 999.99, description: 'A powerful coding machine.' },
-    { name: 'Coffee Mug', price: 15.00, description: 'Fuel container.', inStock: false },
-    { name: 'Mechanical Keyboard', price: 120.50 }
+    { name: 'Laptop',               price: 999.99, description: 'A powerful coding machine.',         inStock: true  },
+    { name: 'Coffee Mug',           price: 15.00,  description: 'Essential developer fuel container.', inStock: false },
+    { name: 'Mechanical Keyboard',  price: 120.50, description: 'Tactile satisfaction guaranteed.',   inStock: true  },
   ]);
-  console.log('✅ Database seeded with initial products.');
+  console.log('✅ Database seeded with 3 initial products.');
 };
 
-// Initialize DB
-connectDB();
+// Boot sequence
+(async () => {
+  try {
+    await connectDB();
+    await seedDatabase();
+    app.listen(PORT, () => {
+      console.log(`🚀 Mongoose Explorer running on http://localhost:${PORT}`);
+    });
+  } catch (err) {
+    console.error('❌ Fatal: could not start server:', err.message);
+    process.exit(1);
+  }
+})();
 
 
 // ==========================================================
-// 2. MONGOOSE CRUD ROUTES
+// 2. STATUS ROUTE
 // ==========================================================
 
-// READ: Get all products
+app.get('/api/status', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      connected: connectionInfo.connected,
+      service:   connectionInfo.service,
+      dbName:    connectionInfo.dbName,
+    },
+  });
+});
+
+
+// ==========================================================
+// 3. PRODUCT CRUD ROUTES
+// ==========================================================
+
+// READ — get all products, newest first
 app.get('/api/products', async (req, res) => {
   try {
-    // .find() with no arguments gets everything
     const products = await Product.find().sort('-createdAt');
     res.json({ success: true, data: products });
   } catch (err) {
@@ -70,58 +98,73 @@ app.get('/api/products', async (req, res) => {
   }
 });
 
-// CREATE: Add a new product
+// CREATE — add a new product (Mongoose validates against schema)
 app.post('/api/products', async (req, res) => {
   try {
-    // Mongoose validates the req.body against the Schema automatically
-    const newProduct = await Product.create(req.body);
+    const { name, price, description, inStock } = req.body;
+
+    if (!name || price === undefined) {
+      return res.status(400).json({ success: false, error: 'name and price are required.' });
+    }
+
+    const newProduct = await Product.create({ name, price, description, inStock });
     res.status(201).json({ success: true, data: newProduct });
   } catch (err) {
-    // Catch validation errors (e.g. missing name, negative price)
+    // Catches Mongoose ValidationError, CastError, etc.
     res.status(400).json({ success: false, error: err.message });
   }
 });
 
-// UPDATE: Modify a product
+// UPDATE — modify a product by _id
 app.put('/api/products/:id', async (req, res) => {
   try {
+    const { id } = req.params;
+
     const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id, 
-      req.body, 
-      { new: true, runValidators: true } // new: returns the updated doc. runValidators: checks rules again
+      id,
+      req.body,
+      { new: true, runValidators: true } // new: returns updated doc; runValidators: re-runs schema rules
     );
-    
+
     if (!updatedProduct) {
-      return res.status(404).json({ success: false, error: 'Product not found' });
+      return res.status(404).json({ success: false, error: `No product found with id: ${id}` });
     }
-    
+
     res.json({ success: true, data: updatedProduct });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
 });
 
-// DELETE: Remove a product
+// DELETE — remove a product by _id
 app.delete('/api/products/:id', async (req, res) => {
   try {
-    const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-    
+    const { id } = req.params;
+
+    const deletedProduct = await Product.findByIdAndDelete(id);
+
     if (!deletedProduct) {
-      return res.status(404).json({ success: false, error: 'Product not found' });
+      return res.status(404).json({ success: false, error: `No product found with id: ${id}` });
     }
-    
-    res.json({ success: true, message: 'Product deleted successfully' });
+
+    res.json({ success: true, message: `"${deletedProduct.name}" deleted successfully.` });
   } catch (err) {
     res.status(400).json({ success: false, error: err.message });
   }
 });
 
-// Utility Route: Reset Database
-app.post('/api/reset', async (req, res) => {
-  await seedDatabase();
-  res.json({ success: true, message: 'Database reset to default products.' });
-});
 
-app.listen(PORT, () => {
-  console.log(`🚀 Mongoose Server running on http://localhost:${PORT}`);
+// ==========================================================
+// 4. UTILITY ROUTES
+// ==========================================================
+
+// RESET — re-seed the database to its default state
+app.post('/api/reset', async (req, res) => {
+  try {
+    await seedDatabase();
+    const products = await Product.find().sort('-createdAt');
+    res.json({ success: true, message: 'Database reset to 3 default products.', data: products });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });

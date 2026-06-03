@@ -3,345 +3,815 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lesson 27 — Middleware & Error Handling Explorer</title>
+  <title>Lesson 27 — Security & Middleware Lab</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
           colors: {
-            teal: { 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488' }
+            teal: { 300: '#5eead4', 400: '#2dd4bf', 500: '#14b8a6', 600: '#0d9488', 700: '#0f766e' }
           }
         }
       }
     };
   </script>
   <style>
-    body { font-family: 'Inter', sans-serif; }
+    * { box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; background: #0b1120; }
     code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* ── Scrollbars ─────────────────────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
 
-    /* Syntax highlight classes */
-    .json-key    { color: #93c5fd; } /* blue-300  */
-    .json-str    { color: #86efac; } /* green-300 */
-    .json-num    { color: #fda4af; } /* rose-300  */
-    .json-bool   { color: #c4b5fd; } /* violet-300*/
-    .json-null   { color: #94a3b8; } /* slate-400 */
+    /* ── Syntax highlight ───────────────────────────────────────────────── */
+    .json-key  { color: #93c5fd; }
+    .json-str  { color: #86efac; }
+    .json-num  { color: #fda4af; }
+    .json-bool { color: #c4b5fd; }
+    .json-null { color: #94a3b8; }
 
-    /* Tab underline animation */
-    .tab-btn { position: relative; transition: color 0.2s; }
-    .tab-btn::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: transparent; transition: background 0.2s; }
-    .tab-btn.active { color: #2dd4bf; }
+    /* ── Tab system ─────────────────────────────────────────────────────── */
+    .tab-btn {
+      position: relative; transition: color 0.2s, background 0.2s;
+      border-radius: 10px;
+    }
+    .tab-btn::after {
+      content: ''; position: absolute; bottom: -1px; left: 0; right: 0;
+      height: 2px; background: transparent; transition: background 0.2s;
+      border-radius: 2px;
+    }
+    .tab-btn.active { color: #2dd4bf; background: rgba(20,184,166,0.12); }
     .tab-btn.active::after { background: #14b8a6; }
     .tab-btn:not(.active) { color: #64748b; }
-    .tab-btn:not(.active):hover { color: #94a3b8; }
+    .tab-btn:not(.active):hover { color: #94a3b8; background: rgba(255,255,255,0.04); }
 
-    /* Endpoint card hover */
+    /* ── Cards ──────────────────────────────────────────────────────────── */
+    .concept-card { transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s; }
+    .concept-card:hover {
+      border-color: #0d9488;
+      transform: translateY(-3px);
+      box-shadow: 0 12px 32px rgba(20,184,166,0.1);
+    }
     .endpoint-card { transition: border-color 0.2s, background 0.2s; }
-    .endpoint-card:hover { background: rgba(30,41,59,0.8); border-color: #334155; }
+    .endpoint-card:hover { background: rgba(30,41,59,0.85); border-color: #334155; }
 
-    /* Send button */
-    .send-btn { transition: all 0.15s; }
-    .send-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(20,184,166,0.35); }
-    .send-btn:active { transform: translateY(0); }
+    /* ── Buttons ────────────────────────────────────────────────────────── */
+    .glow-btn { transition: all 0.18s; }
+    .glow-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(20,184,166,0.4); }
+    .glow-btn:active { transform: translateY(0); }
 
-    /* Concept card */
-    .concept-card { transition: border-color 0.2s, transform 0.15s; }
-    .concept-card:hover { border-color: #0d9488; transform: translateY(-2px); }
-
-    /* Quiz option */
+    /* ── Quiz ───────────────────────────────────────────────────────────── */
     .quiz-opt { transition: background 0.15s, border-color 0.15s; cursor: pointer; }
-    .quiz-opt:hover { background: rgba(45,212,191,0.08); border-color: #0d9488; }
+    .quiz-opt:not([disabled]):hover { background: rgba(45,212,191,0.07); border-color: #0d9488; }
     .quiz-opt.correct { background: rgba(16,185,129,0.1); border-color: #10b981; }
     .quiz-opt.wrong   { background: rgba(239,68,68,0.1);  border-color: #ef4444; }
 
-    /* Request log line pulse */
-    @keyframes fadeIn { from { opacity:0; transform: translateY(4px); } to { opacity:1; transform: none; } }
-    .log-line { animation: fadeIn 0.25s ease; }
+    /* ── Animations ─────────────────────────────────────────────────────── */
+    @keyframes fadeSlideIn { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+    @keyframes pulse-dot { 0%,100% { transform:scale(1); opacity:1; } 50% { transform:scale(1.4); opacity:0.7; } }
+    @keyframes ping { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(2.2); opacity: 0; } }
+    @keyframes slideRight { from { left: -20px; opacity: 0; } to { opacity: 1; } }
 
-    /* Glow on status badge */
-    .status-ok  { color: #34d399; text-shadow: 0 0 8px rgba(52,211,153,0.4); }
-    .status-err { color: #f87171; text-shadow: 0 0 8px rgba(248,113,113,0.4); }
+    .fade-in { animation: fadeSlideIn 0.3s ease both; }
+    .log-line { animation: fadeSlideIn 0.22s ease both; }
+
+    /* ── Status glow ────────────────────────────────────────────────────── */
+    .status-ok  { color: #34d399; text-shadow: 0 0 10px rgba(52,211,153,0.5); }
+    .status-err { color: #f87171; text-shadow: 0 0 10px rgba(248,113,113,0.5); }
+
+    /* ── Middleware chain animation ─────────────────────────────────────── */
+    .mw-box {
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .mw-box.active-box {
+      box-shadow: 0 0 0 2px #14b8a6, 0 0 20px rgba(20,184,166,0.4);
+    }
+    .mw-box.blocked-box {
+      box-shadow: 0 0 0 2px #ef4444, 0 0 20px rgba(239,68,68,0.35);
+    }
+    .mw-box.passed-box {
+      box-shadow: 0 0 0 2px #10b981, 0 0 16px rgba(16,185,129,0.3);
+    }
+    .request-dot {
+      width: 12px; height: 12px;
+      background: #14b8a6;
+      border-radius: 50%;
+      position: absolute;
+      top: 50%; transform: translateY(-50%);
+      box-shadow: 0 0 12px rgba(20,184,166,0.8);
+      transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 10;
+    }
+
+    /* ── .env visualizer ────────────────────────────────────────────────── */
+    .env-file { font-family: 'JetBrains Mono', monospace; font-size: 11px; line-height: 1.8; }
+    .env-comment { color: #64748b; }
+    .env-key { color: #93c5fd; }
+    .env-val { color: #86efac; }
+    .env-equals { color: #94a3b8; }
+    .env-arrow {
+      position: absolute;
+      color: #14b8a6;
+      font-size: 10px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    /* ── Connector line animation ───────────────────────────────────────── */
+    .connector-line { stroke-dasharray: 200; stroke-dashoffset: 200; }
+    .connector-line.animated { animation: drawLine 0.6s ease forwards; }
+    @keyframes drawLine { to { stroke-dashoffset: 0; } }
+
+    /* ── Code annotation ────────────────────────────────────────────────── */
+    .code-annotation {
+      position: relative;
+      display: inline-block;
+    }
+    .annotate-badge {
+      position: absolute;
+      right: -110px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(20,184,166,0.15);
+      border: 1px solid rgba(20,184,166,0.3);
+      color: #2dd4bf;
+      font-size: 9px;
+      font-family: 'Inter', sans-serif;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .annotate-badge::before {
+      content: '←';
+      margin-right: 4px;
+    }
   </style>
 </head>
-<body class="bg-[#0f172a] text-slate-200 min-h-screen">
+<body class="bg-[#0b1120] text-slate-200 min-h-screen">
 
-  <!-- ── AMBIENT GLOW ─────────────────────────────────────────────────────── -->
-  <div class="fixed inset-0 pointer-events-none overflow-hidden">
-    <div class="absolute -top-32 -left-32 w-[500px] h-[500px] bg-teal-500/5 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 -right-32 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-3xl"></div>
+  <!-- ── AMBIENT GLOW BLOBS ──────────────────────────────────────────────── -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="absolute -top-48 -left-48 w-[700px] h-[700px] bg-teal-500/5 rounded-full blur-[100px]"></div>
+    <div class="absolute bottom-0 right-0 w-[500px] h-[500px] bg-cyan-500/4 rounded-full blur-[90px]"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[300px] h-[300px] bg-teal-600/3 rounded-full blur-[80px]"></div>
   </div>
 
-  <!-- ── HEADER ───────────────────────────────────────────────────────────── -->
-  <header class="border-b border-slate-800/80 bg-[#0f172a]/80 backdrop-blur-xl sticky top-0 z-20">
-    <div class="max-w-7xl mx-auto px-6 h-14 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-teal-500/20 border border-teal-500/30 flex items-center justify-center">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+  <!-- ── HEADER ─────────────────────────────────────────────────────────── -->
+  <header class="border-b border-slate-800/80 bg-[#0b1120]/85 backdrop-blur-xl sticky top-0 z-30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
+      <!-- Brand -->
+      <div class="flex items-center gap-3 shrink-0">
+        <div class="w-8 h-8 rounded-lg bg-teal-500/15 border border-teal-500/25 flex items-center justify-center shadow-lg shadow-teal-500/10">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
         </div>
-        <div>
-          <span class="font-bold text-sm text-slate-100">Security & Middleware Explorer</span>
-          <span class="ml-2 text-xs text-slate-500 font-mono">Lesson 27</span>
+        <div class="flex items-baseline gap-2">
+          <span class="font-bold text-sm text-slate-100">Security &amp; Middleware Lab</span>
+          <span class="text-[10px] font-mono font-semibold bg-teal-500/15 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-full">Lesson 27</span>
         </div>
       </div>
-      <nav class="flex gap-1 border border-slate-800 rounded-xl p-1 bg-slate-900/50">
-        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('concepts')">📖 Concepts</button>
-        <button id="tab-explorer" class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('explorer')">🛡️ Explorer</button>
-        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-4 py-1.5 rounded-lg" onclick="switchTab('quiz')">🧠 Quiz</button>
+
+      <!-- Navigation tabs -->
+      <nav class="flex gap-0.5 border border-slate-800 rounded-xl p-1 bg-slate-900/60 backdrop-blur-sm">
+        <button id="tab-concepts" class="tab-btn active font-medium text-xs px-3.5 py-1.5" onclick="switchTab('concepts')">📖 Concepts</button>
+        <button id="tab-chain"    class="tab-btn font-medium text-xs px-3.5 py-1.5" onclick="switchTab('chain')">⛓️ Middleware Chain</button>
+        <button id="tab-explorer" class="tab-btn font-medium text-xs px-3.5 py-1.5" onclick="switchTab('explorer')">🛡️ API Explorer</button>
+        <button id="tab-quiz"     class="tab-btn font-medium text-xs px-3.5 py-1.5" onclick="switchTab('quiz')">🧠 Quiz</button>
       </nav>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 relative">
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8 relative">
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  CONCEPTS VIEW                                                       -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-concepts" class="space-y-8">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         CONCEPTS TAB
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="view-concepts" class="space-y-8 fade-in">
 
       <!-- Hero -->
-      <div class="text-center py-8">
-        <div class="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-1.5 text-teal-400 text-xs font-medium mb-4">
-          Session 27 · Advanced Backend
+      <div class="text-center py-10">
+        <div class="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-1.5 text-teal-400 text-xs font-semibold mb-5">
+          <span class="w-1.5 h-1.5 bg-teal-400 rounded-full" style="animation: pulse-dot 2s ease-in-out infinite;"></span>
+          Session 27 · Advanced Backend Security
         </div>
-        <h1 class="text-4xl font-extrabold mb-3 bg-gradient-to-r from-teal-400 via-emerald-400 to-teal-300 bg-clip-text text-transparent">
-          Middleware, Errors & Environments
+        <h1 class="text-4xl sm:text-5xl font-extrabold mb-4 bg-gradient-to-br from-teal-300 via-teal-400 to-cyan-500 bg-clip-text text-transparent leading-tight">
+          Middleware, Errors &<br class="sm:hidden"> Environments
         </h1>
-        <p class="text-slate-400 text-sm max-w-xl mx-auto leading-relaxed">
-          Level up your Express app. Intercept requests, securely store secrets,
-          and gracefully handle server crashes with global error handlers.
+        <p class="text-slate-400 text-sm max-w-lg mx-auto leading-relaxed">
+          Learn to intercept requests, guard secrets with <code class="text-amber-400">.env</code> files,
+          and catch server crashes before they reach the client.
         </p>
       </div>
 
-      <!-- Concept cards row -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Middleware -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-blue-500/15 border border-blue-500/25 rounded-xl flex items-center justify-center mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-          </div>
-          <h3 class="font-bold text-slate-100 mb-2">Middleware Functions</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            Functions that execute <em>during</em> the request lifecycle. They can modify <code class="text-amber-400">req</code>, send a response early, or pass control to the next function using <code class="text-teal-400">next()</code>.
-          </p>
-          <div class="bg-slate-950/60 rounded-xl p-3 border border-slate-800">
-            <p class="text-xs text-slate-500 mb-2 font-medium uppercase tracking-wider">Common Uses</p>
-            <ul class="text-xs text-slate-400 space-y-1 list-disc pl-4 marker:text-slate-600">
-              <li>Logging (e.g., "GET /api/users")</li>
-              <li>Authentication (checking API keys/tokens)</li>
-              <li>Parsing JSON bodies (<code class="text-blue-400">express.json()</code>)</li>
-            </ul>
-          </div>
-        </div>
+      <!-- ── 3 Concept Cards ─────────────────────────────────────────────── -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
 
-        <!-- Environment Variables -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-teal-500/15 border border-teal-500/25 rounded-xl flex items-center justify-center mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <!-- 1. Middleware -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col">
+          <div class="w-11 h-11 bg-blue-500/12 border border-blue-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
           </div>
-          <h3 class="font-bold text-slate-100 mb-2">Environment Variables</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-4">
-            Keep secrets safe! Passwords, API keys, and connection strings should never be in your code. Store them in a <code class="text-amber-400">.env</code> file instead.
+          <h3 class="font-bold text-slate-100 mb-2 text-base">Middleware Functions</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4 flex-1">
+            Code that runs <em>in the middle</em> of every request. It receives <code class="text-amber-400">req</code>, <code class="text-amber-400">res</code>, and — critically — <code class="text-teal-400 font-semibold">next()</code>. Without calling <code class="text-teal-400">next()</code>, the request freezes forever.
           </p>
-          <pre class="bg-slate-950/60 rounded-xl p-3 border border-slate-800 text-xs overflow-x-auto leading-relaxed"><span class="text-slate-500">// 1. npm install dotenv
-// 2. Add to server.js:</span>
-<span class="text-violet-400">import</span><span class="text-slate-400"> dotenv </span><span class="text-violet-400">from</span><span class="text-green-400"> 'dotenv'</span><span class="text-slate-400">;
-dotenv.</span><span class="text-blue-400">config</span><span class="text-slate-400">();
-
-</span><span class="text-slate-500">// 3. Access your key:</span>
-<span class="text-slate-400">console.</span><span class="text-blue-400">log</span><span class="text-slate-400">(</span><span class="text-amber-400">process.env</span><span class="text-slate-400">.API_SECRET_KEY);</span></pre>
-        </div>
-
-        <!-- Error Handling -->
-        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6">
-          <div class="w-10 h-10 bg-rose-500/15 border border-rose-500/25 rounded-xl flex items-center justify-center mb-4">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <h3 class="font-bold text-slate-100 mb-2">Global Error Handler</h3>
-          <p class="text-slate-400 text-sm leading-relaxed mb-3">
-            If a route crashes (e.g. reading a property of <code class="text-rose-400">undefined</code>), the Express server will crash or hang. A global error handler catches it.
-          </p>
-          <div class="bg-slate-950/60 rounded-lg p-2.5 border border-slate-800 text-xs">
-            <span class="text-slate-500">It is defined by having exactly 4 arguments:</span>
-            <div class="mt-1.5 space-y-0.5 text-slate-300 font-mono">
-              app.<span class="text-blue-400">use</span>((<span class="text-rose-400">err</span>, req, res, next) =&gt; {
-              <br>&nbsp;&nbsp;res.<span class="text-blue-400">status</span>(<span class="text-amber-400">500</span>).<span class="text-blue-400">json</span>({ <span class="text-green-400">error</span>: <span class="text-green-400">'Oops!'</span> });
-              <br>});
+          <div class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800/80 space-y-1.5">
+            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">Real-world uses</p>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-400 shrink-0"></span>
+              Logging every request to the console
             </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-400 shrink-0"></span>
+              Checking API keys / JWT tokens
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0"></span>
+              Parsing JSON request bodies
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+              Rate-limiting abusive clients
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Environment Variables -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col">
+          <div class="w-11 h-11 bg-teal-500/12 border border-teal-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2 text-base">Environment Variables</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4 flex-1">
+            Secrets like passwords and API keys must <strong class="text-slate-300">never</strong> be typed directly in code. They live in a local <code class="text-amber-400">.env</code> file that Git never sees.
+          </p>
+          <div class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800/80">
+            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2">4-step setup</p>
+            <ol class="text-xs text-slate-400 space-y-1.5 list-none">
+              <li class="flex gap-2"><span class="text-teal-500 font-bold">1</span> Create <code class="text-amber-400">.env</code> file</li>
+              <li class="flex gap-2"><span class="text-teal-500 font-bold">2</span> Add <code class="text-amber-400">.env</code> to <code class="text-slate-300">.gitignore</code></li>
+              <li class="flex gap-2"><span class="text-teal-500 font-bold">3</span> <code class="text-violet-400">pnpm install dotenv</code></li>
+              <li class="flex gap-2"><span class="text-teal-500 font-bold">4</span> Call <code class="text-teal-400">dotenv.config()</code> at top of server</li>
+            </ol>
+          </div>
+        </div>
+
+        <!-- 3. Error Handling -->
+        <div class="concept-card bg-slate-900/60 border border-slate-800 rounded-2xl p-6 flex flex-col">
+          <div class="w-11 h-11 bg-rose-500/12 border border-rose-500/20 rounded-xl flex items-center justify-center mb-4">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 class="font-bold text-slate-100 mb-2 text-base">Global Error Handler</h3>
+          <p class="text-slate-400 text-sm leading-relaxed mb-4 flex-1">
+            When a route throws an error (e.g. reading <code class="text-rose-400">undefined.name</code>), Express normally crashes. A 4-argument handler catches it and sends a clean JSON response.
+          </p>
+          <div class="bg-slate-950/70 rounded-xl p-3.5 border border-slate-800/80">
+            <p class="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-2.5">The magic signature</p>
+            <pre class="text-xs leading-relaxed text-slate-300 whitespace-pre-wrap"><span class="text-blue-400">app</span>.<span class="text-teal-400">use</span>((<span class="text-rose-400">err</span>, req, res, next) <span class="text-slate-500">=></span> {
+  res.<span class="text-blue-400">status</span>(<span class="text-amber-400">500</span>).<span class="text-blue-400">json</span>({
+    <span class="text-green-400">error</span>: err.message
+  });
+});</pre>
+            <p class="text-[10px] text-rose-400/80 mt-2">⚠ Must have exactly 4 args — no more, no less</p>
           </div>
         </div>
       </div>
 
-      <!-- Middleware visual chain -->
+      <!-- ── .env Security Visualizer ────────────────────────────────────── -->
       <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 overflow-hidden">
-        <h3 class="font-bold text-slate-100 mb-1">The Middleware Chain</h3>
-        <p class="text-slate-500 text-sm mb-6">How a request flows through Express from top to bottom.</p>
-        
-        <div class="flex flex-col md:flex-row items-center justify-between gap-4 w-full">
-          <!-- Client -->
-          <div class="bg-slate-800 text-xs px-4 py-2 rounded-lg border border-slate-700 font-mono text-slate-300 shrink-0">Client Request</div>
-          
-          <div class="text-slate-600">→</div>
-          
-          <!-- Middlewares -->
-          <div class="flex-1 flex gap-2 w-full">
-            <div class="flex-1 bg-blue-500/10 border-2 border-blue-500/30 rounded-xl p-3 text-center">
-              <div class="text-xs font-mono text-blue-400 font-bold mb-1">express.json()</div>
-              <div class="text-[10px] text-slate-500">Parses Body</div>
-            </div>
-            <div class="text-slate-600 flex items-center">→</div>
-            <div class="flex-1 bg-teal-500/10 border-2 border-teal-500/30 rounded-xl p-3 text-center">
-              <div class="text-xs font-mono text-teal-400 font-bold mb-1">requestLogger</div>
-              <div class="text-[10px] text-slate-500">Console Log</div>
-            </div>
-            <div class="text-slate-600 flex items-center">→</div>
-            <div class="flex-1 bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-3 text-center">
-              <div class="text-xs font-mono text-amber-400 font-bold mb-1">requireApiKey</div>
-              <div class="text-[10px] text-slate-500">Checks Headers</div>
-            </div>
+        <div class="flex items-center gap-3 mb-1">
+          <div class="w-8 h-8 bg-amber-500/12 border border-amber-500/20 rounded-lg flex items-center justify-center">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
           </div>
-          
-          <div class="text-slate-600">→</div>
-          
-          <!-- Route -->
-          <div class="bg-emerald-500/10 border-2 border-emerald-500/30 rounded-xl p-3 text-center shrink-0 w-32">
-            <div class="text-xs font-mono text-emerald-400 font-bold mb-1">Route Handler</div>
-            <div class="text-[10px] text-slate-500">res.json(...)</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- CTA to Explorer -->
-      <div class="text-center py-4">
-        <button onclick="switchTab('explorer')" class="inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-6 py-3 rounded-xl transition-all shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 send-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-          Test the Middleware Stack
-        </button>
-      </div>
-    </div>
-
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  API EXPLORER VIEW                                                   -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-explorer" class="hidden">
-      
-      <!-- Key configurator -->
-      <div class="bg-slate-900/80 border border-slate-700 rounded-xl p-4 mb-6 flex flex-col md:flex-row items-center gap-4 justify-between">
-        <div>
-          <h3 class="font-bold text-slate-100 text-sm">HTTP Headers (Your Client's Wallet)</h3>
-          <p class="text-slate-500 text-xs">Set the <code class="text-amber-400 font-mono">X-API-KEY</code> header to bypass the authentication middleware.</p>
-        </div>
-        <div class="flex items-center gap-2">
-          <span class="text-xs font-mono text-slate-400">X-API-KEY:</span>
-          <input id="api-key-input" type="text" placeholder="Enter super_secret_key_12345" class="mono bg-slate-950/70 border border-slate-800 focus:border-teal-500/60 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none transition-colors w-64" value="">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 xl:grid-cols-[1fr_420px] gap-6">
-        <!-- LEFT: Endpoints -->
-        <div class="space-y-3">
-          <h2 class="font-bold text-slate-100 mb-2">Endpoints</h2>
-
-          <!-- PUBLIC ROUTE -->
-          <div class="endpoint-card bg-slate-900/50 border border-slate-800 rounded-xl p-4">
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-3">
-                  <span class="bg-blue-500/15 text-blue-400 border border-blue-500/25 font-mono font-bold text-xs px-2 py-0.5 rounded">GET</span>
-                  <code class="text-slate-300 text-sm">/api/public-data</code>
-                </div>
-                <span class="text-slate-500 text-xs flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span> No auth middleware required.</span>
-              </div>
-              <button onclick="fetchAPI('GET','/api/public-data')" class="send-btn bg-slate-800 hover:bg-slate-700 text-white text-xs px-4 py-2 rounded-lg font-medium border border-slate-700">Send Request</button>
-            </div>
-          </div>
-
-          <!-- SECURE ROUTE -->
-          <div class="endpoint-card bg-slate-900/50 border border-slate-800 rounded-xl p-4">
-            <div class="flex items-center justify-between">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-3">
-                  <span class="bg-blue-500/15 text-blue-400 border border-blue-500/25 font-mono font-bold text-xs px-2 py-0.5 rounded">GET</span>
-                  <code class="text-slate-300 text-sm">/api/secure-data</code>
-                </div>
-                <span class="text-slate-500 text-xs flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-500"></span> Blocked by <code class="text-amber-400/80">requireApiKey</code> middleware if header is missing/wrong.</span>
-              </div>
-              <button onclick="fetchAPI('GET','/api/secure-data')" class="send-btn bg-teal-500 hover:bg-teal-600 text-white text-xs px-4 py-2 rounded-lg font-medium shadow-lg shadow-teal-500/20">Send Request</button>
-            </div>
-          </div>
-
-          <!-- BROKEN ROUTE -->
-          <div class="endpoint-card bg-slate-900/50 border border-slate-800 rounded-xl p-4 border-rose-900/30 relative overflow-hidden">
-            <div class="absolute inset-0 bg-rose-500/5 pointer-events-none"></div>
-            <div class="flex items-center justify-between relative z-10">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-3">
-                  <span class="bg-blue-500/15 text-blue-400 border border-blue-500/25 font-mono font-bold text-xs px-2 py-0.5 rounded">GET</span>
-                  <code class="text-slate-300 text-sm">/api/broken</code>
-                </div>
-                <span class="text-slate-500 text-xs flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span> Intentionally throws an error to test the Global Error Handler.</span>
-              </div>
-              <button onclick="fetchAPI('GET','/api/broken')" class="send-btn bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs px-4 py-2 rounded-lg font-medium">Break Server</button>
-            </div>
+          <div>
+            <h3 class="font-bold text-slate-100 text-base">.env Security Visualizer</h3>
+            <p class="text-slate-500 text-xs">How dotenv bridges your local secrets to your server code — without ever touching Git</p>
           </div>
         </div>
 
-        <!-- RIGHT: Response Panel -->
-        <div class="flex flex-col gap-4">
-          <!-- Status bar -->
-          <div class="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-3 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div class="flex gap-1.5">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-6 relative">
+
+          <!-- File: .gitignore -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/80 bg-slate-900/50">
+              <div class="flex gap-1">
                 <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
                 <div class="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
                 <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
               </div>
-              <span class="text-slate-500 text-xs font-mono">Response</span>
+              <span class="text-slate-400 text-xs font-mono font-medium">.gitignore</span>
+              <span class="ml-auto text-[10px] bg-rose-500/15 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full">🔒 Git Never Sees These</span>
             </div>
-            <div class="flex items-center gap-2">
-              <span id="status-code" class="font-mono text-xs font-bold text-slate-500">Awaiting request…</span>
+            <div class="p-4 env-file">
+              <div class="env-comment"># Dependencies</div>
+              <div class="text-slate-400">node_modules/</div>
+              <div class="mt-2 env-comment"># Build output</div>
+              <div class="text-slate-400">dist/</div>
+              <div class="mt-2 env-comment"># Environment secrets ← CRITICAL</div>
+              <div class="flex items-center gap-2">
+                <span class="text-amber-400 font-semibold bg-amber-500/10 border border-amber-500/25 rounded px-1.5">.env</span>
+                <span class="text-[10px] text-amber-400/70 font-sans">← blocked!</span>
+              </div>
+              <div class="text-slate-400">.env.local</div>
+              <div class="text-slate-400">.env.production</div>
             </div>
           </div>
 
-          <!-- JSON output -->
-          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl overflow-hidden flex-1 flex flex-col min-h-[250px]">
-            <div class="border-b border-slate-800/60 px-4 py-2 flex items-center gap-2">
-              <span class="text-slate-600 text-xs font-mono">JSON Body</span>
+          <!-- File: .env -->
+          <div class="bg-slate-950/80 border border-teal-500/30 rounded-xl overflow-hidden shadow-lg shadow-teal-500/5">
+            <div class="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/80 bg-slate-900/50">
+              <div class="flex gap-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
+              </div>
+              <span class="text-teal-400 text-xs font-mono font-medium">.env</span>
+              <span class="ml-auto text-[10px] bg-teal-500/15 text-teal-400 border border-teal-500/20 px-2 py-0.5 rounded-full">🏠 Local Only</span>
             </div>
-            <div class="flex-1 overflow-auto p-4">
-              <pre id="json-output" class="text-xs font-mono leading-relaxed text-slate-500 whitespace-pre-wrap">// Responses will appear here</pre>
+            <div class="p-4 env-file">
+              <div class="env-comment"># Server config</div>
+              <div><span class="env-key">PORT</span><span class="env-equals">=</span><span class="env-val">3000</span></div>
+              <div class="mt-2 env-comment"># API credentials</div>
+              <div><span class="env-key">API_SECRET_KEY</span><span class="env-equals">=</span><span class="env-val">super_secret_key_12345</span></div>
+              <div class="mt-2 env-comment"># Database (example)</div>
+              <div><span class="env-key">DATABASE_URL</span><span class="env-equals">=</span><span class="env-val">postgres://user:...</span></div>
+              <div class="mt-3 flex items-center gap-1.5">
+                <span class="inline-flex items-center gap-1 text-[10px] font-sans text-teal-400/80 bg-teal-500/8 border border-teal-500/15 rounded px-2 py-0.5">
+                  ↓ dotenv.config() reads this
+                </span>
+              </div>
             </div>
           </div>
-          
-          <!-- Tip Box -->
-          <div class="bg-slate-800/40 border border-slate-700/50 rounded-xl p-3 text-xs text-slate-400">
-            <strong class="text-teal-400">Look at your VS Code Terminal!</strong>
-            <p class="mt-1">Notice how every request prints <code class="text-slate-300">GET /api/...</code> in the terminal? That is the <code class="text-amber-300">requestLogger</code> middleware at work.</p>
+
+          <!-- File: server.js -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl overflow-hidden">
+            <div class="flex items-center gap-2 px-4 py-2.5 border-b border-slate-800/80 bg-slate-900/50">
+              <div class="flex gap-1">
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
+              </div>
+              <span class="text-slate-400 text-xs font-mono font-medium">server.js</span>
+              <span class="ml-auto text-[10px] bg-blue-500/15 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">📤 Git-safe</span>
+            </div>
+            <div class="p-4 env-file">
+              <div><span class="text-violet-400">import</span> <span class="text-slate-300">dotenv</span> <span class="text-violet-400">from</span> <span class="text-green-400">'dotenv'</span>;</div>
+              <div class="flex items-center gap-2 bg-teal-500/8 border border-teal-500/15 rounded px-1 mt-0.5">
+                <span class="text-slate-300">dotenv</span><span class="text-slate-500">.</span><span class="text-blue-400">config</span><span class="text-slate-400">();</span>
+                <span class="text-[9px] text-teal-400 font-sans font-semibold ml-auto">← reads .env</span>
+              </div>
+              <div class="mt-2 env-comment">// Secrets now live in process.env</div>
+              <div><span class="text-violet-400">const</span> <span class="text-slate-300">PORT</span> <span class="text-slate-500">=</span> <span class="text-amber-400">process</span><span class="text-slate-400">.env.</span><span class="text-blue-400">PORT</span>;</div>
+              <div><span class="text-violet-400">const</span> <span class="text-slate-300">KEY</span> <span class="text-slate-500">=</span> <span class="text-amber-400">process</span><span class="text-slate-400">.env.</span><span class="text-blue-400">API_SECRET_KEY</span>;</div>
+              <div class="mt-2 env-comment">// No raw secrets in this file ✓</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Flow legend -->
+        <div class="mt-5 flex flex-wrap items-center gap-4 text-xs text-slate-500">
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-0.5 bg-teal-500/60"></div>
+            <span>dotenv reads .env on startup</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-0.5 bg-amber-500/60"></div>
+            <span>.gitignore blocks .env from GitHub</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-4 h-0.5 bg-blue-500/60"></div>
+            <span>server.js reads from process.env safely</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CTA ─────────────────────────────────────────────────────────── -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 py-4">
+        <button onclick="switchTab('chain')" class="glow-btn inline-flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-6 py-3 rounded-xl text-sm shadow-lg shadow-teal-500/20 transition-colors">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Simulate the Middleware Chain →
+        </button>
+        <button onclick="switchTab('explorer')" class="glow-btn inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold px-6 py-3 rounded-xl text-sm border border-slate-700 transition-colors">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Open API Explorer
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         MIDDLEWARE CHAIN TAB
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="view-chain" class="hidden space-y-6 fade-in">
+
+      <div class="text-center py-6">
+        <h2 class="text-3xl font-extrabold mb-2 bg-gradient-to-r from-teal-400 to-cyan-400 bg-clip-text text-transparent">Middleware Chain Simulator</h2>
+        <p class="text-slate-400 text-sm max-w-lg mx-auto">Watch your request travel through the Express middleware pipeline in real time. Toggle checkpoints to see what happens when <code class="text-rose-400">next()</code> is never called.</p>
+      </div>
+
+      <!-- Controls -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-5">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div class="flex flex-col gap-3">
+            <p class="text-slate-300 font-semibold text-sm">Simulation Controls</p>
+            <div class="flex flex-wrap gap-4">
+              <!-- Stop at Logger toggle -->
+              <label class="flex items-center gap-2.5 cursor-pointer group">
+                <div class="relative">
+                  <input type="checkbox" id="stop-at-logger" class="sr-only peer" onchange="updateChainConfig()">
+                  <div class="w-10 h-5 bg-slate-700 peer-checked:bg-rose-500/70 rounded-full transition-colors peer-focus:ring-2 peer-focus:ring-rose-500/40"></div>
+                  <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                </div>
+                <span class="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                  <span class="text-amber-400 font-mono">requestLogger</span> blocks <code class="text-slate-400">(skips next())</code>
+                </span>
+              </label>
+              <!-- Stop at Auth toggle -->
+              <label class="flex items-center gap-2.5 cursor-pointer group">
+                <div class="relative">
+                  <input type="checkbox" id="stop-at-auth" class="sr-only peer" onchange="updateChainConfig()">
+                  <div class="w-10 h-5 bg-slate-700 peer-checked:bg-rose-500/70 rounded-full transition-colors peer-focus:ring-2 peer-focus:ring-rose-500/40"></div>
+                  <div class="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+                </div>
+                <span class="text-xs text-slate-400 group-hover:text-slate-300 transition-colors">
+                  <span class="text-amber-400 font-mono">requireApiKey</span> blocks <code class="text-slate-400">(no key sent)</code>
+                </span>
+              </label>
+            </div>
+          </div>
+          <button id="sim-btn" onclick="runSimulation()" class="glow-btn flex items-center gap-2 bg-teal-500 hover:bg-teal-600 text-white font-semibold px-5 py-2.5 rounded-xl text-sm shadow-lg shadow-teal-500/20 transition-colors whitespace-nowrap">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Simulate Request
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Pipeline Visualization ──────────────────────────────────────── -->
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 overflow-x-auto">
+        <div id="chain-pipeline" class="relative min-w-[680px]">
+
+          <!-- Track line -->
+          <div class="absolute top-1/2 left-0 right-0 h-0.5 bg-slate-800 -translate-y-1/2 z-0" style="top: calc(50% - 30px);"></div>
+
+          <!-- Pipeline boxes -->
+          <div class="relative z-10 flex items-center gap-0 justify-between">
+
+            <!-- Client -->
+            <div id="box-client" class="mw-box bg-slate-800/80 border-2 border-slate-700 rounded-xl p-3 w-28 text-center shrink-0">
+              <div class="text-lg mb-1">🌐</div>
+              <div class="text-xs font-mono font-bold text-slate-300">Client</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">HTTP Request</div>
+            </div>
+
+            <!-- Arrow 1 -->
+            <div class="flex-1 flex items-center justify-center" style="margin-top: -60px;">
+              <div class="relative w-full h-1 flex items-center">
+                <div id="arrow-1" class="h-0.5 bg-slate-700 w-full transition-colors duration-500"></div>
+                <svg class="absolute right-0 shrink-0" width="8" height="12" viewBox="0 0 8 12"><path d="M0 0l8 6-8 6z" fill="#475569"/></svg>
+              </div>
+            </div>
+
+            <!-- express.json() -->
+            <div id="box-json" class="mw-box bg-blue-500/8 border-2 border-blue-500/25 rounded-xl p-3 w-32 text-center shrink-0">
+              <div class="text-[10px] font-mono font-bold text-blue-400 mb-1">express.json()</div>
+              <div class="text-[10px] text-slate-500">Parses body</div>
+              <div class="mt-1.5 text-[9px] text-slate-600 font-mono">built-in</div>
+            </div>
+
+            <!-- Arrow 2 -->
+            <div class="flex-1 flex items-center justify-center" style="margin-top: -60px;">
+              <div class="relative w-full h-1 flex items-center">
+                <div id="arrow-2" class="h-0.5 bg-slate-700 w-full transition-colors duration-500"></div>
+                <svg class="absolute right-0 shrink-0" width="8" height="12" viewBox="0 0 8 12"><path d="M0 0l8 6-8 6z" fill="#475569"/></svg>
+              </div>
+            </div>
+
+            <!-- requestLogger -->
+            <div id="box-logger" class="mw-box bg-teal-500/8 border-2 border-teal-500/25 rounded-xl p-3 w-32 text-center shrink-0">
+              <div class="text-[10px] font-mono font-bold text-teal-400 mb-1">requestLogger</div>
+              <div class="text-[10px] text-slate-500">Console log</div>
+              <div class="mt-1.5 text-[9px] text-slate-600 font-mono">custom</div>
+            </div>
+
+            <!-- Arrow 3 -->
+            <div class="flex-1 flex items-center justify-center" style="margin-top: -60px;">
+              <div class="relative w-full h-1 flex items-center">
+                <div id="arrow-3" class="h-0.5 bg-slate-700 w-full transition-colors duration-500"></div>
+                <svg class="absolute right-0 shrink-0" width="8" height="12" viewBox="0 0 8 12"><path d="M0 0l8 6-8 6z" fill="#475569"/></svg>
+              </div>
+            </div>
+
+            <!-- requireApiKey -->
+            <div id="box-auth" class="mw-box bg-amber-500/8 border-2 border-amber-500/25 rounded-xl p-3 w-32 text-center shrink-0">
+              <div class="text-[10px] font-mono font-bold text-amber-400 mb-1">requireApiKey</div>
+              <div class="text-[10px] text-slate-500">Checks header</div>
+              <div class="mt-1.5 text-[9px] text-slate-600 font-mono">custom</div>
+            </div>
+
+            <!-- Arrow 4 -->
+            <div class="flex-1 flex items-center justify-center" style="margin-top: -60px;">
+              <div class="relative w-full h-1 flex items-center">
+                <div id="arrow-4" class="h-0.5 bg-slate-700 w-full transition-colors duration-500"></div>
+                <svg class="absolute right-0 shrink-0" width="8" height="12" viewBox="0 0 8 12"><path d="M0 0l8 6-8 6z" fill="#475569"/></svg>
+              </div>
+            </div>
+
+            <!-- Route Handler -->
+            <div id="box-route" class="mw-box bg-emerald-500/8 border-2 border-emerald-500/25 rounded-xl p-3 w-32 text-center shrink-0">
+              <div class="text-[10px] font-mono font-bold text-emerald-400 mb-1">Route Handler</div>
+              <div class="text-[10px] text-slate-500">res.json()</div>
+              <div class="mt-1.5 text-[9px] text-slate-600 font-mono">endpoint</div>
+            </div>
+          </div>
+
+          <!-- Step labels (below pipeline) -->
+          <div class="flex justify-between mt-4 px-0 text-center" style="gap:0;">
+            <div class="w-28 shrink-0 text-[9px] text-slate-600">origin</div>
+            <div class="flex-1"></div>
+            <div class="w-32 shrink-0 text-[9px] text-slate-600">step 1</div>
+            <div class="flex-1"></div>
+            <div class="w-32 shrink-0 text-[9px] text-slate-600">step 2</div>
+            <div class="flex-1"></div>
+            <div class="w-32 shrink-0 text-[9px] text-slate-600">step 3</div>
+            <div class="flex-1"></div>
+            <div class="w-32 shrink-0 text-[9px] text-slate-600">destination</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Simulation log & result ──────────────────────────────────────── -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <!-- Step-by-step log -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-3 border-b border-slate-800/60 bg-slate-900/40">
+            <div class="flex gap-1">
+              <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
+              <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
+            </div>
+            <span class="text-xs text-slate-500 font-mono ml-1">Pipeline Log</span>
+          </div>
+          <div id="chain-log" class="p-4 font-mono text-xs space-y-1.5 min-h-[160px] text-slate-500">
+            <span class="text-slate-600">// Click "Simulate Request" to begin…</span>
+          </div>
+        </div>
+
+        <!-- Result card -->
+        <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-800/60 bg-slate-900/40">
+            <span class="text-xs text-slate-500 font-mono">Result</span>
+          </div>
+          <div id="chain-result" class="p-6 flex flex-col items-center justify-center min-h-[160px] text-center">
+            <span class="text-slate-600 text-sm">Awaiting simulation…</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explanation cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+          <h4 class="text-teal-400 font-semibold text-xs mb-2">✅ next() Called</h4>
+          <p class="text-slate-400 text-xs leading-relaxed">Control passes to the next middleware in the chain. The request continues its journey.</p>
+        </div>
+        <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+          <h4 class="text-rose-400 font-semibold text-xs mb-2">🚫 next() NOT Called</h4>
+          <p class="text-slate-400 text-xs leading-relaxed">The request freezes here. The client's browser will spin until it times out — forever.</p>
+        </div>
+        <div class="bg-slate-900/50 border border-slate-800 rounded-xl p-4">
+          <h4 class="text-amber-400 font-semibold text-xs mb-2">🔴 res.status(401)</h4>
+          <p class="text-slate-400 text-xs leading-relaxed">Auth middleware can <em>end</em> the request early by sending a response instead of calling next().</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         API EXPLORER TAB
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="view-explorer" class="hidden space-y-6 fade-in">
+
+      <!-- Key configurator bar -->
+      <div class="bg-slate-900/80 border border-slate-700/80 rounded-2xl p-4 flex flex-col md:flex-row items-start md:items-center gap-4 justify-between">
+        <div>
+          <h3 class="font-bold text-slate-100 text-sm flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+            Authentication Header
+          </h3>
+          <p class="text-slate-500 text-xs mt-0.5">Set the <code class="text-amber-400 font-mono">X-API-KEY</code> header to bypass the <code class="text-amber-400/80 font-mono">requireApiKey</code> middleware. Try with a wrong key first!</p>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <label class="text-xs font-mono text-slate-400 whitespace-nowrap">X-API-KEY:</label>
+          <input id="api-key-input" type="text" placeholder="super_secret_key_12345"
+            class="font-mono bg-slate-950/80 border border-slate-700 focus:border-teal-500/60 rounded-lg px-3 py-2 text-sm text-slate-300 outline-none transition-colors w-56 focus:shadow-[0_0_0_3px_rgba(20,184,166,0.1)]">
+          <button onclick="document.getElementById('api-key-input').value = 'super_secret_key_12345'"
+            class="text-xs text-teal-400 hover:text-teal-300 border border-teal-500/25 hover:border-teal-500/40 bg-teal-500/8 px-3 py-2 rounded-lg transition-colors whitespace-nowrap">
+            Paste Key
+          </button>
+        </div>
+      </div>
+
+      <!-- Main layout: endpoints + panels -->
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr_440px] gap-6">
+
+        <!-- LEFT: Endpoints list -->
+        <div class="space-y-3">
+          <h2 class="font-bold text-slate-100 text-base flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+            Live Endpoints
+          </h2>
+
+          <!-- Public route -->
+          <div class="endpoint-card bg-slate-900/50 border border-slate-800 rounded-xl p-5 group">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+                <div class="flex items-center gap-3">
+                  <span class="bg-blue-500/12 text-blue-400 border border-blue-500/20 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-md shrink-0">GET</span>
+                  <code class="text-slate-200 text-sm font-mono truncate">/api/public-data</code>
+                </div>
+                <p class="text-slate-500 text-xs leading-relaxed">
+                  <span class="inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    No authentication required. The <code class="text-blue-400">requestLogger</code> middleware still runs on this route.
+                  </span>
+                </p>
+                <div class="flex gap-2 text-[10px] font-mono">
+                  <span class="text-slate-600">Middleware: </span>
+                  <span class="text-blue-400">express.json</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-teal-400">requestLogger</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-emerald-400">handler</span>
+                </div>
+              </div>
+              <button onclick="fetchAPI('GET','/api/public-data')"
+                class="glow-btn shrink-0 bg-slate-800 hover:bg-slate-700 text-white text-xs px-4 py-2.5 rounded-lg font-semibold border border-slate-700 transition-colors">
+                Send ↗
+              </button>
+            </div>
+          </div>
+
+          <!-- Secure route -->
+          <div class="endpoint-card bg-slate-900/50 border border-slate-800 rounded-xl p-5 group">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+                <div class="flex items-center gap-3">
+                  <span class="bg-blue-500/12 text-blue-400 border border-blue-500/20 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-md shrink-0">GET</span>
+                  <code class="text-slate-200 text-sm font-mono truncate">/api/secure-data</code>
+                </div>
+                <p class="text-slate-500 text-xs leading-relaxed">
+                  <span class="inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                    Protected by <code class="text-amber-400">requireApiKey</code>. Returns <span class="text-rose-400">401</span> with no key, <span class="text-rose-400">403</span> with a wrong key.
+                  </span>
+                </p>
+                <div class="flex gap-2 text-[10px] font-mono">
+                  <span class="text-slate-600">Middleware: </span>
+                  <span class="text-blue-400">express.json</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-teal-400">requestLogger</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-amber-400">requireApiKey</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-emerald-400">handler</span>
+                </div>
+              </div>
+              <button onclick="fetchAPI('GET','/api/secure-data')"
+                class="glow-btn shrink-0 bg-teal-500 hover:bg-teal-600 text-white text-xs px-4 py-2.5 rounded-lg font-semibold shadow-lg shadow-teal-500/20 transition-colors">
+                Send ↗
+              </button>
+            </div>
+          </div>
+
+          <!-- Broken route -->
+          <div class="endpoint-card bg-rose-950/20 border border-rose-900/40 rounded-xl p-5 group relative overflow-hidden">
+            <div class="absolute inset-0 bg-rose-500/3 pointer-events-none"></div>
+            <div class="flex items-center justify-between gap-4 relative z-10">
+              <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+                <div class="flex items-center gap-3">
+                  <span class="bg-blue-500/12 text-blue-400 border border-blue-500/20 font-mono font-bold text-[11px] px-2.5 py-0.5 rounded-md shrink-0">GET</span>
+                  <code class="text-slate-200 text-sm font-mono truncate">/api/broken</code>
+                  <span class="text-[10px] bg-rose-500/15 text-rose-400 border border-rose-500/20 px-2 py-0.5 rounded-full font-semibold">💥 Crashes Intentionally</span>
+                </div>
+                <p class="text-slate-500 text-xs leading-relaxed">
+                  <span class="inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                    Tries to read <code class="text-rose-400">undefined.name</code> — TypeError! The global error handler catches it instead of killing the server.
+                  </span>
+                </p>
+                <div class="flex gap-2 text-[10px] font-mono">
+                  <span class="text-slate-600">Middleware: </span>
+                  <span class="text-teal-400">requestLogger</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-rose-400">💥 crash</span>
+                  <span class="text-slate-700">→</span>
+                  <span class="text-rose-400">errorHandler</span>
+                </div>
+              </div>
+              <button onclick="fetchAPI('GET','/api/broken')"
+                class="glow-btn shrink-0 bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-xs px-4 py-2.5 rounded-lg font-semibold transition-colors">
+                Break It ↗
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Response + Request Log panels -->
+        <div class="flex flex-col gap-4">
+
+          <!-- Response panel -->
+          <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 bg-slate-900/40">
+              <div class="flex items-center gap-2">
+                <div class="flex gap-1">
+                  <div class="w-2.5 h-2.5 rounded-full bg-rose-500/60"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-amber-500/60"></div>
+                  <div class="w-2.5 h-2.5 rounded-full bg-emerald-500/60"></div>
+                </div>
+                <span class="text-xs text-slate-500 font-mono ml-1">Response</span>
+              </div>
+              <span id="status-code" class="font-mono text-xs font-bold text-slate-600">Awaiting request…</span>
+            </div>
+            <div class="bg-slate-950/80 flex-1">
+              <div class="p-4 min-h-[160px] max-h-[240px] overflow-auto">
+                <pre id="json-output" class="text-xs font-mono leading-relaxed text-slate-500 whitespace-pre-wrap">// Send a request to see the response</pre>
+              </div>
+            </div>
+          </div>
+
+          <!-- Request log panel -->
+          <div class="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden flex-1">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800/60 bg-slate-900/40">
+              <span class="text-xs text-slate-500 font-mono">Session Request Log</span>
+              <button onclick="clearRequestLog()" class="text-[10px] text-slate-600 hover:text-slate-400 transition-colors">Clear</button>
+            </div>
+            <div id="request-log" class="p-3 max-h-[280px] overflow-y-auto space-y-1.5">
+              <div class="text-xs text-slate-600 font-mono text-center py-4">No requests yet this session</div>
+            </div>
+          </div>
+
+          <!-- Tip -->
+          <div class="bg-teal-500/5 border border-teal-500/15 rounded-xl p-3.5 text-xs text-slate-400">
+            <span class="text-teal-400 font-semibold">👀 Watch your terminal!</span>
+            <p class="mt-1 leading-relaxed">Every request triggers <code class="text-amber-300">requestLogger</code> which prints <code class="text-slate-300">[HH:MM:SS] METHOD /path</code> to the Node.js console — even for failed auth requests.</p>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <!--  QUIZ VIEW                                                            -->
-    <!-- ════════════════════════════════════════════════════════════════════ -->
-    <div id="view-quiz" class="hidden max-w-2xl mx-auto">
+    <!-- ══════════════════════════════════════════════════════════════════════
+         QUIZ TAB
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <div id="view-quiz" class="hidden max-w-2xl mx-auto fade-in">
       <div class="text-center mb-8">
-        <h2 class="text-2xl font-bold mb-2">Middleware & Config Check</h2>
-        <p class="text-slate-500 text-sm">7 questions · Instant feedback</p>
+        <div class="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 rounded-full px-4 py-1.5 text-teal-400 text-xs font-semibold mb-4">
+          🧠 Knowledge Check
+        </div>
+        <h2 class="text-2xl font-bold mb-2">Middleware &amp; Config Quiz</h2>
+        <p class="text-slate-500 text-sm">7 questions · Instant per-answer feedback</p>
       </div>
-      <div id="quiz-body" class="space-y-6"></div>
-      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-6 text-center">
-        <p id="quiz-score-text" class="text-2xl font-bold mb-1"></p>
-        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-4"></p>
-        <button onclick="initQuiz()" class="bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-all send-btn">Retake Quiz</button>
+
+      <!-- Progress bar -->
+      <div class="mb-6 bg-slate-800/60 rounded-full h-1.5 overflow-hidden">
+        <div id="quiz-progress" class="h-full bg-gradient-to-r from-teal-500 to-cyan-400 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+
+      <div id="quiz-body" class="space-y-5"></div>
+
+      <div id="quiz-footer" class="hidden mt-8 bg-slate-900/60 border border-slate-800 rounded-2xl p-7 text-center">
+        <div id="quiz-score-icon" class="text-5xl mb-4"></div>
+        <p id="quiz-score-text" class="text-3xl font-extrabold mb-1"></p>
+        <p id="quiz-grade-text" class="text-slate-400 text-sm mb-6"></p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <button onclick="initQuiz()" class="glow-btn bg-teal-500 hover:bg-teal-600 text-white px-6 py-2.5 rounded-xl font-semibold text-sm transition-colors">
+            Retake Quiz
+          </button>
+          <button onclick="switchTab('concepts')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-2.5 rounded-xl font-semibold text-sm border border-slate-700 transition-colors">
+            Review Concepts
+          </button>
+        </div>
       </div>
     </div>
 
@@ -349,25 +819,190 @@ dotenv.</span><span class="text-blue-400">config</span><span class="text-slate-4
 
   <script>
   // ═══════════════════════════════════════════════════════════════════════════
-  //  TAB SWITCHER
+  //  TAB SYSTEM
   // ═══════════════════════════════════════════════════════════════════════════
-  const TABS = ['concepts', 'explorer', 'quiz'];
+  const TABS = ['concepts', 'chain', 'explorer', 'quiz'];
+
   function switchTab(target) {
     TABS.forEach(t => {
-      document.getElementById(`view-${t}`).classList.toggle('hidden', t !== target);
-      document.getElementById(`tab-${t}`).classList.toggle('active', t === target);
+      const view = document.getElementById(`view-${t}`);
+      const btn  = document.getElementById(`tab-${t}`);
+      if (t === target) {
+        view.classList.remove('hidden');
+        view.classList.add('fade-in');
+        btn.classList.add('active');
+      } else {
+        view.classList.add('hidden');
+        view.classList.remove('fade-in');
+        btn.classList.remove('active');
+      }
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  MIDDLEWARE CHAIN SIMULATOR
+  // ═══════════════════════════════════════════════════════════════════════════
+  let simRunning = false;
+  let stopAtLogger = false;
+  let stopAtAuth   = false;
+
+  function updateChainConfig() {
+    stopAtLogger = document.getElementById('stop-at-logger').checked;
+    stopAtAuth   = document.getElementById('stop-at-auth').checked;
+    resetChainVisuals();
+  }
+
+  function resetChainVisuals() {
+    const boxes = ['client','json','logger','auth','route'];
+    boxes.forEach(id => {
+      const el = document.getElementById(`box-${id}`);
+      el.classList.remove('active-box','blocked-box','passed-box');
+    });
+    for (let i = 1; i <= 4; i++) {
+      const arrow = document.getElementById(`arrow-${i}`);
+      if (arrow) arrow.style.background = '';
+    }
+    document.getElementById('chain-log').innerHTML = '<span class="text-slate-600">// Click "Simulate Request" to begin…</span>';
+    document.getElementById('chain-result').innerHTML = '<span class="text-slate-600 text-sm">Awaiting simulation…</span>';
+  }
+
+  function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  function appendLog(html) {
+    const log = document.getElementById('chain-log');
+    if (log.innerHTML.includes('// Click')) log.innerHTML = '';
+    const line = document.createElement('div');
+    line.className = 'log-line';
+    line.innerHTML = html;
+    log.appendChild(line);
+    log.scrollTop = log.scrollHeight;
+  }
+
+  function setBoxState(id, state) {
+    const el = document.getElementById(`box-${id}`);
+    el.classList.remove('active-box','blocked-box','passed-box');
+    if (state) el.classList.add(`${state}-box`);
+  }
+
+  function lightArrow(num, color) {
+    const arrow = document.getElementById(`arrow-${num}`);
+    if (arrow) arrow.style.background = color || '#14b8a6';
+  }
+
+  async function runSimulation() {
+    if (simRunning) return;
+    simRunning = true;
+    const btn = document.getElementById('sim-btn');
+    btn.disabled = true;
+    btn.innerHTML = `<span class="inline-block w-3 h-3 border-2 border-white/30 border-t-white rounded-full" style="animation:spin 0.7s linear infinite"></span> Running…`;
+
+    // Add a quick spin keyframe if not present
+    if (!document.getElementById('spin-style')) {
+      const s = document.createElement('style');
+      s.id = 'spin-style';
+      s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(s);
+    }
+
+    resetChainVisuals();
+
+    const T = 600; // step duration in ms
+
+    // Step 0: Client
+    setBoxState('client','active');
+    appendLog('<span class="text-slate-400">→ <span class="text-cyan-400">Client</span> sends GET /api/secure-data</span>');
+    await delay(T);
+    setBoxState('client','passed');
+    lightArrow(1, '#14b8a6');
+
+    // Step 1: express.json()
+    setBoxState('json','active');
+    appendLog('<span class="text-blue-400">  [express.json()]</span> <span class="text-slate-400">Parsed request body. Calling next()…</span>');
+    await delay(T);
+    setBoxState('json','passed');
+    lightArrow(2, '#14b8a6');
+
+    // Step 2: requestLogger
+    setBoxState('logger','active');
+    appendLog('<span class="text-teal-400">  [requestLogger]</span> <span class="text-slate-400">Logged: [' + new Date().toLocaleTimeString() + '] GET /api/secure-data</span>');
+    await delay(T);
+
+    if (stopAtLogger) {
+      // Blocked here!
+      setBoxState('logger','blocked');
+      appendLog('<span class="text-rose-400">  [requestLogger]</span> <span class="text-rose-300">⚠ next() NOT called! Request is now frozen.</span>');
+      showChainResult(null, 'FROZEN', 'The request is stuck at requestLogger. The client will time out.');
+      finishSim(btn);
+      return;
+    }
+
+    setBoxState('logger','passed');
+    appendLog('<span class="text-teal-400">  [requestLogger]</span> <span class="text-slate-400">Calling next()…</span>');
+    lightArrow(3, '#14b8a6');
+
+    // Step 3: requireApiKey
+    setBoxState('auth','active');
+    appendLog('<span class="text-amber-400">  [requireApiKey]</span> <span class="text-slate-400">Checking X-API-KEY header…</span>');
+    await delay(T);
+
+    if (stopAtAuth) {
+      // Auth blocked
+      setBoxState('auth','blocked');
+      appendLog('<span class="text-amber-400">  [requireApiKey]</span> <span class="text-rose-300">🔑 No API key found! Sending 401 Unauthorized.</span>');
+      showChainResult(401, 'BLOCKED', 'Auth middleware returned 401. Route handler never ran.');
+      finishSim(btn);
+      return;
+    }
+
+    setBoxState('auth','passed');
+    appendLog('<span class="text-amber-400">  [requireApiKey]</span> <span class="text-slate-400">Key valid ✓ Calling next()…</span>');
+    lightArrow(4, '#14b8a6');
+
+    // Step 4: Route handler
+    await delay(T * 0.5);
+    setBoxState('route','active');
+    appendLog('<span class="text-emerald-400">  [Route Handler]</span> <span class="text-slate-400">Processing request…</span>');
+    await delay(T);
+    setBoxState('route','passed');
+    appendLog('<span class="text-emerald-400">  [Route Handler]</span> <span class="text-emerald-300">res.json({ success: true }) ✓</span>');
+
+    showChainResult(200, 'SUCCESS', 'All middleware passed! Route handler responded with 200 OK.');
+    finishSim(btn);
+  }
+
+  function showChainResult(status, type, message) {
+    const el = document.getElementById('chain-result');
+    const configs = {
+      SUCCESS: { code: '200 OK', color: 'text-emerald-400', bg: 'bg-emerald-500/8 border-emerald-500/20', icon: '✅' },
+      BLOCKED: { code: `${status} ${status === 401 ? 'Unauthorized' : 'Forbidden'}`, color: 'text-rose-400', bg: 'bg-rose-500/8 border-rose-500/20', icon: '🔴' },
+      FROZEN:  { code: 'No Response', color: 'text-amber-400', bg: 'bg-amber-500/8 border-amber-500/20', icon: '⏳' }
+    };
+    const cfg = configs[type];
+    el.innerHTML = `
+      <div class="border ${cfg.bg} rounded-xl p-4 w-full text-center">
+        <div class="text-3xl mb-2">${cfg.icon}</div>
+        <div class="font-mono font-bold text-lg ${cfg.color}">${cfg.code}</div>
+        <p class="text-slate-400 text-xs mt-2 leading-relaxed">${message}</p>
+      </div>`;
+  }
+
+  function finishSim(btn) {
+    simRunning = false;
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Simulate Again`;
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
   //  API EXPLORER
   // ═══════════════════════════════════════════════════════════════════════════
-  const outputEl  = document.getElementById('json-output');
-  const statusEl  = document.getElementById('status-code');
+  const outputEl = document.getElementById('json-output');
+  const statusEl = document.getElementById('status-code');
+  let sessionLog  = [];
 
   function highlight(json) {
-    return json
-      .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, m => {
+    return json.replace(
+      /(\"(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*\"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+      m => {
         if (/^"/.test(m)) {
           if (/:$/.test(m)) return `<span class="json-key">${m}</span>`;
           return `<span class="json-str">${m}</span>`;
@@ -375,111 +1010,159 @@ dotenv.</span><span class="text-blue-400">config</span><span class="text-slate-4
         if (/true|false/.test(m)) return `<span class="json-bool">${m}</span>`;
         if (/null/.test(m))       return `<span class="json-null">${m}</span>`;
         return `<span class="json-num">${m}</span>`;
-      });
+      }
+    );
+  }
+
+  function addRequestLog(method, url, status) {
+    const time = new Date().toLocaleTimeString();
+    const isOk = status >= 200 && status < 300;
+    const statusColor = isOk ? 'text-emerald-400' : (status >= 500 ? 'text-rose-400' : 'text-amber-400');
+    const methodColor = { GET: 'text-blue-400', POST: 'text-emerald-400', DELETE: 'text-rose-400' }[method] || 'text-slate-400';
+
+    sessionLog.push({ time, method, url, status });
+
+    const logEl = document.getElementById('request-log');
+    if (logEl.querySelector('.text-slate-600')) logEl.innerHTML = '';
+
+    const entry = document.createElement('div');
+    entry.className = 'log-line flex items-center gap-2 font-mono text-[11px] bg-slate-950/40 rounded-lg px-3 py-2 border border-slate-800/60';
+    entry.innerHTML = `
+      <span class="text-slate-600 shrink-0">${time}</span>
+      <span class="${methodColor} font-bold w-10 shrink-0">${method}</span>
+      <span class="text-slate-300 flex-1 truncate">${url}</span>
+      <span class="${statusColor} font-bold shrink-0">${status}</span>`;
+    logEl.insertBefore(entry, logEl.firstChild);
+  }
+
+  function clearRequestLog() {
+    sessionLog = [];
+    document.getElementById('request-log').innerHTML = '<div class="text-xs text-slate-600 font-mono text-center py-4">Log cleared</div>';
   }
 
   async function fetchAPI(method, url) {
-    outputEl.innerHTML = '<span class="text-slate-600">Loading…</span>';
+    outputEl.innerHTML = '<span class="text-slate-600 animate-pulse">Sending request…</span>';
     statusEl.textContent = '…';
     statusEl.className = 'font-mono text-xs font-bold text-slate-500';
 
-    const apiKey = document.getElementById('api-key-input').value.trim();
+    const apiKey  = document.getElementById('api-key-input').value.trim();
     const headers = { 'Content-Type': 'application/json' };
-    
-    // Attach the header if the user typed one in!
-    if (apiKey) {
-      headers['x-api-key'] = apiKey;
-    }
+    if (apiKey) headers['x-api-key'] = apiKey;
 
     try {
       const res  = await fetch(url, { method, headers });
       const data = await res.json();
+      const ok   = res.status >= 200 && res.status < 300;
 
-      const ok = res.status >= 200 && res.status < 300;
       statusEl.textContent = `${res.status} ${res.statusText}`;
-      statusEl.className = `font-mono text-xs font-bold ${ok ? 'status-ok' : 'status-err'}`;
-      outputEl.innerHTML = highlight(JSON.stringify(data, null, 2));
+      statusEl.className   = `font-mono text-xs font-bold ${ok ? 'status-ok' : 'status-err'}`;
+      outputEl.innerHTML   = highlight(JSON.stringify(data, null, 2));
+      addRequestLog(method, url, res.status);
     } catch(e) {
       statusEl.textContent = 'Network Error';
-      statusEl.className = 'font-mono text-xs font-bold status-err';
-      outputEl.innerHTML = '<span class="text-rose-400">Failed to reach the Express server.\nIs it running? (pnpm dev)</span>';
+      statusEl.className   = 'font-mono text-xs font-bold status-err';
+      outputEl.innerHTML   = '<span class="text-rose-400">Failed to reach the Express server.\nIs it running? Run: pnpm dev</span>';
+      addRequestLog(method, url, 0);
     }
   }
 
   // ═══════════════════════════════════════════════════════════════════════════
-  //  QUIZ
+  //  QUIZ ENGINE
   // ═══════════════════════════════════════════════════════════════════════════
   const QUESTIONS = [
     {
-      q: "What is the primary role of middleware in Express?",
-      opts: ["To connect to a database", "To intercept and process a request before it reaches the route handler", "To serve React files", "To define the HTTP status code"],
+      q: "What is the primary role of middleware in Express.js?",
+      opts: [
+        "To connect to a PostgreSQL database",
+        "To intercept and process a request before it reaches the route handler",
+        "To serve React components server-side",
+        "To define the final HTTP status code"
+      ],
       ans: 1,
-      exp: "Middleware sits in the 'middle' of the request cycle. It can log data, check authentication, parse JSON bodies, and more before the final route handler takes over."
+      exp: "Middleware sits 'in the middle' of the request lifecycle. It can log data, check authentication, parse JSON bodies, attach user objects to req, and more — all before the final route handler takes over."
     },
     {
-      q: "What MUST a middleware function call to pass control to the next function?",
+      q: "What MUST a middleware function call if it does NOT send a response back to the client?",
       opts: ["res.send()", "return true", "next()", "app.continue()"],
       ans: 2,
-      exp: "If a middleware function does not send a response back to the client, it MUST call next(). If it doesn't, the request will hang forever and the client will eventually time out."
+      exp: "If a middleware does not end the request (via res.json() etc.), it MUST call next(). Without it, the request pipeline stops dead — the client will wait forever and eventually time out."
     },
     {
       q: "Why do we use the 'dotenv' package and a .env file?",
-      opts: ["To make the server run faster", "To store sensitive configuration (like passwords and API keys) outside of our source code", "To configure Node.js memory limits", "To create global variables across all files"],
+      opts: [
+        "To make the Express server run faster",
+        "To store sensitive configuration (passwords, API keys) outside of source code",
+        "To configure Node.js memory limits globally",
+        "To create global CSS variables for the frontend"
+      ],
       ans: 1,
-      exp: "Code is often uploaded to GitHub. If you hardcode a database password in server.js, everyone can see it. .env files are kept local and ignored by git to keep secrets safe."
+      exp: "Code is regularly pushed to GitHub. If a database password is hardcoded in server.js, it is publicly visible. .env files store secrets locally and are excluded from Git, keeping credentials out of version control."
     },
     {
-      q: "Which file should ALWAYS contain '.env' to ensure your secrets are not uploaded to GitHub?",
+      q: "Which file must contain '.env' to ensure your secrets are never uploaded to GitHub?",
       opts: ["package.json", "server.js", ".gitignore", "README.md"],
       ans: 2,
-      exp: "The .gitignore file tells Git which files it should never track or upload. Adding '.env' is the most critical security step when setting up a Node backend."
+      exp: ".gitignore tells Git which files and folders to never track or upload. Adding '.env' to .gitignore is the single most critical security step when setting up any Node.js backend."
     },
     {
-      q: "How does Express recognize a Global Error Handling middleware?",
-      opts: ["By naming the function errorHandler()", "By placing it at the top of the file", "By passing exactly 4 arguments: (err, req, res, next)", "By using the app.error() method"],
+      q: "How does Express recognize a Global Error Handling middleware (vs. regular middleware)?",
+      opts: [
+        "By naming the function 'errorHandler'",
+        "By placing it at the very top of the file",
+        "By giving it exactly 4 arguments: (err, req, res, next)",
+        "By using the special app.error() method"
+      ],
       ans: 2,
-      exp: "Express has a special rule: if a middleware function signature has 4 arguments instead of the usual 3, Express automatically treats it as the error-handling middleware."
+      exp: "Express inspects the function's .length property (number of declared parameters). If it sees 4, it treats the middleware as an error handler. This is why you must never omit the 'next' parameter, even if you don't use it."
     },
     {
-      q: "Where should the Global Error Handling middleware be placed in server.js?",
-      opts: ["At the very top, before express.json()", "Anywhere, Express will find it", "Inside a route handler", "At the very bottom, after all other routes and middleware"],
+      q: "Where must the Global Error Handler be placed in server.js?",
+      opts: [
+        "At the very top, before express.json()",
+        "Anywhere in the file — Express will find it automatically",
+        "Inside a specific route handler",
+        "At the very bottom, after ALL other routes and middleware"
+      ],
       ans: 3,
-      exp: "Error handlers catch errors that fall through the chain. If defined at the top, none of your routes will have run yet, so it won't catch their errors."
+      exp: "Error handlers catch errors that fall through the middleware chain. If defined before your routes, no route errors will have occurred yet, so they'll never be caught. Always place it last."
     },
     {
-      q: "If an authentication middleware determines an API key is invalid, what HTTP status code should it return?",
-      opts: ["200 OK", "404 Not Found", "403 Forbidden (or 401 Unauthorized)", "500 Internal Server Error"],
+      q: "An authentication middleware finds that the provided API key is wrong (not missing, just incorrect). What HTTP status code should it return?",
+      opts: ["200 OK", "404 Not Found", "403 Forbidden", "500 Internal Server Error"],
       ans: 2,
-      exp: "401 means 'You need to log in / provide a key'. 403 means 'You provided a key, but you aren't allowed to access this'. 4xx codes always mean the client made a mistake."
+      exp: "401 Unauthorized = 'You haven't provided credentials at all'. 403 Forbidden = 'You provided credentials, but you're not allowed access'. Since a (wrong) key was provided, 403 is the most semantically correct choice."
     }
   ];
 
   let quizAnswers = {};
-  let quizDone = false;
+  let quizDone    = false;
 
   function initQuiz() {
     quizAnswers = {};
-    quizDone = false;
+    quizDone    = false;
     document.getElementById('quiz-footer').classList.add('hidden');
+    document.getElementById('quiz-progress').style.width = '0%';
+
     const body = document.getElementById('quiz-body');
     body.innerHTML = QUESTIONS.map((q, qi) => `
-      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6" id="qcard-${qi}">
-        <p class="font-medium text-slate-100 mb-4 leading-relaxed">
-          <span class="text-teal-400 font-mono mr-2">${qi + 1}.</span>${q.q}
-        </p>
-        <div class="space-y-2" id="qopts-${qi}">
+      <div class="bg-slate-900/60 border border-slate-800 rounded-2xl p-6 fade-in" id="qcard-${qi}" style="animation-delay: ${qi * 0.05}s">
+        <div class="flex items-start gap-3 mb-4">
+          <span class="shrink-0 w-7 h-7 rounded-lg bg-teal-500/15 border border-teal-500/20 flex items-center justify-center text-teal-400 font-bold font-mono text-xs">${qi + 1}</span>
+          <p class="font-medium text-slate-100 leading-relaxed text-sm">${q.q}</p>
+        </div>
+        <div class="space-y-2 pl-10" id="qopts-${qi}">
           ${q.opts.map((opt, oi) => `
             <button
               onclick="selectAnswer(${qi}, ${oi})"
               id="opt-${qi}-${oi}"
-              class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300"
+              class="quiz-opt w-full text-left flex items-center gap-3 p-3 border border-slate-800 rounded-xl text-sm text-slate-300 transition-all"
             >
-              <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-xs font-mono text-slate-500 shrink-0" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>
-              ${opt}
+              <span class="w-6 h-6 rounded-full border border-slate-700 flex items-center justify-center text-[11px] font-mono text-slate-500 shrink-0 transition-all" id="opt-icon-${qi}-${oi}">${String.fromCharCode(65+oi)}</span>
+              <span>${opt}</span>
             </button>
           `).join('')}
         </div>
-        <div id="exp-${qi}" class="hidden mt-4 p-3 rounded-xl border border-slate-700 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
+        <div id="exp-${qi}" class="hidden mt-4 ml-10 p-3.5 rounded-xl border border-slate-700/60 bg-slate-800/40 text-xs text-slate-400 leading-relaxed"></div>
       </div>
     `).join('');
   }
@@ -487,42 +1170,61 @@ dotenv.</span><span class="text-blue-400">config</span><span class="text-slate-4
   function selectAnswer(qi, oi) {
     if (quizDone || quizAnswers[qi] !== undefined) return;
     quizAnswers[qi] = oi;
-    const q = QUESTIONS[qi];
+
+    const q         = QUESTIONS[qi];
     const isCorrect = oi === q.ans;
 
+    // Style all options
     for (let i = 0; i < q.opts.length; i++) {
       const btn = document.getElementById(`opt-${qi}-${i}`);
       const ico = document.getElementById(`opt-icon-${qi}-${i}`);
+      btn.disabled = true;
       if (i === q.ans) {
         btn.classList.add('correct');
-        ico.textContent = '✓';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/10 border border-emerald-400/30';
+        ico.textContent  = '✓';
+        ico.className    = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-emerald-400 shrink-0 bg-emerald-400/12 border border-emerald-400/30 transition-all';
       } else if (i === oi && !isCorrect) {
         btn.classList.add('wrong');
-        ico.textContent = '✗';
-        ico.className = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/10 border border-rose-400/30';
+        ico.textContent  = '✗';
+        ico.className    = 'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold text-rose-400 shrink-0 bg-rose-400/12 border border-rose-400/30 transition-all';
       }
-      btn.disabled = true;
     }
 
+    // Show explanation
     const expEl = document.getElementById(`exp-${qi}`);
     expEl.innerHTML = `<span class="font-semibold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">${isCorrect ? '✅ Correct!' : '❌ Incorrect.'}</span>  ${q.exp}`;
     expEl.classList.remove('hidden');
 
-    if (Object.keys(quizAnswers).length === QUESTIONS.length) showFinalScore();
+    // Update progress bar
+    const answered = Object.keys(quizAnswers).length;
+    document.getElementById('quiz-progress').style.width = `${Math.round(answered / QUESTIONS.length * 100)}%`;
+
+    if (answered === QUESTIONS.length) {
+      setTimeout(showFinalScore, 400);
+    }
   }
 
   function showFinalScore() {
-    quizDone = true;
-    const score = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
-    const pct   = Math.round(score / QUESTIONS.length * 100);
-    const grade = pct >= 85 ? '🏆 Outstanding!' : pct >= 70 ? '👍 Great work!' : pct >= 57 ? '📖 Keep reviewing the concepts.' : '🔄 Go back through the Concepts tab and retry.';
-    document.getElementById('quiz-score-text').textContent = `${score} / ${QUESTIONS.length} — ${pct}%`;
-    document.getElementById('quiz-grade-text').textContent = grade;
+    quizDone     = true;
+    const score  = QUESTIONS.reduce((s, q, i) => s + (quizAnswers[i] === q.ans ? 1 : 0), 0);
+    const pct    = Math.round(score / QUESTIONS.length * 100);
+    const config = pct >= 86 ? { icon: '🏆', grade: 'Outstanding! You have a strong grasp of Express middleware.', color: 'text-emerald-400' }
+                 : pct >= 71 ? { icon: '👍', grade: 'Great work! Review any wrong answers and you\'re solid.', color: 'text-teal-400' }
+                 : pct >= 57 ? { icon: '📖', grade: 'Getting there. Go back through the Concepts tab.', color: 'text-amber-400' }
+                 : { icon: '🔄', grade: 'Keep at it. Reread the notes and try the simulator again.', color: 'text-rose-400' };
+
+    document.getElementById('quiz-score-icon').textContent   = config.icon;
+    document.getElementById('quiz-score-text').textContent   = `${score} / ${QUESTIONS.length} — ${pct}%`;
+    document.getElementById('quiz-score-text').className     = `text-3xl font-extrabold mb-1 ${config.color}`;
+    document.getElementById('quiz-grade-text').textContent   = config.grade;
     document.getElementById('quiz-footer').classList.remove('hidden');
+    document.getElementById('quiz-progress').style.width     = '100%';
     document.getElementById('quiz-footer').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
+  // ═══════════════════════════════════════════════════════════════════════════
+  //  INIT
+  // ═══════════════════════════════════════════════════════════════════════════
   initQuiz();
   </script>
 </body>
