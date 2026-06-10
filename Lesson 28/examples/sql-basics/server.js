@@ -68,7 +68,7 @@ async function setupNeon() {
 }
 
 // ─── SQLite (in-memory) fallback ──────────────────────────────────────────────
-function setupSQLite() {
+async function setupSQLite() {
   try {
     const { default: Database } = await import('better-sqlite3');
     sqliteDb = new Database(':memory:');

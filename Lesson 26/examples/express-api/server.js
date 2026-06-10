@@ -3,6 +3,8 @@ import cors from 'cors';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
+'./publi'
+
 // Setup needed for ES Modules to serve static files
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
