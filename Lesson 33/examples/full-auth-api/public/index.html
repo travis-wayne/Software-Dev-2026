@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth Portal — Lesson 33</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    code, pre, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    body { background-color: #0b1120; overflow-x: hidden; color: #f1f5f9; }
+
+    /* ── Cyberpunk blobs ─────────────────────────── */
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; pointer-events: none; z-index: 0; }
+    .blob-1 { width: 500px; height: 500px; background: #3b82f6; top: -100px; left: -100px; }
+    .blob-2 { width: 400px; height: 400px; background: #8b5cf6; bottom: -100px; right: -100px; }
+
+    /* ── Glass card ─────────────────────────────── */
+    .glass { background: rgba(15,23,42,0.7); border: 1px solid rgba(59,130,246,0.18); backdrop-filter: blur(12px); }
+
+    /* ── Tab styles ─────────────────────────────── */
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { background: rgba(59,130,246,0.15); border-color: #3b82f6; color: #93c5fd; }
+    .tab-btn:not(.active):hover { background: rgba(59,130,246,0.05); border-color: rgba(59,130,246,0.3); }
+
+    /* ── Forms ─────────────────────────────────── */
+    .input-field { background: rgba(15,23,42,0.8); border: 1px solid rgba(59,130,246,0.3); color: #f1f5f9; transition: all 0.2s; }
+    .input-field:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); }
+
+    .btn-primary { background: linear-gradient(135deg, #2563eb, #3b82f6); transition: all 0.25s; }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(59,130,246,0.4); }
+
+    .btn-admin { background: linear-gradient(135deg, #7c3aed, #8b5cf6); transition: all 0.25s; }
+    .btn-admin:hover { transform: translateY(-1px); box-shadow: 0 4px 20px rgba(139,92,246,0.4); }
+
+    .view-panel { display: none; }
+    .view-panel.active { display: block; animation: fadeIn 0.3s ease; }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* ── Quiz ──────────────────────────────────── */
+    .quiz-opt { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(59,130,246,0.25); }
+    .quiz-opt:hover:not(.answered) { border-color: #3b82f6; background: rgba(59,130,246,0.12); }
+    .quiz-opt.correct { border-color: #10b981; background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .quiz-opt.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.12); color: #fca5a5; }
+  </style>
+</head>
+<body class="min-h-screen relative flex flex-col items-center pt-10">
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="relative z-10 w-full max-w-5xl px-4">
+
+    <!-- HEADER -->
+    <header class="glass rounded-2xl px-6 py-4 mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-blue-600">
+          <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Auth Architecture Lab</h1>
+          <p class="text-xs text-slate-400 mt-0.5">JWT · BCrypt · Prisma</p>
+        </div>
+      </div>
+      
+      <!-- User Status Indicator -->
+      <div id="auth-status" class="flex items-center gap-3 px-4 py-2 rounded-lg border border-slate-700 bg-slate-800/50">
+        <div class="w-2 h-2 rounded-full bg-rose-500" id="status-dot"></div>
+        <span class="text-sm font-medium text-slate-300" id="status-text">Not Logged In</span>
+        <button id="btn-logout" onclick="logout()" class="hidden ml-2 text-xs text-rose-400 hover:text-rose-300 underline">Logout</button>
+      </div>
+    </header>
+
+    <!-- NAVIGATION -->
+    <nav class="flex justify-center gap-4 mb-8">
+      <button onclick="switchView('portal')" id="tab-portal" class="tab-btn active px-6 py-2.5 rounded-xl font-medium border border-transparent">🔑 Auth Portal</button>
+      <button onclick="switchView('dashboard')" id="tab-dashboard" class="tab-btn px-6 py-2.5 rounded-xl font-medium border border-transparent">🏠 Dashboard</button>
+      <button onclick="switchView('admin')" id="tab-admin" class="tab-btn px-6 py-2.5 rounded-xl font-medium border border-transparent">🛡️ Admin Panel</button>
+      <button onclick="switchView('quiz')" id="tab-quiz" class="tab-btn px-6 py-2.5 rounded-xl font-medium border border-transparent">🧠 Quiz</button>
+    </nav>
+
+    <!-- ==========================================
+         VIEW 1: AUTH PORTAL
+    ========================================== -->
+    <div id="view-portal" class="view-panel active max-w-3xl mx-auto">
+      <div class="grid md:grid-cols-2 gap-8">
+        
+        <!-- LOGIN FORM -->
+        <div class="glass rounded-2xl p-6">
+          <h2 class="text-xl font-bold mb-4">Login</h2>
+          <form id="form-login" onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Email</label>
+              <input type="email" id="login-email" class="input-field w-full rounded-lg px-3 py-2 text-sm" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Password</label>
+              <input type="password" id="login-password" class="input-field w-full rounded-lg px-3 py-2 text-sm" required>
+            </div>
+            <button type="submit" class="btn-primary w-full py-2.5 rounded-lg text-sm font-bold shadow-lg">Login ➔</button>
+          </form>
+          <div id="login-msg" class="mt-3 text-xs font-mono"></div>
+        </div>
+
+        <!-- REGISTER FORM -->
+        <div class="glass rounded-2xl p-6 border-dashed">
+          <h2 class="text-xl font-bold mb-4 text-slate-300">Register</h2>
+          <form id="form-register" onsubmit="handleRegister(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Name</label>
+              <input type="text" id="reg-name" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Email</label>
+              <input type="email" id="reg-email" class="input-field w-full rounded-lg px-3 py-2 text-sm" required>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-1">Password</label>
+              <input type="password" id="reg-password" class="input-field w-full rounded-lg px-3 py-2 text-sm" required>
+            </div>
+            <button type="submit" class="w-full py-2.5 rounded-lg text-sm font-bold bg-slate-800 hover:bg-slate-700 transition-colors border border-slate-600">Create Account</button>
+          </form>
+          <div id="reg-msg" class="mt-3 text-xs font-mono"></div>
+        </div>
+
+      </div>
+
+      <!-- LOCAL STORAGE VIEWER -->
+      <div class="mt-8 glass rounded-2xl p-6 border-emerald-500/30">
+        <h3 class="text-sm font-bold text-emerald-400 mb-2 flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
+          Browser localStorage state
+        </h3>
+        <p class="text-xs text-slate-400 mb-3">Notice how the JWT is stored on the client side after login.</p>
+        <div class="bg-slate-900 rounded-lg p-3 overflow-x-auto border border-slate-700">
+          <code id="ls-viewer" class="text-xs text-emerald-300 mono break-all">null</code>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 2: DASHBOARD (PROTECTED)
+    ========================================== -->
+    <div id="view-dashboard" class="view-panel max-w-4xl mx-auto">
+      <div class="glass rounded-2xl p-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-white">My Private Notes</h2>
+          <button onclick="fetchNotes()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm border border-slate-600">↻ Refresh</button>
+        </div>
+
+        <div id="dash-error" class="hidden mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm">
+          <strong>401 Unauthorized:</strong> You must be logged in to view this page.
+        </div>
+
+        <div id="dash-content" class="hidden">
+          <div class="grid md:grid-cols-3 gap-6 mb-8" id="notes-grid">
+            <!-- Notes injected here -->
+          </div>
+
+          <form onsubmit="handleCreateNote(event)" class="flex gap-3">
+            <input type="text" id="new-note-text" class="input-field flex-1 rounded-lg px-4 py-2" placeholder="Write a new private note..." required>
+            <button type="submit" class="btn-primary px-6 py-2 rounded-lg font-bold">Save Note</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 3: ADMIN PANEL (RBAC)
+    ========================================== -->
+    <div id="view-admin" class="view-panel max-w-4xl mx-auto">
+      <div class="glass rounded-2xl p-8 border-purple-500/30">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-2xl font-bold text-purple-300 flex items-center gap-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            Admin Command Center
+          </h2>
+          <button onclick="fetchAdminStats()" class="btn-admin px-4 py-2 rounded-lg text-sm text-white font-bold">Access Database</button>
+        </div>
+
+        <div id="admin-error" class="mb-6 p-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 text-sm mono">
+          Status: Awaiting authorization check...
+        </div>
+
+        <div id="admin-content" class="hidden">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="bg-slate-900 border border-purple-500/30 rounded-xl p-6 text-center">
+              <p class="text-sm text-slate-400 mb-1">Total Registered Users</p>
+              <p class="text-4xl font-bold text-white" id="stat-users">-</p>
+            </div>
+            <div class="bg-slate-900 border border-purple-500/30 rounded-xl p-6 text-center">
+              <p class="text-sm text-slate-400 mb-1">Total Platform Notes</p>
+              <p class="text-4xl font-bold text-white" id="stat-notes">-</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==========================================
+         VIEW 4: QUIZ
+    ========================================== -->
+    <div id="view-quiz" class="view-panel max-w-3xl mx-auto">
+      <div class="glass rounded-2xl p-8">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Auth Checkpoint</h2>
+            <p class="text-slate-400 text-sm mt-1">Test your knowledge.</p>
+          </div>
+          <div class="w-12 h-12 rounded-full border-4 border-blue-500/30 flex items-center justify-center font-bold text-blue-400" id="score-display">0/5</div>
+        </div>
+        <div id="quiz-container" class="space-y-8"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── Navigation Logic ─────────────────────────────
+    function switchView(viewId) {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.view-panel').forEach(p => p.classList.remove('active'));
+      
+      document.getElementById('tab-' + viewId).classList.add('active');
+      document.getElementById('view-' + viewId).classList.add('active');
+
+      if (viewId === 'dashboard') fetchNotes();
+    }
+
+    // ── Global State & UI Sync ───────────────────────
+    function updateState() {
+      const token = localStorage.getItem('token');
+      const lsViewer = document.getElementById('ls-viewer');
+      const statusDot = document.getElementById('status-dot');
+      const statusText = document.getElementById('status-text');
+      const btnLogout = document.getElementById('btn-logout');
+
+      if (token) {
+        lsViewer.innerText = `{ "token": "${token.substring(0, 30)}..." }`;
+        statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_#10b981]";
+        statusText.innerText = "Authenticated";
+        btnLogout.classList.remove('hidden');
+      } else {
+        lsViewer.innerText = `null`;
+        statusDot.className = "w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_8px_#ef4444]";
+        statusText.innerText = "Not Logged In";
+        btnLogout.classList.add('hidden');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('token');
+      updateState();
+      switchView('portal');
+    }
+
+    // ── Auth Endpoints ───────────────────────────────
+    async function handleRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById('reg-name').value;
+      const email = document.getElementById('reg-email').value;
+      const password = document.getElementById('reg-password').value;
+      const msgBox = document.getElementById('reg-msg');
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          msgBox.className = "mt-3 text-xs font-mono text-emerald-400";
+          msgBox.innerText = "✅ " + data.message + " (Look at the network tab, no password hash returned!)";
+          document.getElementById('form-register').reset();
+        } else {
+          msgBox.className = "mt-3 text-xs font-mono text-rose-400";
+          msgBox.innerText = "❌ " + data.error;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+      const msgBox = document.getElementById('login-msg');
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          msgBox.className = "mt-3 text-xs font-mono text-emerald-400";
+          msgBox.innerText = "✅ Login successful! Token received.";
+          // STORING THE TOKEN
+          localStorage.setItem('token', data.token);
+          updateState();
+          setTimeout(() => switchView('dashboard'), 800);
+        } else {
+          msgBox.className = "mt-3 text-xs font-mono text-rose-400";
+          msgBox.innerText = "❌ " + data.error;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    // ── Protected Endpoints ─────────────────────────
+    async function fetchNotes() {
+      const token = localStorage.getItem('token');
+      const errBox = document.getElementById('dash-error');
+      const contentBox = document.getElementById('dash-content');
+      
+      if (!token) {
+        errBox.classList.remove('hidden');
+        contentBox.classList.add('hidden');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/notes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          errBox.classList.add('hidden');
+          contentBox.classList.remove('hidden');
+          renderNotes(data.notes);
+        } else {
+          errBox.classList.remove('hidden');
+          errBox.innerHTML = `<strong>${res.status} Error:</strong> ${data.error}`;
+          contentBox.classList.add('hidden');
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    async function handleCreateNote(e) {
+      e.preventDefault();
+      const textInput = document.getElementById('new-note-text');
+      const token = localStorage.getItem('token');
+
+      await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ text: textInput.value })
+      });
+      
+      textInput.value = '';
+      fetchNotes();
+    }
+
+    function renderNotes(notes) {
+      const grid = document.getElementById('notes-grid');
+      grid.innerHTML = '';
+      if(notes.length === 0) grid.innerHTML = '<p class="text-sm text-slate-500">No notes yet.</p>';
+      
+      notes.forEach(n => {
+        grid.innerHTML += `
+          <div class="bg-slate-800/50 border border-slate-700 p-4 rounded-xl">
+            <p class="text-slate-200 text-sm">${n.text}</p>
+          </div>
+        `;
+      });
+    }
+
+    // ── RBAC Endpoint ───────────────────────────────
+    async function fetchAdminStats() {
+      const token = localStorage.getItem('token');
+      const errBox = document.getElementById('admin-error');
+      const contentBox = document.getElementById('admin-content');
+      
+      errBox.className = "mb-6 p-4 rounded-lg bg-slate-800 border border-slate-700 text-slate-400 text-sm mono";
+      errBox.innerText = "Checking authorization...";
+      contentBox.classList.add('hidden');
+
+      if (!token) {
+        errBox.className = "mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm";
+        errBox.innerText = "401 Unauthorized: No token provided.";
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/notes/admin-stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          errBox.className = "mb-6 p-4 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-sm";
+          errBox.innerText = "✅ 200 OK: Access Granted. Welcome Admin.";
+          contentBox.classList.remove('hidden');
+          document.getElementById('stat-users').innerText = data.stats.totalUsers;
+          document.getElementById('stat-notes').innerText = data.stats.totalNotes;
+        } else {
+          errBox.className = "mb-6 p-4 rounded-lg bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm";
+          errBox.innerHTML = `<strong>${res.status} Error:</strong> ${data.error}<br><span class="text-xs text-slate-400 mt-2 block">Hint: Try manually changing your role to "ADMIN" in Prisma Studio!</span>`;
+        }
+      } catch (err) { console.error(err); }
+    }
+
+    // ── Quiz ────────────────────────────────────────
+    const questions = [
+      { q: "Why should we omit the password hash from the /register response?", opts: ["It slows down the network.", "To prevent leaking sensitive cryptographic data to the client.", "Because JSON doesn't support hashes."], ans: 1 },
+      { q: "Why do we return a generic 'Invalid credentials' error instead of 'Email not found' during login?", opts: ["To save bandwidth.", "To prevent attackers from enumerating valid email addresses.", "It is required by the HTTP spec."], ans: 1 },
+      { q: "How does the browser persist the JWT between page reloads?", opts: ["It asks the server for it again.", "It stores it in a SQL database.", "It saves it in localStorage or an HttpOnly cookie."], ans: 2 },
+      { q: "What does the requireAuth middleware do?", opts: ["It hashes passwords.", "It verifies the JWT and attaches the user data to req.user.", "It checks if the user is an admin."], ans: 1 },
+      { q: "In what order should middleware be chained for an Admin route?", opts: ["app.get('/route', requireAdmin, requireAuth, controller)", "app.get('/route', requireAuth, requireAdmin, controller)"], ans: 1 }
+    ];
+
+    let score = 0;
+    const qCont = document.getElementById('quiz-container');
+
+    questions.forEach((q, i) => {
+      qCont.innerHTML += `
+        <div class="mb-6">
+          <p class="text-sm font-semibold text-slate-200 mb-3">${i+1}. ${q.q}</p>
+          <div class="space-y-2" id="q${i}">
+            ${q.opts.map((opt, j) => `<div class="quiz-opt rounded-lg p-3 text-sm text-slate-300" onclick="answer(${i}, ${j}, this)">${opt}</div>`).join('')}
+          </div>
+        </div>
+      `;
+    });
+
+    function answer(qIdx, optIdx, el) {
+      const parent = document.getElementById(`q${qIdx}`);
+      if (parent.dataset.answered) return;
+      parent.dataset.answered = "true";
+      
+      const correct = questions[qIdx].ans;
+      const opts = parent.children;
+      for(let i=0; i<opts.length; i++) opts[i].classList.add('answered');
+      
+      if (optIdx === correct) {
+        el.classList.add('correct');
+        score++;
+        document.getElementById('score-display').innerText = `${score}/5`;
+      } else {
+        el.classList.add('wrong');
+        opts[correct].classList.add('correct');
+      }
+    }
+
+    // Init
+    updateState();
+  </script>
+</body>
+</html>
