@@ -197,7 +197,67 @@ app.post('/api/movies', requireAuth, (req, res) => {
 
 ---
 
-## 5. Common Mistakes to Avoid
+## 6. Sessions vs JWT — The Full Comparison Table
+
+| Feature | Session-Based | JWT (Token-Based) |
+|---------|--------------|-------------------|
+| Where token is stored | Server memory/DB | Client (localStorage/cookie) |
+| Scalability | Hard (need shared session store) | Easy (stateless) |
+| Revocation | Easy (delete from DB) | Hard (wait for expiry) |
+| Server storage needed | Yes | No |
+| Best for | Traditional web apps with cookies | APIs, mobile apps, microservices |
+| Protection against XSS | Better (httpOnly cookies) | Vulnerable if in localStorage |
+
+---
+
+## 7. Refresh Tokens — Staying Logged In Securely
+
+If access tokens live forever, a hacker who steals one has permanent access. Therefore, access tokens should be **short-lived** (e.g., 15 minutes). But users don't want to log in every 15 minutes. 
+
+**The Solution:** Pair a short-lived access token with a long-lived **refresh token** (e.g., 7-30 days).
+
+1. **Login:** Server sends *two* tokens. The access token (short life) and a refresh token (long life).
+2. **Access Token:** Lives in memory (or localStorage if risky) and is sent on every API request.
+3. **Refresh Token:** Lives securely in an `httpOnly` cookie.
+4. **When Access Token Expires:** The API returns `401 Unauthorized`. The frontend silently calls a `/api/refresh` endpoint. The browser automatically includes the `httpOnly` refresh token. The server verifies it and issues a fresh access token.
+
+```text
+Client                  Server
+  |--- Login ------------>|
+  |<-- Access + Refresh --|
+  |                       |
+  |--- API + Access ----->|
+  |<-- 401 Expired -------|
+  |                       |
+  |--- /refresh + Ref --->|
+  |<-- New Access Token --|
+```
+
+---
+
+## 8. httpOnly Cookies vs localStorage
+
+If you store a JWT in `localStorage`, **any JavaScript on your page can read it**. If your site has an XSS (Cross-Site Scripting) vulnerability, a hacker can inject malicious JS that steals your users' tokens.
+
+**`httpOnly` cookies** are a safer alternative for web apps. An `httpOnly` cookie is sent by the server and stored by the browser. Crucially, **JavaScript cannot read an `httpOnly` cookie**.
+
+```javascript
+// Express example of setting an httpOnly cookie
+res.cookie('token', jwt, { 
+  httpOnly: true,  // JS cannot read this cookie
+  secure: true,    // HTTPS only
+  sameSite: 'Strict', // CSRF protection
+  maxAge: 24 * 60 * 60 * 1000 // 24 hours
+});
+```
+
+**Trade-offs:**
+- `localStorage` is simpler for APIs consumed by multiple clients (mobile, web, desktop) but vulnerable to XSS.
+- `httpOnly` cookies protect from XSS but require CSRF protection.
+
+---
+
+## 9. Common Mistakes to Avoid
 
 | Mistake | What Happens | Fix |
 |---------|--------------|-----|
@@ -205,9 +265,12 @@ app.post('/api/movies', requireAuth, (req, res) => {
 | Forgetting `await` on `bcrypt.hash` | You accidentally save a Promise object to the database instead of a hash | Always use `await bcrypt.hash()` |
 | Hardcoding JWT secret | If code goes to GitHub, hackers can forge tokens | Use `process.env.JWT_SECRET` |
 | Comparing plain text passwords directly | Logins always fail because the database has a hash | Always use `await bcrypt.compare(plainText, hash)` |
+| Storing sensitive data in JWT payload | Base64 decoded by anyone — data is public | Only store non-sensitive IDs (`userId`) |
+| Using localStorage for JWT in XSS-vulnerable apps | XSS attack steals all tokens | Use httpOnly cookies for production web apps |
+| Short JWT_SECRET like "secret" | Bruteforce attacks can guess the key and forge tokens | Use a strong random 64-character string |
 
 ---
 
-## 6. Next Steps
+## 10. Next Steps
 
 Work through [`exercises/auth_practice.md`](../exercises/auth_practice.md) — you'll secure a Movies API from scratch by building Registration, Login, and Authorization middleware.

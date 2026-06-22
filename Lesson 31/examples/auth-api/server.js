@@ -17,21 +17,85 @@ const JWT_SECRET = process.env.JWT_SECRET || 'fallback_secret_for_local_dev';
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Initialize In-Memory SQLite Database for the interactive lab
-const db = new Database(':memory:');
+// ─────────────────────────────────────────────────────────────
+// DB ADAPTER — Neon PostgreSQL OR better-sqlite3 fallback
+// ─────────────────────────────────────────────────────────────
+let dbAdapter = null;
 
-// Create Users table
-db.exec(`
-  CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL
-  )
-`);
+async function initDB() {
+  if (process.env.DATABASE_URL) {
+    try {
+      const { default: pg } = await import('pg');
+      const { Pool } = pg;
+      const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: { rejectUnauthorized: false } });
+      await pool.query('SELECT 1');
+      console.log('✅ Connected to Neon PostgreSQL');
+      
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          email VARCHAR(255) UNIQUE NOT NULL,
+          password_hash VARCHAR(255) NOT NULL,
+          name VARCHAR(255),
+          role VARCHAR(50) DEFAULT 'user',
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
 
-// Prepared statements for faster queries
-const insertUser = db.prepare('INSERT INTO users (username, password_hash) VALUES (?, ?)');
-const getUserByUsername = db.prepare('SELECT * FROM users WHERE username = ?');
+      dbAdapter = {
+        service: 'Neon PostgreSQL',
+        connected: true,
+        getUser: async (email) => {
+          const res = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+          return res.rows[0];
+        },
+        createUser: async (email, passwordHash, name = '', role = 'user') => {
+          const res = await pool.query(
+            'INSERT INTO users (email, password_hash, name, role) VALUES ($1, $2, $3, $4) RETURNING id',
+            [email, passwordHash, name, role]
+          );
+          return res.rows[0].id;
+        }
+      };
+    } catch (err) {
+      console.warn('⚠️  Neon connection failed:', err.message);
+      console.warn('⚠️  Falling back to SQLite in-memory.');
+      await initSQLite();
+    }
+  } else {
+    console.log('ℹ️  DATABASE_URL not set — using SQLite in-memory fallback.');
+    await initSQLite();
+  }
+}
+
+async function initSQLite() {
+  const { default: Database } = await import('better-sqlite3');
+  const db = new Database(':memory:');
+  
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      name TEXT,
+      role TEXT DEFAULT 'user',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+
+  const stmtGet = db.prepare('SELECT * FROM users WHERE email = ?');
+  const stmtInsert = db.prepare('INSERT INTO users (email, password_hash, name, role) VALUES (?, ?, ?, ?)');
+
+  dbAdapter = {
+    service: 'Local SQLite',
+    connected: true,
+    getUser: async (email) => stmtGet.get(email),
+    createUser: async (email, passwordHash, name = '', role = 'user') => {
+      const info = stmtInsert.run(email, passwordHash, name, role);
+      return info.lastInsertRowid;
+    }
+  };
+}
 
 // ============================================================
 // Auth Routes
@@ -40,16 +104,20 @@ const getUserByUsername = db.prepare('SELECT * FROM users WHERE username = ?');
 // 1. REGISTER: Hash the password and save to DB
 app.post('/api/auth/register', async (req, res, next) => {
   try {
+    // The UI sends username, we map it to email for the DB schema requirement
     const { username, password } = req.body;
+    const email = req.body.email || username;
 
-    if (!username || !password) {
-      return res.status(400).json({ success: false, error: 'Username and password required' });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Username/Email and password required' });
     }
 
+    if (!dbAdapter) return res.status(503).json({ success: false, error: 'DB not ready' });
+
     // Check if user exists
-    const existingUser = getUserByUsername.get(username);
+    const existingUser = await dbAdapter.getUser(email);
     if (existingUser) {
-      return res.status(400).json({ success: false, error: 'Username already taken' });
+      return res.status(400).json({ success: false, error: 'Username/Email already taken' });
     }
 
     // Hash the password (Cost factor 10)
@@ -57,14 +125,14 @@ app.post('/api/auth/register', async (req, res, next) => {
     const passwordHash = await bcrypt.hash(password, saltRounds);
 
     // Save user
-    const result = insertUser.run(username, passwordHash);
+    const userId = await dbAdapter.createUser(email, passwordHash);
 
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
       data: {
-        userId: result.lastInsertRowid,
-        username,
+        userId,
+        username: email,
         savedHash: passwordHash // Returning the hash ONLY for the lab visualizer
       }
     });
@@ -76,14 +144,18 @@ app.post('/api/auth/register', async (req, res, next) => {
 // 2. LOGIN: Compare hashes and issue JWT
 app.post('/api/auth/login', async (req, res, next) => {
   try {
+    // The UI sends username, we map it to email
     const { username, password } = req.body;
+    const email = req.body.email || username;
 
-    if (!username || !password) {
-      return res.status(400).json({ success: false, error: 'Username and password required' });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, error: 'Username/Email and password required' });
     }
 
+    if (!dbAdapter) return res.status(503).json({ success: false, error: 'DB not ready' });
+
     // Find user
-    const user = getUserByUsername.get(username);
+    const user = await dbAdapter.getUser(email);
     if (!user) {
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
@@ -97,7 +169,8 @@ app.post('/api/auth/login', async (req, res, next) => {
     // Passwords match! Generate JWT
     const payload = {
       userId: user.id,
-      username: user.username
+      username: user.email,
+      role: user.role
     };
 
     const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
@@ -161,6 +234,9 @@ app.use((err, req, res, next) => {
 });
 
 // Start Server
+await initDB();
+
 app.listen(PORT, () => {
   console.log(`🔒 Auth API running at http://localhost:${PORT}`);
+  console.log(`🗄️  Service: ${dbAdapter?.service}`);
 });

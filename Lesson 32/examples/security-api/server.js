@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import xss from 'xss';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import Database from 'better-sqlite3';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -33,10 +34,24 @@ app.use(express.urlencoded({ extended: true }));
 // 4. Serve static files (The Lab UI)
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Database (In-memory array for the lab)
+// Database (In-memory array for the XSS lab)
 let comments = [
   { id: 1, text: "Welcome to the comment board!" }
 ];
+
+// Database (In-memory SQLite for SQL Injection lab)
+const db = new Database(':memory:');
+db.exec(`
+  CREATE TABLE users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT UNIQUE,
+    password TEXT,
+    role TEXT
+  );
+  INSERT INTO users (email, password, role) VALUES ('admin@admin.com', 'supersecret', 'admin');
+  INSERT INTO users (email, password, role) VALUES ('alice@email.com', 'password123', 'user');
+  INSERT INTO users (email, password, role) VALUES ('bob@email.com', 'password123', 'user');
+`);
 
 // ============================================================
 // XSS LAB ROUTES
@@ -76,6 +91,49 @@ app.post('/api/comments/secure', (req, res) => {
 app.post('/api/comments/reset', (req, res) => {
   comments = [{ id: 1, text: "Welcome to the comment board!" }];
   res.json({ success: true });
+});
+
+// ============================================================
+// SQL INJECTION LAB ROUTES
+// ============================================================
+
+// VULNERABLE LOGIN (String concatenation)
+app.post('/api/sqli/vulnerable', (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    // 🚨 DANGEROUS: Concatenating raw user input directly into SQL query
+    const query = `SELECT * FROM users WHERE email = '${email}' AND password = '${password}'`;
+    const user = db.prepare(query).get(); // Will execute the concatenated string
+    
+    if (user) {
+      res.json({ success: true, message: `Welcome, ${user.email}! (Role: ${user.role})`, user, query });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid credentials', query });
+    }
+  } catch (err) {
+    // If they do something like drop table, catch it and return
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// SECURE LOGIN (Parameterized Query)
+app.post('/api/sqli/secure', (req, res) => {
+  const { email, password } = req.body;
+  
+  try {
+    // ✅ SAFE: Using ? placeholders. The database treats input strictly as data, not executable code.
+    const query = `SELECT * FROM users WHERE email = ? AND password = ?`;
+    const user = db.prepare(query).get(email, password);
+    
+    if (user) {
+      res.json({ success: true, message: `Welcome, ${user.email}! (Role: ${user.role})`, user, query });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid credentials', query });
+    }
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // ============================================================
