@@ -1,0 +1,29 @@
+name: 2 - Frontend CD (Deploy to Vercel)
+
+# Only deploy when code is pushed directly to main
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy-frontend:
+    runs-on: ubuntu-latest
+    
+    # Wait for the CI pipeline to finish! We never deploy broken code.
+    # (Assuming you have a job named 'build-and-test' in another workflow)
+    # needs: build-and-test 
+
+    steps:
+      - name: 📥 Download the Code
+        uses: actions/checkout@v4
+
+      - name: 🚀 Deploy to Vercel
+        uses: amondnet/vercel-action@v20
+        with:
+          # These secrets MUST be configured in your GitHub Repository Settings!
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          
+          # Deploy straight to production (no preview URLs)
+          vercel-args: '--prod'

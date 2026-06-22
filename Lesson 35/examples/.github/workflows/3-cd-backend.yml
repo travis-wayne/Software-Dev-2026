@@ -1,0 +1,19 @@
+name: 3 - Backend CD (Deploy to Render)
+
+# Only deploy when code is pushed directly to main
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  deploy-backend:
+    runs-on: ubuntu-latest
+    
+    # Wait for the CI pipeline to pass before deploying
+    # needs: build-and-test 
+
+    steps:
+      - name: 🚀 Trigger Render Deploy Hook
+        # Render provides a secret "Deploy Hook URL". 
+        # Making a simple HTTP request to this URL tells Render's servers to pull the latest code and deploy it.
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}

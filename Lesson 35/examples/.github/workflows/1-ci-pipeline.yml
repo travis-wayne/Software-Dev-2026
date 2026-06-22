@@ -1,0 +1,35 @@
+name: 1 - Node.js CI Pipeline (Tests)
+
+# Triggers when code is pushed to the 'main' branch
+# or when a Pull Request is opened against 'main'.
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build-and-test:
+    # We want this to run on the latest version of Ubuntu Linux
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Download the Code
+      uses: actions/checkout@v4
+
+    - name: ⚙️ Setup Node.js Environment
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        # This speeds up the pipeline by caching your node_modules
+        cache: 'npm'
+
+    - name: 📦 Install Dependencies
+      run: npm ci
+
+    - name: 🧪 Run Automated Tests
+      run: npm test
+
+    # (Optional) Add a linting step here if you use ESLint!
+    # - name: 🧹 Run Linter
+    #   run: npm run lint
