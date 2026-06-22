@@ -13,13 +13,19 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ============================================================
-// GLOBAL MIDDLEWARE
+// MIDDLEWARE
 // ============================================================
 
-// 1. Helmet sets 14 security headers (e.g. preventing Clickjacking)
-app.use(helmet());
+// 1. Serve static files (The Lab UI) FIRST, before Helmet!
+// This allows the Tailwind CSS CDN and our XSS lab scripts to execute properly,
+// because they won't be blocked by Helmet's strict Content Security Policies.
+app.use(express.static(path.join(__dirname, 'public')));
 
-// 2. Strict CORS Configuration (Only allowing specific frontend)
+// 2. Helmet sets 14 security headers (e.g. preventing Clickjacking)
+// We apply this ONLY to our API routes to demonstrate securing the backend!
+app.use('/api', helmet());
+
+// 3. Strict CORS Configuration (Only allowing specific frontend)
 // For the lab UI, we actually allow everything so it loads on localhost:3000,
 // but we set up a special endpoint to DEMONSTRATE CORS failures.
 app.use(cors({
@@ -27,12 +33,9 @@ app.use(cors({
   methods: ['GET', 'POST']
 }));
 
-// 3. Body parser
+// 4. Body parser
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// 4. Serve static files (The Lab UI)
-app.use(express.static(path.join(__dirname, 'public')));
 
 // Database (In-memory array for the XSS lab)
 let comments = [

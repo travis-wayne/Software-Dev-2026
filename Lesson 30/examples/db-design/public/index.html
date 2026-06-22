@@ -110,9 +110,10 @@
     <!-- ══════════════════════════════════════════════
          TAB NAV
     ══════════════════════════════════════════════ -->
-    <nav class="flex gap-3 mb-6">
+    <nav class="flex flex-wrap gap-3 mb-6">
       <button onclick="switchTab('concepts')"  id="tab-concepts"  class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">📖 Concepts</button>
-      <button onclick="switchTab('lab')"       id="tab-lab"       class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🔗 ER Diagram + JOIN Lab</button>
+      <button onclick="switchTab('lab')"       id="tab-lab"       class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🔗 JOIN Lab</button>
+      <button onclick="switchTab('explorer')"  id="tab-explorer"  class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🗂️ Explorer</button>
       <button onclick="switchTab('quiz')"      id="tab-quiz"      class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🧠 Quiz</button>
     </nav>
 
@@ -369,27 +370,9 @@
 
 
     <!-- ══════════════════════════════════════════════
-         TAB 2 — ER DIAGRAM + JOIN LAB
+         TAB 2 — JOIN LAB
     ══════════════════════════════════════════════ -->
     <div id="panel-lab" class="tab-panel space-y-6">
-
-      <!-- TOP HALF: Live Table Viewer -->
-      <div class="glass rounded-2xl p-6">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <h3 class="text-lg font-bold text-white">Live Database Tables</h3>
-            <p class="text-slate-400 text-sm mt-0.5">FK columns are highlighted in <span class="text-violet-300">violet</span>. Data is fetched live from the server.</p>
-          </div>
-          <button onclick="loadTables()" class="px-4 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:bg-violet-900/30 transition-colors" style="border:1px solid rgba(139,92,246,0.35)">
-            ↻ Refresh
-          </button>
-        </div>
-
-        <!-- Tables grid -->
-        <div id="tablesGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <div class="col-span-full text-center text-slate-500 py-8 text-sm">Loading tables…</div>
-        </div>
-      </div>
 
       <!-- BOTTOM HALF: SQL JOIN Editor -->
       <div class="glass rounded-2xl p-6">
@@ -436,7 +419,33 @@ INNER JOIN users ON posts.user_id = users.id;</textarea>
 
 
     <!-- ══════════════════════════════════════════════
-         TAB 3 — QUIZ
+         TAB 3 — EXPLORER
+    ══════════════════════════════════════════════ -->
+    <div id="panel-explorer" class="tab-panel space-y-6">
+
+      <!-- TOP HALF: Live Table Viewer -->
+      <div class="glass rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-5">
+          <div>
+            <h3 class="text-lg font-bold text-white">Live Database Tables</h3>
+            <p class="text-slate-400 text-sm mt-0.5">FK columns are highlighted in <span class="text-violet-300">violet</span>. Data is fetched live from the server.</p>
+          </div>
+          <button onclick="loadTables()" class="px-4 py-2 rounded-xl text-xs font-semibold text-violet-300 hover:bg-violet-900/30 transition-colors" style="border:1px solid rgba(139,92,246,0.35)">
+            ↻ Refresh
+          </button>
+        </div>
+
+        <!-- Tables grid -->
+        <div id="tablesGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="col-span-full text-center text-slate-500 py-8 text-sm">Loading tables…</div>
+        </div>
+      </div>
+
+    </div><!-- /explorer panel -->
+
+
+    <!-- ══════════════════════════════════════════════
+         TAB 4 — QUIZ
     ══════════════════════════════════════════════ -->
     <div id="panel-quiz" class="tab-panel">
       <div class="glass rounded-2xl p-8 max-w-3xl mx-auto">
@@ -470,11 +479,11 @@ INNER JOIN users ON posts.user_id = users.id;</textarea>
 
   // ── Tab switching ────────────────────────────────────────────────
   function switchTab(name) {
-    ['concepts','lab','quiz'].forEach(t => {
+    ['concepts','lab','explorer','quiz'].forEach(t => {
       document.getElementById('panel-' + t).classList.toggle('active', t === name);
       document.getElementById('tab-' + t).classList.toggle('active', t === name);
     });
-    if (name === 'lab') loadTables();
+    if (name === 'explorer') loadTables();
     if (name === 'quiz') initQuiz();
   }
 

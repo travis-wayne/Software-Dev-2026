@@ -385,7 +385,54 @@ CREATE TABLE post_tags (
 
 ---
 
-## 8. Common Mistakes to Avoid
+## 8. Indexes — The Table of Contents for Your Database
+
+### What is an Index?
+Imagine trying to find every mention of "George Washington" in a 1,000-page history book. Without an index, you have to read every single page (this is called a **Full Table Scan**). With an index at the back of the book, you look up "Washington, George", see "Pages 42, 87, 105", and go straight there.
+
+A database index works exactly the same way. It is a separate data structure that keeps a sorted list of values from a specific column, pointing to the exact disk location of the full row.
+
+### When to Use Indexes
+By default, the Primary Key (`id`) is always indexed. But Foreign Keys are **not** indexed automatically.
+
+If you run this query frequently:
+```sql
+SELECT * FROM posts WHERE user_id = 45;
+```
+Without an index on `user_id`, the database must scan the entire `posts` table. If there are millions of posts, this query will be slow.
+
+```sql
+-- The fix:
+CREATE INDEX idx_posts_user_id ON posts(user_id);
+```
+
+### The Trade-off
+Why not index every column? Because indexes speed up **reads** but slow down **writes**.
+Every time you `INSERT`, `UPDATE`, or `DELETE` a post, the database also has to update the index. If you have 20 indexes on a table, writing to that table becomes very slow.
+Rule of thumb: **Index columns that you frequently filter by (`WHERE`), sort by (`ORDER BY`), or JOIN on.**
+
+### Composite Indexes
+You can index multiple columns together. This is useful for queries that filter by both columns at once:
+```sql
+CREATE INDEX idx_post_tags_post_tag ON post_tags(post_id, tag_id);
+```
+
+---
+
+## 9. When NOT to Normalize (Pragmatic Denormalization)
+
+Normalization is a goal, not a religion. Sometimes, strict normalization makes a database too slow or queries too complex. **Denormalization** is the strategic, intentional breaking of normalization rules to improve performance.
+
+### Example: The User's Full Name
+Technically, if you store `first_name` and `last_name`, storing `full_name` violates 3NF because `full_name` depends on the other two columns.
+However, if you have to display the full name 1,000 times a second, computing it every time might waste CPU cycles. Storing `full_name` as a cached column is a valid denormalization.
+
+### The Rule of Thumb
+**Never denormalize prematurely.** Start with a perfectly normalized database. Only denormalize when you have proven, measured read performance issues that an index cannot solve.
+
+---
+
+## 10. Common Mistakes to Avoid
 
 | Mistake | What Goes Wrong | Fix |
 |---------|----------------|-----|
@@ -393,10 +440,12 @@ CREATE TABLE post_tags (
 | Forgetting the UNIQUE constraint on 1:1 FK | Becomes 1:N by accident | Add `UNIQUE` to the FK column for 1:1 relationships |
 | Ambiguous column name in JOIN | `column reference "id" is ambiguous` | Always qualify: `users.id`, `posts.id` |
 | Missing ON DELETE behaviour | Foreign key constraint errors when deleting parents | Explicitly decide: CASCADE, SET NULL, or RESTRICT |
-| No index on Foreign Key columns | JOIN queries are slow on large tables | `CREATE INDEX ON posts(user_id)` speeds up JOINs significantly |
+| Not indexing FK columns | JOINs on large tables take minutes | `CREATE INDEX ON tablename(fk_column)` |
+| Over-normalizing simple data | Too many JOINs for simple queries | Store simple lookups like country codes as ENUMs or inline |
 
 ---
 
-## 9. Next Steps
+## 11. Next Steps
 
-Work through [`exercises/design_practice.md`](../exercises/design_practice.md) — you'll design a full E-commerce schema from scratch (Customers, Products, Orders, Order_Items), draw the ERD, write the SQL, and test it on your Neon database.
+1. **Explore the Lab:** Use the DB Design Explorer (tab 'Explorer') to see live queries in action.
+2. **Practice:** Work through [`exercises/design_practice.md`](../exercises/design_practice.md) — you'll design a full E-commerce schema from scratch (Customers, Products, Orders, Order_Items), draw the ERD, write the SQL, and test it on your Neon database.

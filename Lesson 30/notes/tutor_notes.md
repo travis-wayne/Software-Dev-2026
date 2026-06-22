@@ -83,6 +83,8 @@ This is normalization — and it's not about databases being complex. It's about
 
 **Formative check**: Ask 2-3 students: *"The school database has a `classes` table. Can a student be in many classes? Can a class have many students? What kind of relationship is that?"* (M:N — they need a junction table)
 
+**Formative check**: Ask: *"If we have an `orders` table and we add a `customer_address` column to it, which normal form does this likely violate if a customer can have many orders?"* (3NF — the address depends on the customer, not the order).
+
 ---
 
 ### Phase 2 — Neon + ER Diagram Walkthrough (15 min)
@@ -105,6 +107,8 @@ This is normalization — and it's not about databases being complex. It's about
    - Point out the 🔑 FK columns highlighted in violet
    - Run `/api/tables` in browser devtools to show the raw JSON response
    - **Ask**: "What does `user_id: 1` in the `posts` table mean? Where does that 1 point?"
+
+**Formative check**: Ask: *"If an arrow points from `posts.user_id` to `users.id`, which table must be created first when we write our SQL script?"* (The `users` table must be created first, because `posts` needs to reference it).
 
 ---
 
@@ -130,6 +134,8 @@ This is normalization — and it's not about databases being complex. It's about
 **Bonus** (5 min): Ask students what happens if they type `DROP TABLE users;`
 - The UI blocks it with a 403 error
 - Discuss why destructive queries are blocked in web UIs
+
+**Formative check**: Ask: *"When would it make sense to intentionally duplicate data (pragmatic denormalization) instead of using a JOIN?"* (When read performance is critical and computing a value on-the-fly is too slow, and you have proven that an index isn't enough).
 
 ---
 

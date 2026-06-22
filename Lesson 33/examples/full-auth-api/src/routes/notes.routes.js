@@ -1,11 +1,9 @@
 import express from 'express';
 import { requireAuth } from '../middleware/auth.js';
 import { requireAdmin } from '../middleware/role.js';
-import pkg from '@prisma/client';
-const { PrismaClient } = pkg;
+import prisma from '../lib/prisma.js';
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 // In-memory array for notes (to keep the lab simple and focused on Auth)
 // In a real app, this would be in the database linked to the User via a relation.
