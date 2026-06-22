@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Security Lab — Lesson 32</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    code, pre, textarea, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    body { background-color: #0b1120; overflow-x: hidden; }
+
+    /* ── Cyberpunk blobs ─────────────────────────── */
+    .blob { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; pointer-events: none; z-index: 0; }
+    .blob-1 { width: 600px; height: 600px; background: #10b981; top: -200px; left: -150px; }
+    .blob-2 { width: 500px; height: 500px; background: #ef4444; bottom: -180px; right: -120px; }
+
+    /* ── Glass card ─────────────────────────────── */
+    .glass { background: rgba(15,23,42,0.7); border: 1px solid rgba(16,185,129,0.18); backdrop-filter: blur(12px); }
+    .glass-danger { border: 1px solid rgba(239,68,68,0.3); }
+
+    /* ── Tab styles ─────────────────────────────── */
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { background: rgba(16,185,129,0.15); border-color: #10b981; color: #6ee7b7; }
+    .tab-btn:not(.active):hover { background: rgba(16,185,129,0.05); border-color: rgba(16,185,129,0.3); }
+
+    /* ── Glow button ────────────────────────────── */
+    .btn-glow { background: linear-gradient(135deg, #059669, #10b981); transition: all 0.25s; }
+    .btn-glow:hover { background: linear-gradient(135deg, #047857, #059669); box-shadow: 0 0 24px rgba(16,185,129,0.4); transform: translateY(-1px); }
+    
+    .btn-danger { background: linear-gradient(135deg, #dc2626, #ef4444); transition: all 0.25s; }
+    .btn-danger:hover { box-shadow: 0 0 24px rgba(239,68,68,0.4); transform: translateY(-1px); }
+
+    /* ── Smooth show/hide ──────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Forms ─────────────────────────────────── */
+    .input-field { background: rgba(15,23,42,0.8); border: 1px solid rgba(16,185,129,0.3); color: #f1f5f9; transition: all 0.2s; }
+    .input-field:focus { outline: none; border-color: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,0.2); }
+    .input-field.danger { border-color: rgba(239,68,68,0.4); }
+    .input-field.danger:focus { border-color: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
+
+    /* ── Quiz ──────────────────────────────────── */
+    .quiz-opt { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(16,185,129,0.25); }
+    .quiz-opt:hover:not(.answered) { border-color: #10b981; background: rgba(16,185,129,0.12); }
+    .quiz-opt.correct { border-color: #10b981; background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .quiz-opt.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.12); color: #fca5a5; }
+
+    /* Make injected HTML elements visible but slightly styled to prove XSS */
+    #xss-render-area h1 { font-size: 1.5rem; font-weight: bold; color: white; }
+    #xss-render-area b { font-weight: bold; color: #fbbf24; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-200 relative">
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════ -->
+    <header class="glass rounded-2xl px-6 py-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center bg-emerald-600">
+          <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Security Lab</h1>
+          <p class="text-xs text-slate-400 mt-0.5">CORS · XSS · Helmet</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold text-emerald-300" style="background:rgba(16,185,129,0.2);border:1px solid rgba(16,185,129,0.4)">Lesson 32</span>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════
+         TAB NAV
+    ══════════════════════════════════════════════ -->
+    <nav class="flex gap-3 mb-6">
+      <button onclick="switchTab('concepts')" id="tab-concepts" class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">📖 Concepts</button>
+      <button onclick="switchTab('lab')"      id="tab-lab"      class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🛡️ Security Lab</button>
+      <button onclick="switchTab('quiz')"     id="tab-quiz"     class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🧠 Quiz</button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 1 — CONCEPTS
+    ══════════════════════════════════════════════ -->
+    <div id="panel-concepts" class="tab-panel space-y-8">
+      
+      <div class="grid md:grid-cols-3 gap-6">
+        <!-- CORS -->
+        <div class="glass rounded-2xl p-6">
+          <div class="text-emerald-400 mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path></svg></div>
+          <h3 class="font-bold text-lg text-white mb-2">CORS (Cross-Origin)</h3>
+          <p class="text-sm text-slate-400">Browsers block JS from fetching data from other domains (Same-Origin Policy). CORS is the backend telling the browser "It's okay, let them in."</p>
+        </div>
+        
+        <!-- XSS -->
+        <div class="glass rounded-2xl p-6 glass-danger">
+          <div class="text-rose-400 mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg></div>
+          <h3 class="font-bold text-lg text-white mb-2">XSS (Cross-Site Scripting)</h3>
+          <p class="text-sm text-slate-400">Attackers inject malicious <code>&lt;script&gt;</code> tags into your database. If you render it as HTML, the browser executes it and they steal your data.</p>
+        </div>
+
+        <!-- CSRF -->
+        <div class="glass rounded-2xl p-6">
+          <div class="text-amber-400 mb-3"><svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg></div>
+          <h3 class="font-bold text-lg text-white mb-2">CSRF (Cross-Site Forgery)</h3>
+          <p class="text-sm text-slate-400">Attackers trick the browser into sending requests to your bank. If the browser auto-attaches cookies, the bank thinks you made the request.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 2 — SECURITY LAB
+    ══════════════════════════════════════════════ -->
+    <div id="panel-lab" class="tab-panel active space-y-8">
+      
+      <!-- XSS LAB -->
+      <div class="glass rounded-2xl p-8 border border-rose-500/30">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              XSS Simulator (Hack Yourself)
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">Try to inject Javascript into the comment board.</p>
+          </div>
+          <button onclick="resetComments()" class="text-xs text-slate-400 hover:text-white border border-slate-600 px-3 py-1.5 rounded-lg">Reset DB</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+          
+          <!-- Input Area -->
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-semibold text-rose-400 mb-2 uppercase tracking-wide">Payload Injection</label>
+              <textarea id="xss-input" class="input-field danger w-full h-24 rounded-lg p-3 text-sm mono" placeholder="<script>alert('I stole your cookies: ' + document.cookie)</script>"></textarea>
+            </div>
+            
+            <div class="flex gap-3">
+              <button onclick="submitComment('vulnerable')" class="btn-danger flex-1 py-3 rounded-lg text-sm font-bold text-white shadow-lg shadow-rose-500/20">
+                Submit Vulnerable ❌
+              </button>
+              <button onclick="submitComment('secure')" class="btn-glow flex-1 py-3 rounded-lg text-sm font-bold text-white shadow-lg shadow-emerald-500/20">
+                Submit Secure ✅
+              </button>
+            </div>
+            
+            <div class="mt-4 p-4 bg-slate-900 rounded-lg border border-slate-700 text-xs text-slate-400">
+              <p><strong>Vulnerable:</strong> Saves text directly to DB.</p>
+              <p class="mt-1"><strong>Secure:</strong> Runs text through the <code>xss()</code> NPM package before saving.</p>
+            </div>
+          </div>
+
+          <!-- Render Area -->
+          <div>
+            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wide">Rendered Output (innerHTML)</label>
+            <div id="xss-render-area" class="bg-slate-900 border border-slate-700 rounded-lg p-4 min-h-[16rem] space-y-3">
+              <!-- Comments will load here -->
+            </div>
+            <p class="text-[0.65rem] text-slate-500 mt-2 text-right">In React, output is auto-encoded. Here we simulate vanilla <code>innerHTML</code> rendering to demonstrate the backend's responsibility.</p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- CORS LAB -->
+      <div class="glass rounded-2xl p-8 border border-emerald-500/30">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+              <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path></svg>
+              CORS Tester
+            </h2>
+            <p class="text-sm text-slate-400 mt-1">The endpoint <code>/api/cors-strict</code> only allows <code>http://my-strict-frontend.com</code>.</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 rounded-lg p-4 border border-slate-700 flex flex-col md:flex-row gap-4 items-center justify-between">
+          <code class="text-sm text-slate-300 mono">fetch('http://localhost:3000/api/cors-strict')</code>
+          <button onclick="testCORS()" class="btn-glow px-6 py-2 rounded-lg text-sm font-bold text-white whitespace-nowrap">Execute Fetch</button>
+        </div>
+
+        <div id="cors-result" class="mt-4 p-4 rounded-lg hidden font-mono text-xs"></div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 3 — QUIZ
+    ══════════════════════════════════════════════ -->
+    <div id="panel-quiz" class="tab-panel">
+      <div class="glass rounded-2xl p-8 max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Security Checkpoint</h2>
+            <p class="text-slate-400 text-sm mt-1">Test your hacker defenses.</p>
+          </div>
+          <div class="w-12 h-12 rounded-full border-4 border-emerald-500/30 flex items-center justify-center font-bold text-emerald-400" id="score-display">0/7</div>
+        </div>
+
+        <div id="quiz-container" class="space-y-8">
+          <!-- JS injected quiz -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.getElementById('panel-' + tabId).classList.add('active');
+    }
+
+    // ==========================================
+    // XSS LAB LOGIC
+    // ==========================================
+    
+    // Initial Load
+    fetchComments();
+
+    async function fetchComments() {
+      try {
+        const res = await fetch('/api/comments');
+        const data = await res.json();
+        renderComments(data.comments);
+      } catch (e) { console.error(e); }
+    }
+
+    async function submitComment(type) {
+      const text = document.getElementById('xss-input').value;
+      if (!text) return;
+
+      const endpoint = type === 'vulnerable' ? '/api/comments/vulnerable' : '/api/comments/secure';
+      
+      try {
+        await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        document.getElementById('xss-input').value = '';
+        fetchComments();
+      } catch(e) { alert("Error submitting comment"); }
+    }
+
+    async function resetComments() {
+      await fetch('/api/comments/reset', { method: 'POST' });
+      fetchComments();
+    }
+
+    function renderComments(comments) {
+      const area = document.getElementById('xss-render-area');
+      area.innerHTML = ''; // Clear
+
+      comments.forEach(c => {
+        const div = document.createElement('div');
+        div.className = "p-3 rounded bg-slate-800 border border-slate-700 text-sm text-slate-300 break-words";
+        
+        // VULNERABLE RENDER: We are intentionally using innerHTML to demonstrate what happens 
+        // if the backend doesn't sanitize data and the frontend renders it raw.
+        // NOTE: Modern browsers sometimes block script execution in innerHTML natively, 
+        // but image onError payloads still work, e.g. <img src=x onerror=alert('Hacked')>
+        div.innerHTML = `<span class="text-xs text-slate-500 block mb-1">ID: ${c.id}</span> ${c.text}`;
+        
+        area.appendChild(div);
+
+        // Hack to make inserted script tags execute (since standard innerHTML ignores them)
+        const scripts = div.getElementsByTagName('script');
+        for (let i = 0; i < scripts.length; i++) {
+          const s = document.createElement('script');
+          s.text = scripts[i].innerText;
+          document.body.appendChild(s).parentNode.removeChild(s);
+        }
+      });
+    }
+
+    // ==========================================
+    // CORS LAB LOGIC
+    // ==========================================
+    async function testCORS() {
+      const resDiv = document.getElementById('cors-result');
+      resDiv.classList.remove('hidden', 'bg-emerald-900/30', 'text-emerald-400', 'bg-rose-900/30', 'text-rose-400');
+      
+      resDiv.innerHTML = "Fetching...";
+      resDiv.className = "mt-4 p-4 rounded-lg font-mono text-xs bg-slate-800 text-slate-300";
+
+      try {
+        const res = await fetch('/api/cors-strict');
+        // If it succeeds (which it shouldn't, unless origin matches)
+        const data = await res.json();
+        resDiv.classList.add('bg-emerald-900/30', 'text-emerald-400');
+        resDiv.innerHTML = `Success! ${data.message}`;
+      } catch (e) {
+        // Fetch throws a TypeError when CORS blocks it
+        resDiv.classList.add('bg-rose-900/30', 'text-rose-400', 'border', 'border-rose-500/30');
+        resDiv.innerHTML = `
+          <strong class="text-rose-500">CORS Error!</strong><br><br>
+          Access to fetch at 'http://localhost:3000/api/cors-strict' from origin '${window.location.origin}' has been blocked by CORS policy: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+          <br><br><span class="text-slate-400">^ This is what happens when your frontend origin isn't in the backend's whitelist.</span>
+        `;
+      }
+    }
+
+    // ==========================================
+    // QUIZ LOGIC
+    // ==========================================
+    const questions = [
+      { q: "What does the Same-Origin Policy (SOP) do?", opts: ["Blocks malicious scripts from executing in the DB.", "Blocks the browser from fetching data from a different domain by default.", "Encrypts passwords before they hit the database."], ans: 1 },
+      { q: "Why is app.use(cors()) without any options dangerous for an authenticated API?", opts: ["It allows any website in the world to make requests to your API.", "It slows down the server.", "It causes XSS vulnerabilities."], ans: 0 },
+      { q: "What is an XSS attack?", opts: ["Stealing passwords from a database leak.", "Tricking a user into making an unwanted bank transfer.", "Injecting malicious JavaScript into a webpage that other users view."], ans: 2 },
+      { q: "If your React frontend automatically encodes output (e.g., turning < into &lt;), do you still need to sanitize data on the backend?", opts: ["No, the frontend handles it.", "Yes, because hackers can bypass the frontend and send raw data to the API via Postman."], ans: 1 },
+      { q: "What is Helmet?", opts: ["A library to hash passwords.", "An Express middleware that automatically adds 14 security headers to responses.", "A database validation tool."], ans: 1 },
+      { q: "What does setting a cookie to SameSite=Lax help prevent?", opts: ["XSS attacks", "SQL Injection", "CSRF attacks"], ans: 2 },
+      { q: "How do you mitigate XSS on the Backend?", opts: ["Use JSON Web Tokens.", "Sanitize incoming string inputs before saving to the database.", "Add a CORS header."], ans: 1 }
+    ];
+
+    let score = 0;
+    const qCont = document.getElementById('quiz-container');
+
+    questions.forEach((q, i) => {
+      const div = document.createElement('div');
+      div.className = 'mb-6';
+      div.innerHTML = `
+        <p class="text-sm font-semibold text-slate-200 mb-3">${i+1}. ${q.q}</p>
+        <div class="space-y-2" id="q${i}">
+          ${q.opts.map((opt, j) => `<div class="quiz-opt rounded-lg p-3 text-sm text-slate-300" onclick="answer(${i}, ${j}, this)">${opt}</div>`).join('')}
+        </div>
+      `;
+      qCont.appendChild(div);
+    });
+
+    function answer(qIdx, optIdx, el) {
+      const parent = document.getElementById(`q${qIdx}`);
+      if (parent.dataset.answered) return;
+      parent.dataset.answered = "true";
+      
+      const correct = questions[qIdx].ans;
+      const opts = parent.children;
+      
+      for(let i=0; i<opts.length; i++) opts[i].classList.add('answered');
+      
+      if (optIdx === correct) {
+        el.classList.add('correct');
+        score++;
+        document.getElementById('score-display').innerText = `${score}/7`;
+      } else {
+        el.classList.add('wrong');
+        opts[correct].classList.add('correct');
+      }
+    }
+  </script>
+</body>
+</html>
