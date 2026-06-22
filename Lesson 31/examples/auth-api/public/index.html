@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Auth & Security Explorer — Lesson 31</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    code, pre, textarea, .mono { font-family: 'JetBrains Mono', monospace; }
+
+    body { background-color: #0b1120; }
+
+    /* ── Ambient blobs ─────────────────────────── */
+    .blob { position: fixed; border-radius: 50%; filter: blur(120px); opacity: 0.15; pointer-events: none; z-index: 0; }
+    .blob-1 { width: 600px; height: 600px; background: #ec4899; top: -200px; left: -150px; }
+    .blob-2 { width: 500px; height: 500px; background: #e11d48; bottom: -180px; right: -120px; }
+    .blob-3 { width: 350px; height: 350px; background: #f43f5e; top: 45%; left: 35%; }
+
+    /* ── Glass card ─────────────────────────────── */
+    .glass { background: rgba(15,23,42,0.7); border: 1px solid rgba(244,63,94,0.18); backdrop-filter: blur(12px); }
+
+    /* ── Tab styles ─────────────────────────────── */
+    .tab-btn { transition: all 0.2s ease; }
+    .tab-btn.active { background: rgba(244,63,94,0.25); border-color: #f43f5e; color: #fda4af; }
+    .tab-btn:not(.active):hover { background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.4); }
+
+    /* ── Glow button ────────────────────────────── */
+    .btn-glow { background: linear-gradient(135deg, #e11d48, #f43f5e); transition: all 0.25s; }
+    .btn-glow:hover { background: linear-gradient(135deg, #be123c, #e11d48); box-shadow: 0 0 24px rgba(244,63,94,0.55); transform: translateY(-1px); }
+    .btn-glow:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    /* ── Smooth show/hide ──────────────────────── */
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Forms ─────────────────────────────────── */
+    .input-field { background: rgba(15,23,42,0.8); border: 1px solid rgba(244,63,94,0.3); color: #f1f5f9; transition: all 0.2s; }
+    .input-field:focus { outline: none; border-color: #f43f5e; box-shadow: 0 0 0 3px rgba(244,63,94,0.2); }
+
+    /* ── Quiz ──────────────────────────────────── */
+    .quiz-opt { transition: all 0.2s; cursor: pointer; border: 1px solid rgba(244,63,94,0.25); }
+    .quiz-opt:hover:not(.answered) { border-color: #f43f5e; background: rgba(244,63,94,0.12); }
+    .quiz-opt.correct { border-color: #10b981; background: rgba(16,185,129,0.15); color: #6ee7b7; }
+    .quiz-opt.wrong   { border-color: #ef4444; background: rgba(239,68,68,0.12); color: #fca5a5; }
+
+    /* ── JSON viewer ───────────────────────────── */
+    .json-key { color: #fda4af; }
+    .json-string { color: #86efac; }
+    .json-number { color: #93c5fd; }
+  </style>
+</head>
+<body class="min-h-screen text-slate-200 relative overflow-x-hidden">
+
+  <!-- Ambient blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="relative z-10 max-w-7xl mx-auto px-4 py-6">
+
+    <!-- ══════════════════════════════════════════════
+         HEADER
+    ══════════════════════════════════════════════ -->
+    <header class="glass rounded-2xl px-6 py-4 mb-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-4">
+        <!-- Shield icon -->
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#e11d48,#f43f5e)">
+          <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-white">Auth &amp; Security Explorer</h1>
+          <p class="text-xs text-slate-400 mt-0.5">Bcrypt · JWT · Stateless Sessions</p>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-semibold text-rose-300" style="background:rgba(244,63,94,0.2);border:1px solid rgba(244,63,94,0.4)">Lesson 31</span>
+      </div>
+    </header>
+
+    <!-- ══════════════════════════════════════════════
+         TAB NAV
+    ══════════════════════════════════════════════ -->
+    <nav class="flex gap-3 mb-6">
+      <button onclick="switchTab('concepts')" id="tab-concepts" class="tab-btn active px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">📖 Concepts</button>
+      <button onclick="switchTab('lab')"      id="tab-lab"      class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🔐 Auth Lab</button>
+      <button onclick="switchTab('quiz')"     id="tab-quiz"     class="tab-btn px-5 py-2.5 rounded-xl text-sm font-medium border border-transparent text-slate-300">🧠 Quiz</button>
+    </nav>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 1 — CONCEPTS
+    ══════════════════════════════════════════════ -->
+    <div id="panel-concepts" class="tab-panel active space-y-8">
+
+      <!-- Hero -->
+      <div class="rounded-2xl p-8 relative overflow-hidden" style="background:linear-gradient(135deg,rgba(225,29,72,0.4),rgba(244,63,94,0.1));border:1px solid rgba(244,63,94,0.3)">
+        <div class="relative z-10">
+          <p class="text-rose-300 font-semibold text-sm uppercase tracking-widest mb-2">Lesson 31</p>
+          <h2 class="text-3xl font-extrabold text-white mb-3">Who goes there?</h2>
+          <p class="text-slate-300 max-w-2xl leading-relaxed">Learn to hash passwords securely so even you can't read them, and use JSON Web Tokens (JWTs) to build blazing fast, stateless authentication systems.</p>
+          <button onclick="switchTab('lab')" class="btn-glow mt-6 px-6 py-3 rounded-xl text-white font-semibold text-sm inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            Launch Auth Lab
+          </button>
+        </div>
+        <div class="absolute right-0 top-0 w-64 h-64 rounded-full opacity-10" style="background:radial-gradient(circle,#fda4af,transparent);transform:translate(30%,-30%)"></div>
+      </div>
+
+      <!-- Analogy Grid -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <!-- Sessions -->
+        <div class="glass rounded-2xl p-6">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-slate-800 border border-slate-600">📋</div>
+            <h3 class="font-bold text-slate-200">Sessions: The VIP List</h3>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed mb-4">Stateful. The server keeps a list of who is logged in. The client just holds a tiny "Session ID" cookie.</p>
+          <ul class="text-xs text-slate-400 space-y-2">
+            <li class="flex gap-2">✅ <span class="text-slate-300">Easy to log someone out instantly.</span></li>
+            <li class="flex gap-2">❌ <span class="text-slate-300">Server must check the DB on every single request.</span></li>
+            <li class="flex gap-2">❌ <span class="text-slate-300">Harder to scale across multiple servers.</span></li>
+          </ul>
+        </div>
+
+        <!-- JWT -->
+        <div class="glass rounded-2xl p-6" style="border-color: rgba(244,63,94,0.4)">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center bg-rose-900/40 border border-rose-500/50">💳</div>
+            <h3 class="font-bold text-rose-300">JWT: The Hotel Key Card</h3>
+          </div>
+          <p class="text-sm text-slate-400 leading-relaxed mb-4">Stateless. The server cryptographically signs a "token" with user data and an expiration date. It doesn't remember who has them.</p>
+          <ul class="text-xs text-slate-400 space-y-2">
+            <li class="flex gap-2">✅ <span class="text-slate-300">No DB lookups. Blazing fast.</span></li>
+            <li class="flex gap-2">✅ <span class="text-slate-300">Scales infinitely across any number of servers.</span></li>
+            <li class="flex gap-2">❌ <span class="text-slate-300">Very hard to revoke before it expires.</span></li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 2 — AUTH LAB
+    ══════════════════════════════════════════════ -->
+    <div id="panel-lab" class="tab-panel space-y-6">
+      
+      <div class="grid lg:grid-cols-3 gap-6">
+        
+        <!-- 1. Register (Bcrypt) -->
+        <div class="glass rounded-2xl p-6 flex flex-col">
+          <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-rose-500 text-xs flex items-center justify-center">1</span> Register</h3>
+          <p class="text-xs text-slate-400 mb-6">See Bcrypt hashing in action.</p>
+          
+          <div class="space-y-4 flex-grow">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Username</label>
+              <input type="text" id="reg-user" class="input-field w-full rounded-lg px-3 py-2 text-sm" placeholder="e.g. alice_dev">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Password</label>
+              <input type="password" id="reg-pass" class="input-field w-full rounded-lg px-3 py-2 text-sm" placeholder="••••••••">
+            </div>
+            <button onclick="handleRegister()" class="btn-glow w-full py-2.5 rounded-lg text-sm font-bold text-white mt-2">Hash &amp; Save to DB</button>
+          </div>
+
+          <div id="reg-result" class="mt-6 hidden">
+            <p class="text-xs text-emerald-400 font-medium mb-2">Stored in Database:</p>
+            <div class="bg-slate-900 rounded-lg p-3 border border-slate-700">
+              <p class="text-[0.65rem] mono text-slate-300 break-all" id="reg-hash"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Login (JWT Issue) -->
+        <div class="glass rounded-2xl p-6 flex flex-col">
+          <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-rose-500 text-xs flex items-center justify-center">2</span> Login</h3>
+          <p class="text-xs text-slate-400 mb-6">Trade credentials for a JWT.</p>
+          
+          <div class="space-y-4 flex-grow">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Username</label>
+              <input type="text" id="log-user" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Password</label>
+              <input type="password" id="log-pass" class="input-field w-full rounded-lg px-3 py-2 text-sm">
+            </div>
+            <button onclick="handleLogin()" class="btn-glow w-full py-2.5 rounded-lg text-sm font-bold text-white mt-2">Login</button>
+          </div>
+        </div>
+
+        <!-- 3. Protected Area (Verify) -->
+        <div class="glass rounded-2xl p-6 flex flex-col relative overflow-hidden" id="vip-area">
+          <!-- Locked Overlay -->
+          <div id="locked-overlay" class="absolute inset-0 bg-slate-900/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center border border-slate-700 rounded-2xl">
+            <svg class="w-12 h-12 text-slate-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <h4 class="font-bold text-white mb-1">Protected Route</h4>
+            <p class="text-xs text-slate-400">You need a valid JWT to enter.</p>
+          </div>
+
+          <h3 class="text-lg font-bold text-white mb-1 flex items-center gap-2"><span class="w-6 h-6 rounded-full bg-rose-500 text-xs flex items-center justify-center">3</span> The VIP Room</h3>
+          <p class="text-xs text-slate-400 mb-4">Request sent with: <code class="mono text-rose-300">Authorization: Bearer &lt;token&gt;</code></p>
+          
+          <div id="vip-content" class="flex-grow space-y-4">
+            <div class="bg-emerald-900/30 border border-emerald-500/30 rounded-lg p-4">
+              <p class="text-xs text-emerald-400 font-bold mb-1">Server Response (200 OK)</p>
+              <p class="text-sm text-slate-200" id="vip-message"></p>
+            </div>
+            
+            <div>
+              <p class="text-xs text-slate-400 mb-2">Decoded User Payload:</p>
+              <pre class="bg-slate-900 rounded-lg p-3 text-xs mono text-slate-300 border border-slate-700" id="vip-payload"></pre>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- JWT Inspector (Appears after login) -->
+      <div id="jwt-inspector" class="glass rounded-2xl p-6 hidden">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-bold text-white">Your JSON Web Token</h3>
+          <button onclick="useToken()" class="btn-glow px-4 py-2 rounded-lg text-xs font-bold text-white">Use Token to enter VIP Room</button>
+        </div>
+        
+        <div class="grid md:grid-cols-2 gap-6">
+          <div>
+            <p class="text-xs text-slate-400 mb-2">Raw Token (try tampering with it!)</p>
+            <textarea id="raw-jwt" class="input-field w-full h-32 rounded-lg p-3 text-xs mono break-all leading-relaxed" oninput="parseJWT()"></textarea>
+            <p class="text-[0.65rem] text-slate-500 mt-2">If you change a single character, the signature breaks and the server will reject it.</p>
+          </div>
+          
+          <div class="space-y-3">
+            <div>
+              <p class="text-xs font-bold text-rose-400 mb-1">Header (Algorithm)</p>
+              <pre class="bg-slate-900 rounded-lg p-2 text-xs mono text-rose-300 border border-rose-900/50" id="jwt-header"></pre>
+            </div>
+            <div>
+              <p class="text-xs font-bold text-emerald-400 mb-1">Payload (Data)</p>
+              <pre class="bg-slate-900 rounded-lg p-2 text-xs mono text-emerald-300 border border-emerald-900/50" id="jwt-payload"></pre>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 3 — QUIZ
+    ══════════════════════════════════════════════ -->
+    <div id="panel-quiz" class="tab-panel">
+      <div class="glass rounded-2xl p-8 max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+          <div>
+            <h2 class="text-2xl font-bold text-white">Auth Checkpoint</h2>
+            <p class="text-slate-400 text-sm mt-1">Test your security knowledge.</p>
+          </div>
+          <div class="w-12 h-12 rounded-full border-4 border-rose-500/30 flex items-center justify-center font-bold text-rose-400" id="score-display">0/7</div>
+        </div>
+
+        <div id="quiz-container" class="space-y-8">
+          <!-- JS injected quiz -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(panel => panel.classList.remove('active'));
+      document.getElementById('tab-' + tabId).classList.add('active');
+      document.getElementById('panel-' + tabId).classList.add('active');
+    }
+
+    // Auth State
+    let currentToken = '';
+
+    // Lab logic
+    async function handleRegister() {
+      const u = document.getElementById('reg-user').value;
+      const p = document.getElementById('reg-pass').value;
+      
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          document.getElementById('reg-result').classList.remove('hidden');
+          document.getElementById('reg-hash').innerText = data.data.savedHash;
+          // Auto fill login
+          document.getElementById('log-user').value = u;
+          document.getElementById('log-pass').value = p;
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch(e) { alert("Network error"); }
+    }
+
+    async function handleLogin() {
+      const u = document.getElementById('log-user').value;
+      const p = document.getElementById('log-pass').value;
+      
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: u, password: p })
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          currentToken = data.token;
+          document.getElementById('jwt-inspector').classList.remove('hidden');
+          document.getElementById('raw-jwt').value = currentToken;
+          parseJWT();
+        } else {
+          alert("Login Failed: " + data.error);
+        }
+      } catch(e) { alert("Network error"); }
+    }
+
+    function parseJWT() {
+      const token = document.getElementById('raw-jwt').value;
+      currentToken = token; // Update state if user tampered with it
+      
+      try {
+        const parts = token.split('.');
+        if(parts.length !== 3) throw new Error();
+        
+        const header = JSON.parse(atob(parts[0]));
+        const payload = JSON.parse(atob(parts[1]));
+        
+        document.getElementById('jwt-header').innerText = JSON.stringify(header, null, 2);
+        document.getElementById('jwt-payload').innerText = JSON.stringify(payload, null, 2);
+      } catch(e) {
+        document.getElementById('jwt-header').innerText = "Invalid Base64";
+        document.getElementById('jwt-payload').innerText = "Invalid Base64";
+      }
+    }
+
+    async function useToken() {
+      if(!currentToken) return;
+      
+      try {
+        const res = await fetch('/api/secure/profile', {
+          headers: { 'Authorization': `Bearer ${currentToken}` }
+        });
+        const data = await res.json();
+        
+        if (res.ok && data.success) {
+          document.getElementById('locked-overlay').classList.add('hidden');
+          document.getElementById('vip-message').innerText = data.data.secretMessage;
+          document.getElementById('vip-payload').innerText = JSON.stringify(data.data.user, null, 2);
+        } else {
+          document.getElementById('locked-overlay').classList.remove('hidden');
+          alert(`Access Denied (${res.status}): ${data.error}`);
+        }
+      } catch(e) { alert("Network error"); }
+    }
+
+    // Quiz Data
+    const questions = [
+      { q: "What is the primary difference between Hashing and Encryption?", opts: ["Hashing is one-way, encryption is two-way.", "Encryption is one-way, hashing is two-way.", "Hashing is only for JWTs."], ans: 0 },
+      { q: "What is safe to store in a JWT payload?", opts: ["The user's plaintext password.", "The user's credit card number.", "A non-sensitive User ID."], ans: 2 },
+      { q: "Why do we use Bcrypt instead of fast algorithms like MD5 for passwords?", opts: ["MD5 is too hard to implement.", "Bcrypt is intentionally slow, preventing brute-force attacks.", "Bcrypt creates shorter strings."], ans: 1 },
+      { q: "In a JWT, what guarantees that the payload hasn't been tampered with?", opts: ["The Base64 encoding.", "The Signature.", "The Header algorithm."], ans: 1 },
+      { q: "How do you verify a login password against a Bcrypt hash?", opts: ["if (password === hash)", "if (bcrypt.hash(password) === hash)", "await bcrypt.compare(password, hash)"], ans: 2 },
+      { q: "Which auth pattern requires the server to query the database on every single request?", opts: ["JSON Web Tokens", "Session-Based Auth", "Both require DB lookups"], ans: 1 },
+      { q: "What is the standard HTTP header format for sending a JWT?", opts: ["Token: <jwt>", "Authorization: Bearer <jwt>", "JWT: Bearer <jwt>"], ans: 1 }
+    ];
+
+    let score = 0;
+    const qCont = document.getElementById('quiz-container');
+
+    questions.forEach((q, i) => {
+      const div = document.createElement('div');
+      div.className = 'mb-6';
+      div.innerHTML = `
+        <p class="text-sm font-semibold text-slate-200 mb-3">${i+1}. ${q.q}</p>
+        <div class="space-y-2" id="q${i}">
+          ${q.opts.map((opt, j) => `<div class="quiz-opt rounded-lg p-3 text-sm text-slate-300" onclick="answer(${i}, ${j}, this)">${opt}</div>`).join('')}
+        </div>
+      `;
+      qCont.appendChild(div);
+    });
+
+    function answer(qIdx, optIdx, el) {
+      const parent = document.getElementById(`q${qIdx}`);
+      if (parent.dataset.answered) return;
+      parent.dataset.answered = "true";
+      
+      const correct = questions[qIdx].ans;
+      const opts = parent.children;
+      
+      for(let i=0; i<opts.length; i++) opts[i].classList.add('answered');
+      
+      if (optIdx === correct) {
+        el.classList.add('correct');
+        score++;
+        document.getElementById('score-display').innerText = `${score}/7`;
+      } else {
+        el.classList.add('wrong');
+        opts[correct].classList.add('correct');
+      }
+    }
+  </script>
+</body>
+</html>
