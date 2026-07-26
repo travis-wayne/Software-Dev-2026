@@ -1,0 +1,39 @@
+# =========================================================================
+# Lesson 44: Kubernetes Services (ClusterIP & LoadBalancer)
+# Provides stable IP networking and automatic load balancing across replica pods
+# =========================================================================
+
+# --- Internal ClusterIP Service (For microservice-to-microservice communication) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: express-api-internal
+  labels:
+    app: express-api
+spec:
+  type: ClusterIP                # Default: Accessible ONLY from inside the Kubernetes cluster
+  selector:
+    app: express-api             # Routes traffic to ANY healthy pod with label 'app: express-api'
+  ports:
+    - name: http
+      protocol: TCP
+      port: 3007                 # Port exposed to internal cluster pods
+      targetPort: 3007           # Internal container listening port
+
+---
+# --- External LoadBalancer Service (For user web browsers & API Gateway routing) ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: express-api-loadbalancer
+  labels:
+    app: express-api
+spec:
+  type: LoadBalancer             # Requests an external public IP from cloud infrastructure (AWS/GCP/Azure)
+  selector:
+    app: express-api
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80                   # External listening port (e.g., http://api.mydomain.com:80)
+      targetPort: 3007           # Maps external port 80 -> internal container port 3007

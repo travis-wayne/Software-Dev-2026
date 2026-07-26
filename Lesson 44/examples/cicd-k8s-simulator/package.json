@@ -1,0 +1,27 @@
+{
+  "name": "cicd-k8s-simulator",
+  "version": "1.0.0",
+  "description": "Standalone offline runtime simulator for GitHub Actions CI/CD Docker image builds and Kubernetes cluster self-healing orchestration",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 0",
+    "postinstall": "node -e \"import('fs').then(fs => !fs.existsSync('.env') && fs.copyFileSync('.env.example', '.env'));\""
+  },
+  "keywords": [
+    "kubernetes",
+    "cicd",
+    "simulator",
+    "docker",
+    "orchestration",
+    "pnpm"
+  ],
+  "author": "Software-Dev-2026 Curriculum",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}
