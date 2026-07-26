@@ -1,0 +1,60 @@
+// Lesson 41 — Prisma Declarative Database Schema
+// Learn more about Prisma schema file syntax: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "sqlite" // Change to "postgresql" when connecting to Neon Cloud PostgreSQL!
+  url      = env("DATABASE_URL")
+  // directUrl = env("DIRECT_URL") // Uncomment when provider is "postgresql" for Neon DB Migrations!
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String?
+  role      String   @default("USER") // In PostgreSQL, this can be modeled as enum Role { USER ADMIN }
+  orders    Order[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email]) // Index for high-speed authentication lookups!
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  total     Float
+  status    String      @default("COMPLETED")
+  items     OrderItem[]
+  createdAt DateTime    @default(now())
+
+  @@index([userId]) // Index foreign key column to optimize relational JOIN performance!
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   Int
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int     @default(1)
+  price     Float
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model Product {
+  id          Int         @id @default(autoincrement())
+  sku         String      @unique
+  name        String
+  description String?
+  price       Float
+  stock       Int         @default(100)
+  orderItems  OrderItem[]
+  createdAt   DateTime    @default(now())
+}

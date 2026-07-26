@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 41 — ORMs, ODMs & Database Migrations Interactive Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --bg-color: #0b1120;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-hover: rgba(255, 255, 255, 0.08);
+      --accent-emerald: #10b981;
+      --accent-violet: #8b5cf6;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-blue: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 32px;
+    }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 32px;
+      padding: 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 { font-size: 1.8rem; font-weight: 800; color: #ffffff; }
+    h1 span { color: var(--accent-emerald); }
+    .subtitle { color: #94a3b8; font-size: 0.95rem; }
+
+    /* Tabs */
+    .tabs-nav {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 12px 24px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover { background: var(--glass-hover); color: #ffffff; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(139, 92, 246, 0.2));
+      border-color: var(--accent-emerald);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Tab Content */
+    .tab-content { max-width: 1200px; margin: 0 auto; display: none; }
+    .tab-content.active { display: block; }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover { border-color: rgba(255, 255, 255, 0.18); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.2s ease; border: none;
+    }
+    .btn-emerald { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .btn-emerald:hover { background: linear-gradient(135deg, #34d399, #10b981); transform: translateY(-1px); }
+    .btn-violet { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
+    .btn-violet:hover { background: linear-gradient(135deg, #a78bfa, #8b5cf6); transform: translateY(-1px); }
+    .btn-rose { background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; }
+    .btn-rose:hover { background: linear-gradient(135deg, #fb7185, #f43f5e); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid var(--glass-border); color: #cbd5e1; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+    .btn-ghost.active { background: rgba(16, 185, 129, 0.15); border-color: #10b981; color: #34d399; }
+
+    .glass-input {
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #f8fafc;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      width: 100%;
+      margin-top: 6px;
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus { outline: none; border-color: var(--accent-emerald); }
+
+    .badge {
+      display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-violet { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-rose { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-blue { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fcd34d; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    .terminal-box {
+      background: #000000;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+    }
+
+    /* Quiz Option */
+    .quiz-opt {
+      padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px;
+    }
+    .quiz-opt:hover { background: rgba(255,255,255,0.05); }
+    .quiz-opt.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; }
+    .quiz-opt.wrong { background: rgba(244, 63, 94, 0.2); border-color: #f43f5e; color: #fda4af; }
+
+    /* Timeline Step */
+    .timeline-step {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .timeline-step:hover { background: rgba(255,255,255,0.05); }
+    .timeline-step.active {
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+    .step-badge {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.85rem; flex-shrink: 0;
+    }
+    .timeline-step.active .step-badge { background: var(--accent-emerald); color: #000; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>⚡ Advanced Backend <span>Interactive Lab</span></h1>
+      <p class="subtitle">Lesson 41 — Explore Prisma ORM, Mongoose ODM, Schema Migrations, and N+1 Performance Optimization</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <span class="badge badge-emerald">Prisma v5.22</span>
+      <span class="badge badge-violet">Mongoose v8.3</span>
+      <span class="badge badge-blue">Neon PostgreSQL</span>
+    </div>
+  </header>
+
+  <nav class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('translator')">⚡ 1. ORM vs. SQL Translator</button>
+    <button class="tab-btn" onclick="switchTab('timeline')">⏳ 2. Migration Timeline Simulator</button>
+    <button class="tab-btn" onclick="switchTab('analyzer')">🚀 3. N+1 Query & Populate Analyzer</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">🧠 4. Mastery Quiz</button>
+  </nav>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 1: ORM VS SQL TRANSLATOR -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-translator" class="tab-content active">
+    <div class="grid-2">
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">🔑 Select High-Level ORM / ODM Command</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+          ORMs and ODMs allow you to write clean, type-safe JavaScript. Select an operation below to see how the engine compiles your object code into raw SQL or MongoDB queries under the hood!
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <button class="btn btn-ghost active" id="trans-btn-1" onclick="selectTranslation(1)" style="justify-content: flex-start; padding: 14px; text-align: left;">
+            <span class="badge badge-emerald" style="width: 80px; text-align: center;">Prisma</span>
+            <div>
+              <div style="font-weight: 700; color: #fff;">Eager Relational JOIN (findMany + include)</div>
+              <div style="font-size: 0.75rem; opacity: 0.8;">Fetch users and their nested orders in one request</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="trans-btn-2" onclick="selectTranslation(2)" style="justify-content: flex-start; padding: 14px; text-align: left;">
+            <span class="badge badge-violet" style="width: 80px; text-align: center;">Mongoose</span>
+            <div>
+              <div style="font-weight: 700; color: #fff;">Cross-Collection NoSQL Join (.populate)</div>
+              <div style="font-size: 0.75rem; opacity: 0.8;">Resolve referenced user details inside Order documents</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="trans-btn-3" onclick="selectTranslation(3)" style="justify-content: flex-start; padding: 14px; text-align: left;">
+            <span class="badge badge-emerald" style="width: 80px; text-align: center;">Prisma</span>
+            <div>
+              <div style="font-weight: 700; color: #fff;">Atomic Transaction ($transaction)</div>
+              <div style="font-size: 0.75rem; opacity: 0.8;">Verify inventory and insert order simultaneously</div>
+            </div>
+          </button>
+
+          <button class="btn btn-ghost" id="trans-btn-4" onclick="selectTranslation(4)" style="justify-content: flex-start; padding: 14px; text-align: left;">
+            <span class="badge badge-violet" style="width: 80px; text-align: center;">Mongoose</span>
+            <div>
+              <div style="font-weight: 700; color: #fff;">Pre-Save Middleware & Virtuals</div>
+              <div style="font-size: 0.75rem; opacity: 0.8;">Automated bcrypt hashing before document serialization</div>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">🔍 Compilation Inspector</h2>
+        
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">1. High-Level JavaScript / TypeScript Code:</div>
+          <pre class="terminal-box" id="trans-js" style="height: 140px; color: #34d399;">// Loading...</pre>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">2. Compiled Database Engine Query (SQL / NoSQL):</div>
+          <pre class="terminal-box" id="trans-sql" style="height: 180px; color: #38bdf8;">// Loading...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 2: MIGRATION TIMELINE SIMULATOR -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-timeline" class="tab-content">
+    <div class="grid-2">
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">⏳ Schema Evolution Time Machine</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+          Database migrations treat your schema like Git version control. Step through chronological migration files below to see how Prisma safely transforms tables and updates its internal tracking log!
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div class="timeline-step active" id="time-step-0" onclick="selectTimeline(0)">
+            <div class="step-badge">v1.0</div>
+            <div>
+              <div style="font-weight: 700; color: #fff;">20260701_init.sql</div>
+              <div style="font-size: 0.8rem; color: #94a3b8;">Initial release: Create Users table with primary key and unique email index.</div>
+            </div>
+          </div>
+
+          <div class="timeline-step" id="time-step-1" onclick="selectTimeline(1)">
+            <div class="step-badge">v1.1</div>
+            <div>
+              <div style="font-weight: 700; color: #fff;">20260710_add_phone.sql</div>
+              <div style="font-size: 0.8rem; color: #94a3b8;">Feature request: Add optional phone string column to Users table.</div>
+            </div>
+          </div>
+
+          <div class="timeline-step" id="time-step-2" onclick="selectTimeline(2)">
+            <div class="step-badge">v1.2</div>
+            <div>
+              <div style="font-weight: 700; color: #fff;">20260718_add_role_enum.sql</div>
+              <div style="font-size: 0.8rem; color: #94a3b8;">Security enhancement: Create Role enum (USER, ADMIN) and set default.</div>
+            </div>
+          </div>
+
+          <div class="timeline-step" id="time-step-3" onclick="selectTimeline(3)">
+            <div class="step-badge">v2.0</div>
+            <div>
+              <div style="font-weight: 700; color: #fff;">20260726_create_orders.sql</div>
+              <div style="font-size: 0.8rem; color: #94a3b8;">Major release: Create Orders table with foreign key reference to User and B-Tree index.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="glass-card" style="background: rgba(0,0,0,0.3); padding: 16px; margin-top: 16px; margin-bottom: 0;">
+          <h4 style="font-size: 0.85rem; color: #cbd5e1; margin-bottom: 6px;">💡 Why Direct URLs Matter for Migrations</h4>
+          <p style="font-size: 0.8rem; color: #94a3b8;">
+            In serverless cloud databases like <strong>Neon PostgreSQL</strong>, normal API queries use a connection pooler (port 6543). However, migrations require persistent <strong>DDL advisory table locks</strong>. You MUST configure a separate <code>DIRECT_URL</code> (port 5432) in <code>schema.prisma</code> to prevent migrations from hanging!
+          </p>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h2 style="font-size: 1.3rem; font-weight: 700;">📜 Generated SQL Migration File</h2>
+          <span id="time-badge" class="badge badge-emerald">Status: Applied</span>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">1. DDL Script (prisma/migrations/<timestamp>_<name>/migration.sql):</div>
+          <pre class="terminal-box" id="time-sql" style="height: 160px; color: #7dd3fc;">// Loading...</pre>
+        </div>
+
+        <div>
+          <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">2. Production Tracking Table (_prisma_migrations log):</div>
+          <pre class="terminal-box" id="time-log" style="height: 140px; color: #c4b5fd;">// Loading...</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 3: N+1 QUERY ANALYZER -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-analyzer" class="tab-content">
+    <div class="grid-2">
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">🚀 The N+1 Query Problem Simulator</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+          The most common performance disaster in ORM applications occurs when you loop over parent records and make sequential database calls for their children. Compare the Naive Loop against Eager Loading below!
+        </p>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 20px;">
+          <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 10px;">Select Number of Parent Users to Fetch:</label>
+          <div style="display: flex; gap: 10px;">
+            <button id="count-10" class="btn btn-ghost active" onclick="setRecordCount(10)" style="flex: 1; padding: 8px;">10 Users</button>
+            <button id="count-50" class="btn btn-ghost" onclick="setRecordCount(50)" style="flex: 1; padding: 8px;">50 Users</button>
+            <button id="count-100" class="btn btn-ghost" onclick="setRecordCount(100)" style="flex: 1; padding: 8px;">100 Users</button>
+            <button id="count-500" class="btn btn-ghost" onclick="setRecordCount(500)" style="flex: 1; padding: 8px;">500 Users</button>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 14px;">
+          <button class="btn btn-rose" onclick="runAnalyzer('naive')" style="flex: 1; padding: 14px; font-size: 0.95rem;">
+            ❌ Test Naive Loop (N+1)
+          </button>
+          <button class="btn btn-emerald" onclick="runAnalyzer('eager')" style="flex: 1; padding: 14px; font-size: 0.95rem;">
+            ✅ Test Eager Loading (JOIN)
+          </button>
+        </div>
+
+        <div id="analyzer-explainer" style="margin-top: 20px; font-size: 0.85rem; color: #94a3b8; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border-left: 4px solid #f43f5e;">
+          Select a test above to simulate network round-trips and response latency.
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h2 style="font-size: 1.3rem; font-weight: 700;">📊 Performance Metrics</h2>
+          <span id="perf-badge" class="badge badge-rose">Status: Waiting</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+          <div style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 10px; border: 1px solid var(--glass-border); text-align: center;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Total DB Requests</div>
+            <div id="metric-queries" style="font-size: 2.2rem; font-weight: 800; color: #f43f5e; margin-top: 4px;">—</div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.4); padding: 16px; border-radius: 10px; border: 1px solid var(--glass-border); text-align: center;">
+            <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Simulated Latency</div>
+            <div id="metric-latency" style="font-size: 2.2rem; font-weight: 800; color: #f59e0b; margin-top: 4px;">—</div>
+          </div>
+        </div>
+
+        <div style="font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 6px;">Simulated Database Execution Log:</div>
+        <pre class="terminal-box" id="metric-log" style="height: 180px; color: #fda4af;">// Awaiting performance simulation...</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 4: MASTERY QUIZ -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-quiz" class="tab-content">
+    <div class="glass-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 700;">🧠 ORMs, ODMs & Migrations Quiz</h2>
+          <p style="color: #94a3b8; font-size: 0.9rem;">Test your knowledge of declarative schemas, migration lifecycles, and NoSQL optimization.</p>
+        </div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-emerald);">
+          Score: <span id="quiz-score">0</span> / 7
+        </div>
+      </div>
+
+      <div id="quiz-questions-container">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TRANSLATOR LOGIC
+    // ─────────────────────────────────────────────────────────────
+    const translations = {
+      1: {
+        js: `// Prisma: Fetch all users and eagerly load their nested orders & items
+const usersWithOrders = await prisma.user.findMany({
+  where: { role: 'ADMIN' },
+  include: {
+    orders: {
+      include: { items: true }
+    }
+  }
+});`,
+        sql: `-- Compiled by Prisma Engine into a single optimized SQL JOIN:
+SELECT 
+  "User"."id", "User"."email", "User"."name",
+  "Order"."id" AS "order_id", "Order"."total",
+  "OrderItem"."id" AS "item_id", "OrderItem"."price"
+FROM "User"
+LEFT JOIN "Order" ON "User"."id" = "Order"."userId"
+LEFT JOIN "OrderItem" ON "Order"."id" = "OrderItem"."orderId"
+WHERE "User"."role" = 'ADMIN';`
+      },
+      2: {
+        js: `// Mongoose: Query orders collection and populate cross-collection user details
+const orders = await Order.find({ status: 'COMPLETED' })
+  .populate('user', 'firstName lastName email -_id')
+  .populate('items.product', 'name price');`,
+        sql: `// Compiled by Mongoose into sequential batched NoSQL queries ($in operator):
+1. db.orders.find({ status: 'COMPLETED' });
+   // Collects unique user ObjectIds: [ObjectId("66a0...01"), ObjectId("66a0...02")]
+2. db.users.find({ 
+     _id: { $in: [ObjectId("66a0...01"), ObjectId("66a0...02")] }
+   }, { firstName: 1, lastName: 1, email: 1, _id: 0 });
+// Engine merges retrieved user documents into Order objects in Node.js memory!`
+      },
+      3: {
+        js: `// Prisma: Atomic Transaction to deduct stock and create order simultaneously
+const newOrder = await prisma.$transaction(async (tx) => {
+  await tx.product.update({
+    where: { id: 10 },
+    data: { stock: { decrement: 2 } }
+  });
+
+  return await tx.order.create({
+    data: { userId: 101, total: 599.98, status: 'PAID' }
+  });
+});`,
+        sql: `-- Compiled SQL Transaction with ACID guarantees:
+BEGIN;
+  UPDATE "Product" SET "stock" = "stock" - 2 WHERE "id" = 10;
+  INSERT INTO "Order" ("userId", "total", "status") VALUES (101, 599.98, 'PAID') RETURNING "id";
+COMMIT;`
+      },
+      4: {
+        js: `// Mongoose: Pre-Save Middleware & Virtual property serialization
+userSchema.pre('save', async function() {
+  if (!this.isModified('password')) return; // Guard clause!
+  this.password = await bcrypt.hash(this.password, 10);
+});
+
+const user = await User.create({
+  email: 'travis@wayne.com',
+  firstName: 'Travis',
+  lastName: 'Wayne',
+  password: 'plaintext_password'
+});`,
+        sql: `// Compiled Mongoose Engine Execution Lifecycle:
+1. Intercepts User.create() call before MongoDB serialization.
+2. Checks this.isModified('password') -> returns true.
+3. Executes bcrypt.hash('plaintext_password', 10) -> "$2a$10$w8.1...".
+4. Executes MongoDB Insert:
+   db.users.insertOne({
+     email: 'travis@wayne.com',
+     firstName: 'Travis',
+     lastName: 'Wayne',
+     password: '$2a$10$w8.1...', // Securely hashed!
+     createdAt: ISODate("2026-07-26T23:00:00Z")
+   });`
+      }
+    };
+
+    function selectTranslation(id) {
+      for (let i = 1; i <= 4; i++) {
+        document.getElementById('trans-btn-' + i).className = i === id ? 'btn btn-ghost active' : 'btn btn-ghost';
+      }
+      document.getElementById('trans-js').textContent = translations[id].js;
+      document.getElementById('trans-sql').textContent = translations[id].sql;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // TIMELINE LOGIC
+    // ─────────────────────────────────────────────────────────────
+    const timelineData = [
+      {
+        sql: `-- CreateTable
+CREATE TABLE "User" (
+    "id" SERIAL NOT NULL,
+    "email" TEXT NOT NULL,
+    "name" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");`,
+        log: `_prisma_migrations tracking table:
+| id | migration_name | checksum | finished_at |
+|---|---|---|---|
+| 1 | 20260701_init | a8f9... | 2026-07-01 10:00:00 |`
+      },
+      {
+        sql: `-- AlterTable
+ALTER TABLE "User" ADD COLUMN "phone" TEXT;`,
+        log: `_prisma_migrations tracking table:
+| id | migration_name | checksum | finished_at |
+|---|---|---|---|
+| 1 | 20260701_init | a8f9... | 2026-07-01 10:00:00 |
+| 2 | 20260710_add_phone | c4b2... | 2026-07-10 14:22:10 |`
+      },
+      {
+        sql: `-- CreateEnum
+CREATE TYPE "Role" AS ENUM ('USER', 'ADMIN');
+
+-- AlterTable
+ALTER TABLE "User" ADD COLUMN "role" "Role" NOT NULL DEFAULT 'USER';`,
+        log: `_prisma_migrations tracking table:
+| id | migration_name | checksum | finished_at |
+|---|---|---|---|
+| 1 | 20260701_init | a8f9... | 2026-07-01 10:00:00 |
+| 2 | 20260710_add_phone | c4b2... | 2026-07-10 14:22:10 |
+| 3 | 20260718_add_role_enum | e9d1... | 2026-07-18 09:15:45 |`
+      },
+      {
+        sql: `-- CreateTable
+CREATE TABLE "Order" (
+    "id" SERIAL NOT NULL,
+    "userId" INTEGER NOT NULL,
+    "total" DOUBLE PRECISION NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "Order_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateIndex
+CREATE INDEX "Order_userId_idx" ON "Order"("userId");
+
+-- AddForeignKey
+ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;`,
+        log: `_prisma_migrations tracking table:
+| id | migration_name | checksum | finished_at |
+|---|---|---|---|
+| 1 | 20260701_init | a8f9... | 2026-07-01 10:00:00 |
+| 2 | 20260710_add_phone | c4b2... | 2026-07-10 14:22:10 |
+| 3 | 20260718_add_role_enum | e9d1... | 2026-07-18 09:15:45 |
+| 4 | 20260726_create_orders | 7b8a... | 2026-07-26 23:10:00 |`
+      }
+    ];
+
+    function selectTimeline(idx) {
+      for (let i = 0; i < 4; i++) {
+        document.getElementById('time-step-' + i).className = i === idx ? 'timeline-step active' : 'timeline-step';
+      }
+      document.getElementById('time-sql').textContent = timelineData[idx].sql;
+      document.getElementById('time-log').textContent = timelineData[idx].log;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ANALYZER LOGIC
+    // ─────────────────────────────────────────────────────────────
+    let currentCount = 10;
+
+    function setRecordCount(count) {
+      currentCount = count;
+      [10, 50, 100, 500].forEach(c => {
+        document.getElementById('count-' + c).className = c === count ? 'btn btn-ghost active' : 'btn btn-ghost';
+      });
+    }
+
+    function runAnalyzer(type) {
+      const badge = document.getElementById('perf-badge');
+      const queries = document.getElementById('metric-queries');
+      const latency = document.getElementById('metric-latency');
+      const log = document.getElementById('metric-log');
+      const exp = document.getElementById('analyzer-explainer');
+
+      if (type === 'naive') {
+        const totalReqs = currentCount + 1;
+        const simLatency = (totalReqs * 12).toLocaleString() + ' ms';
+        
+        badge.className = 'badge badge-rose';
+        badge.textContent = 'Status: N+1 Bottleneck!';
+        queries.style.color = '#f43f5e';
+        queries.textContent = totalReqs;
+        latency.style.color = '#f43f5e';
+        latency.textContent = simLatency;
+        exp.style.borderLeftColor = '#f43f5e';
+        exp.innerHTML = `❌ <strong>Severe Performance Bottleneck:</strong> The server executed 1 initial query to fetch ${currentCount} users, then executed ${currentCount} individual queries inside a loop! Total database requests: <strong>${totalReqs}</strong>. Under production load, connection pools will exhaust!`;
+
+        let logText = `[00:00.00] SELECT * FROM users; -> Returned ${currentCount} rows.\n`;
+        for (let i = 1; i <= Math.min(currentCount, 6); i++) {
+          logText += `[00:00.${(i * 12).toString().padStart(2, '0')}] SELECT * FROM orders WHERE userId = ${i};\n`;
+        }
+        if (currentCount > 6) logText += `... (Repeated ${currentCount - 6} more times across the network!)\n`;
+        logText += `[FAILED] API endpoint took ${simLatency} to respond!`;
+        log.style.color = '#fda4af';
+        log.textContent = logText;
+      } else {
+        badge.className = 'badge badge-emerald';
+        badge.textContent = 'Status: Optimized Eager Load';
+        queries.style.color = '#10b981';
+        queries.textContent = '1 Query';
+        latency.style.color = '#10b981';
+        latency.textContent = '35 ms';
+        exp.style.borderLeftColor = '#10b981';
+        exp.innerHTML = `✅ <strong>Optimized Relational JOIN:</strong> By using Prisma <code>include: { orders: true }</code> or Mongoose <code>.populate('orders')</code>, the database engine executes 1 compiled JOIN query for all ${currentCount} users! Network latency is negligible.`;
+
+        log.style.color = '#34d399';
+        log.textContent = `[00:00.00] SELECT "User".*, "Order".* FROM "User" LEFT JOIN "Order" ON "User"."id" = "Order"."userId";\n[00:00.03] Database engine returned ${currentCount} users with nested order arrays in a single round-trip!\n[SUCCESS] API endpoint responded in 35 ms!`;
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // QUIZ LOGIC
+    // ─────────────────────────────────────────────────────────────
+    const quizData = [
+      {
+        q: "1. What is the primary advantage of a declarative ORM like Prisma over writing raw SQL queries?",
+        options: [
+          "Prisma makes database execution 100x faster than raw C-compiled PostgreSQL.",
+          "Prisma provides compile-time TypeScript type safety, autocomplete, and automated schema migrations.",
+          "Prisma eliminates the need for primary keys or foreign keys in relational databases.",
+          "Prisma allows you to store MongoDB documents directly inside SQLite."
+        ],
+        correct: 1
+      },
+      {
+        q: "2. What is the difference between npx prisma migrate dev and npx prisma db push?",
+        options: [
+          "migrate dev is for MongoDB, while db push is for PostgreSQL.",
+          "migrate dev generates timestamped SQL migration files and logs history for team/production use, whereas db push directly syncs schema without tracking history.",
+          "db push deletes the entire database, while migrate dev only deletes tables with foreign keys.",
+          "There is no difference; they are identical aliases."
+        ],
+        correct: 1
+      },
+      {
+        q: "3. Why must you configure a DIRECT_URL (port 5432) alongside a pooled DATABASE_URL (port 6543) when deploying Prisma to Neon PostgreSQL?",
+        options: [
+          "Because Neon requires two user accounts for security compliance.",
+          "Connection poolers (like PgBouncer) multiplex queries and block persistent DDL table locks. Migrations must bypass the pooler via direct URL.",
+          "To allow React frontend components to query PostgreSQL without passing through Node.js.",
+          "DIRECT_URL is only required if you use Mongoose alongside Prisma."
+        ],
+        correct: 1
+      },
+      {
+        q: "4. What is a Mongoose 'Virtual' property?",
+        options: [
+          "A property that is computed dynamically in Node.js runtime memory (like fullName) but is never persisted to MongoDB disk storage.",
+          "An encrypted password hash stored inside a hidden MongoDB system collection.",
+          "A temporary database index that deletes itself after 24 hours.",
+          "A mock database used exclusively during Vitest unit testing."
+        ],
+        correct: 0
+      },
+      {
+        q: "5. When writing a Mongoose pre('save') middleware hook to hash passwords, why MUST you include the check: if (!this.isModified('password')) return;?",
+        options: [
+          "To prevent Bcrypt from throwing a syntax error.",
+          "Without this guard clause, updating any other field (like firstName) would re-hash the already-hashed password string into an invalid double-hash!",
+          "Because MongoDB collections only permit 1 pre-save hook per schema.",
+          "To ensure the user is logged out automatically after updating their profile."
+        ],
+        correct: 1
+      },
+      {
+        q: "6. How does Mongoose's .populate('author') method work under the hood in MongoDB?",
+        options: [
+          "It executes an SQL LEFT JOIN inside the MongoDB storage engine.",
+          "It queries the primary collection, collects unique author ObjectIds, runs a second query using the $in operator against the users collection, and merges the documents in Node.js memory.",
+          "It copies the entire users collection into the orders collection permanently.",
+          "It requires an external Redis caching server to resolve references."
+        ],
+        correct: 1
+      },
+      {
+        q: "7. How do you resolve the infamous N+1 Query Problem when fetching users and their associated orders in Prisma?",
+        options: [
+          "Write a 10-second sleep timer inside your for-loop.",
+          "Use eager relational loading by passing { include: { orders: true } } in your findMany() query.",
+          "Disable all foreign key constraints in PostgreSQL.",
+          "Switch from PostgreSQL to SQLite."
+        ],
+        correct: 1
+      }
+    ];
+
+    let score = 0;
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-questions-container');
+      container.innerHTML = '';
+
+      quizData.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'glass-card mb-6';
+        div.style.padding = '20px';
+        
+        let html = `<h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; color: #fff;">${item.q}</h3>`;
+        
+        item.options.forEach((opt, optIdx) => {
+          html += `<div class="quiz-opt" id="q-${idx}-opt-${optIdx}" onclick="answerQuiz(${idx}, ${optIdx})">${opt}</div>`;
+        });
+
+        div.innerHTML = html;
+        container.appendChild(div);
+      });
+    }
+
+    function answerQuiz(qIdx, optIdx) {
+      const q = quizData[qIdx];
+      if (document.querySelector(`#q-${qIdx}-opt-0`).classList.contains('disabled')) return;
+
+      q.options.forEach((_, idx) => {
+        const el = document.getElementById(`q-${qIdx}-opt-${idx}`);
+        el.classList.add('disabled');
+        el.style.pointerEvents = 'none';
+        if (idx === q.correct) el.classList.add('correct');
+      });
+
+      const selectedEl = document.getElementById(`q-${qIdx}-opt-${optIdx}`);
+      if (optIdx === q.correct) {
+        score++;
+        document.getElementById('quiz-score').textContent = score;
+      } else {
+        selectedEl.classList.add('wrong');
+      }
+    }
+
+    // Initialize on load
+    window.onload = () => {
+      selectTranslation(1);
+      selectTimeline(0);
+      runAnalyzer('eager');
+      renderQuiz();
+    };
+  </script>
+</body>
+</html>

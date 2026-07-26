@@ -1,0 +1,26 @@
+{
+  "name": "prisma-postgres-demo",
+  "version": "1.0.0",
+  "description": "Lesson 41 — Prisma ORM & Neon PostgreSQL Migrations Demo (with SQLite fallback)",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node -e \"import('fs').then(fs => !fs.existsSync('.env') && fs.copyFileSync('.env.example', '.env'));\"",
+    "dev": "node src/server.js",
+    "db:push": "prisma db push",
+    "db:seed": "node prisma/seed.js",
+    "db:migrate": "prisma migrate dev"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "prisma": "^5.22.0"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  }
+}
