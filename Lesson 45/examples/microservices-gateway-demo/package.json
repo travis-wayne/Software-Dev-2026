@@ -1,0 +1,23 @@
+{
+  "name": "lesson-45-microservices-demo",
+  "version": "1.0.0",
+  "description": "Lesson 45 — API Gateway + 3 Microservices Demo",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"node src/user-service.js\" \"node src/product-service.js\" \"node src/order-service.js\" \"node src/gateway.js\"",
+    "gateway": "node src/gateway.js",
+    "user": "node src/user-service.js",
+    "product": "node src/product-service.js",
+    "order": "node src/order-service.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

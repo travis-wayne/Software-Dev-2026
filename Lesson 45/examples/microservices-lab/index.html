@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Microservices Architecture Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b1120;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --primary: #10b981;
+      --secondary: #8b5cf6;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-color);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient Blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.12;
+    }
+    .blob-1 { top: 10%; left: 10%; width: 400px; height: 400px; background: var(--secondary); }
+    .blob-2 { bottom: 10%; right: 10%; width: 500px; height: 500px; background: var(--primary); }
+
+    /* Glass System */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+    }
+
+    .glass-card {
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      margin: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-weight: 600;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-size: 1.8rem;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 10px var(--primary);
+      animation: pulse 2s infinite;
+    }
+    
+    .dot.offline {
+      background: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    /* Tabs */
+    .tabs-nav {
+      display: flex;
+      gap: 1rem;
+      margin: 0 1.5rem;
+      padding: 0.5rem;
+      border-radius: 12px;
+    }
+    
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn.active {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+      border-color: var(--primary);
+      border-image-slice: 1;
+      border-radius: 8px;
+    }
+
+    .tab-content {
+      display: none;
+      padding: 2rem 1.5rem;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .btn {
+      background: linear-gradient(90deg, var(--primary), #059669);
+      color: white;
+      border: none;
+      padding: 0.8rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+    }
+    
+    .btn.ghost {
+      background: transparent;
+      border: 1px solid var(--text-muted);
+    }
+    
+    .btn.ghost:hover {
+      border-color: var(--text);
+      box-shadow: none;
+    }
+
+    /* Tab 1: Architecture Explorer */
+    .arch-toggle {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+    .pill {
+      background: rgba(0,0,0,0.3);
+      border-radius: 30px;
+      padding: 0.3rem;
+      display: flex;
+    }
+    .pill button {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.7rem 1.5rem;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .pill button.active {
+      background: var(--glass-bg);
+      color: var(--text);
+    }
+
+    .arch-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .monolith-box {
+      border: 2px solid var(--danger);
+      padding: 2rem;
+      border-radius: 16px;
+      width: 600px;
+      text-align: center;
+    }
+    
+    .modules-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    
+    .module-item {
+      background: rgba(255,255,255,0.05);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .micro-row {
+      display: flex;
+      gap: 2rem;
+      justify-content: center;
+      width: 100%;
+    }
+    
+    .svc-card {
+      width: 200px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      border: 1px solid var(--primary);
+    }
+    .svc-card.gateway { border-color: var(--secondary); }
+    .svc-card.db { border-color: var(--warning); border-radius: 30px; }
+
+    /* Tab 2: Request Simulator */
+    .simulator-layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 2rem;
+    }
+    
+    .control-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .req-btn {
+      text-align: left;
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .req-btn.selected { border-color: var(--primary); background: rgba(16, 185, 129, 0.1); }
+    
+    .timeline {
+      padding: 1rem;
+      min-height: 400px;
+    }
+    
+    .step {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      opacity: 0;
+      transform: translateX(-10px);
+      animation: slideIn 0.3s forwards;
+    }
+    
+    @keyframes slideIn { to { opacity: 1; transform: translateX(0); } }
+    
+    .code-block {
+      background: rgba(0,0,0,0.5);
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1.5rem;
+      border-radius: 8px;
+      color: var(--primary);
+      margin-top: 2rem;
+      overflow-x: auto;
+    }
+
+    /* Tab 3: Chaos Lab */
+    .chaos-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    
+    .service-health {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+    
+    .toggle {
+      position: relative;
+      width: 50px;
+      height: 24px;
+      background: var(--primary);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .toggle::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      right: 2px;
+      transition: 0.2s;
+    }
+    .toggle.off { background: var(--danger); }
+    .toggle.off::after { right: 28px; }
+
+    .cb-state-machine {
+      text-align: center;
+      padding: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--info);
+      font-size: 0.9rem;
+      white-space: pre;
+    }
+
+    .log-console {
+      background: #000;
+      color: #0f0;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1rem;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: auto;
+      font-size: 0.85rem;
+    }
+
+    /* Tab 4: Quiz */
+    .quiz-question { margin-bottom: 2rem; }
+    .quiz-options { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; }
+    .quiz-option {
+      padding: 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .quiz-option.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--primary); }
+    .quiz-option.wrong { background: rgba(244, 63, 94, 0.2); border-color: var(--danger); }
+
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header class="glass">
+    <h1>Microservices Lab</h1>
+    <div class="status-bar">
+      <div class="badge"><div class="dot"></div> API Gateway :3009</div>
+      <div class="badge"><div class="dot"></div> Services: 3</div>
+    </div>
+  </header>
+
+  <nav class="tabs-nav glass">
+    <button class="tab-btn active" onclick="switchTab(1)">1. Architecture Explorer</button>
+    <button class="tab-btn" onclick="switchTab(2)">2. Request Simulator</button>
+    <button class="tab-btn" onclick="switchTab(3)">3. Chaos Lab (Circuit Breaker)</button>
+    <button class="tab-btn" onclick="switchTab(4)">4. Mastery Quiz</button>
+  </nav>
+
+  <!-- Tab 1 -->
+  <div id="tab1" class="tab-content active">
+    <div class="arch-toggle">
+      <div class="pill">
+        <button id="btn-mono" class="active" onclick="setArchMode('mono')">Monolith Mode</button>
+        <button id="btn-micro" onclick="setArchMode('micro')">Microservices Mode</button>
+      </div>
+    </div>
+
+    <div id="arch-mono" class="arch-container">
+      <div class="glass glass-card monolith-box">
+        <h3>Monolith Application</h3>
+        <div class="modules-grid">
+          <div class="module-item">👤 Auth</div>
+          <div class="module-item">📦 Products</div>
+          <div class="module-item">🛒 Orders</div>
+          <div class="module-item">💳 Payments</div>
+          <div class="module-item">🔔 Notifications</div>
+        </div>
+      </div>
+      <div>↓</div>
+      <div class="glass svc-card db" style="border-color: var(--danger)">
+        🐘 Shared PostgreSQL
+      </div>
+      <div style="color: var(--danger); margin-top: 1rem; padding: 1rem; background: rgba(244,63,94,0.1); border-radius: 8px;">
+        ⚠️ Scale the whole thing just to handle more checkouts! Hidden coupling everywhere.
+      </div>
+    </div>
+
+    <div id="arch-micro" class="arch-container" style="display: none;">
+      <div class="micro-row">
+        <div class="glass svc-card" style="border-color: #fff">📱 Client Apps</div>
+      </div>
+      <div>↓</div>
+      <div class="micro-row">
+        <div class="glass svc-card gateway">🔀 API Gateway :3009</div>
+      </div>
+      <div>↙ &nbsp; ↓ &nbsp; ↘</div>
+      <div class="micro-row">
+        <div class="glass svc-card">👤 User Service :3010</div>
+        <div class="glass svc-card">📦 Product Service :3011</div>
+        <div class="glass svc-card">🛒 Order Service :3012</div>
+      </div>
+      <div>↓ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ↓ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ↓</div>
+      <div class="micro-row">
+        <div class="glass svc-card db">🐘 Neon PostgreSQL</div>
+        <div class="glass svc-card db">🍃 MongoDB Atlas</div>
+        <div class="glass svc-card db">🐘 PostgreSQL</div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-top: 2rem; width: 100%;">
+        <div class="glass p-4" style="padding: 1rem; text-align: center;">
+          <h4 style="color: var(--primary)">Independent Scale</h4>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted);">Scale only the Order Service on Black Friday without wasting resources.</p>
+        </div>
+        <div class="glass p-4" style="padding: 1rem; text-align: center;">
+          <h4 style="color: var(--secondary)">Independent Deploy</h4>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted);">Teams deploy on their own schedule without coordinating.</p>
+        </div>
+        <div class="glass p-4" style="padding: 1rem; text-align: center;">
+          <h4 style="color: var(--info)">Tech Freedom</h4>
+          <p style="font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted);">Choose the right tool (and DB) for the specific job.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2 -->
+  <div id="tab2" class="tab-content">
+    <div class="simulator-layout">
+      <div class="control-panel glass" style="padding: 1.5rem">
+        <h3>1. Select Operation</h3>
+        <button class="req-btn selected" onclick="selectOp(this, 'users')">🔍 GET /api/users</button>
+        <button class="req-btn" onclick="selectOp(this, 'products')">📦 GET /api/products</button>
+        <button class="req-btn" onclick="selectOp(this, 'order-post')">🛒 POST /api/orders (Aggregate)</button>
+        <button class="req-btn" onclick="selectOp(this, 'rate')">⚡ Spam Requests (Rate Limit)</button>
+        
+        <div style="margin-top: 1rem">
+          <label><input type="checkbox" id="auth-check" checked> Include valid JWT</label>
+        </div>
+        
+        <button class="btn" style="margin-top: 1rem" onclick="simulateRequest()">Send Request →</button>
+      </div>
+      
+      <div class="glass" style="padding: 1.5rem">
+        <h3>2. Journey Timeline</h3>
+        <div id="timeline" class="timeline">
+          <div style="color: var(--text-muted); padding-top: 2rem; text-align: center;">Waiting for request...</div>
+        </div>
+        
+        <div class="code-block" id="response-block" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 3 -->
+  <div id="tab3" class="tab-content">
+    <div class="chaos-grid">
+      <div class="glass" style="padding: 1.5rem">
+        <h3>Service Health Control</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 1rem;">Take a service offline to trigger the Circuit Breaker.</p>
+        
+        <div class="service-health">
+          <div>👤 User Service</div>
+          <div class="toggle" id="tog-user" onclick="toggleService('user')"></div>
+        </div>
+        <div class="service-health">
+          <div>📦 Product Service</div>
+          <div class="toggle" id="tog-product" onclick="toggleService('product')"></div>
+        </div>
+        <div class="service-health">
+          <div>🛒 Order Service</div>
+          <div class="toggle" id="tog-order" onclick="toggleService('order')"></div>
+        </div>
+
+        <button class="btn" style="width: 100%; margin-top: 1rem;" onclick="fireChaosRequests()">Fire 10 Requests at User Service</button>
+      </div>
+
+      <div class="glass" style="padding: 1.5rem">
+        <h3>Circuit Breaker State (User Service)</h3>
+        <div class="cb-state-machine" id="cb-diagram">
+[CLOSED ✅] ←── success ────────────┐
+     │                              │
+failures >= 3                       │
+     ↓                         test success
+[OPEN ❌] ── timeout elapsed ──→ [HALF-OPEN 🔄]
+                                    │
+                                test fails
+                                    │
+                                    ↓
+                               back to OPEN
+        </div>
+      </div>
+    </div>
+    
+    <div class="glass" style="margin-top: 2rem; padding: 1.5rem;">
+      <h3>Gateway Console</h3>
+      <div class="log-console" id="chaos-log"></div>
+    </div>
+  </div>
+
+  <!-- Tab 4 -->
+  <div id="tab4" class="tab-content">
+    <div class="glass" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+      <h2 style="margin-bottom: 2rem; color: var(--primary);">Mastery Check</h2>
+      
+      <div class="quiz-question">
+        <h3>1. What is the main structural difference between a monolith and microservices?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, false)">A) Microservices use React, monoliths use jQuery</div>
+          <div class="quiz-option" onclick="checkAns(this, true)">B) A monolith runs as one unit; microservices are multiple independently deployable services</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) Microservices are always faster than monoliths</div>
+        </div>
+      </div>
+
+      <div class="quiz-question">
+        <h3>2. What is the role of an API Gateway?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, true)">A) A single entry point that routes requests, handles auth, and rate limiting</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">B) It is a database for microservices</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) It replaces the need for all microservices</div>
+        </div>
+      </div>
+      
+      <div class="quiz-question">
+        <h3>3. Why should each microservice have its own database?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, false)">A) It's cheaper to run separate databases</div>
+          <div class="quiz-option" onclick="checkAns(this, true)">B) To prevent hidden coupling — schema changes in one shouldn't break others</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) Because Kubernetes requires it</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Tab switching
+    function switchTab(num) {
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === num - 1);
+      });
+      document.querySelectorAll('.tab-content').forEach((content, i) => {
+        content.classList.toggle('active', i === num - 1);
+      });
+    }
+
+    // Tab 1 Architecture
+    function setArchMode(mode) {
+      document.getElementById('btn-mono').classList.toggle('active', mode === 'mono');
+      document.getElementById('btn-micro').classList.toggle('active', mode === 'micro');
+      document.getElementById('arch-mono').style.display = mode === 'mono' ? 'flex' : 'none';
+      document.getElementById('arch-micro').style.display = mode === 'micro' ? 'flex' : 'none';
+    }
+
+    // Tab 2 Simulator
+    let selectedOp = 'users';
+    function selectOp(btn, op) {
+      document.querySelectorAll('.req-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedOp = op;
+    }
+
+    async function simulateRequest() {
+      const tl = document.getElementById('timeline');
+      const resBlock = document.getElementById('response-block');
+      tl.innerHTML = '';
+      resBlock.style.display = 'none';
+
+      const authOk = document.getElementById('auth-check').checked;
+      
+      const addStep = (text, color, delay) => {
+        return new Promise(resolve => {
+          setTimeout(() => {
+            const div = document.createElement('div');
+            div.className = 'step';
+            div.innerHTML = `<span style="color: ${color}">●</span> <span>${text}</span>`;
+            tl.appendChild(div);
+            resolve();
+          }, delay);
+        });
+      };
+
+      await addStep('📱 [Client] Request initiated...', 'var(--info)', 100);
+
+      if (!authOk) {
+        await addStep('🔀 [Gateway] JWT Verification: FAILED ❌', 'var(--danger)', 400);
+        await addStep('📱 [Client] Received: 401 Unauthorized', 'var(--info)', 300);
+        resBlock.style.display = 'block';
+        resBlock.style.color = 'var(--danger)';
+        resBlock.innerHTML = '{\n  "error": "Unauthorized"\n}';
+        return;
+      }
+
+      await addStep('🔀 [Gateway] Rate limit: OK (12/60)', 'var(--secondary)', 400);
+      await addStep('🔀 [Gateway] JWT Verification: OK ✅', 'var(--secondary)', 300);
+
+      if (selectedOp === 'users') {
+        await addStep('🔀 [Gateway] Routing to user-service:3010...', 'var(--secondary)', 300);
+        await addStep('👤 [User Service] Executing SELECT * FROM ms_users', 'var(--primary)', 400);
+        await addStep('👤 [User Service] 3 records found', 'var(--primary)', 300);
+        await addStep('🔀 [Gateway] Appending headers X-Request-Id', 'var(--secondary)', 200);
+        await addStep('📱 [Client] Received 200 OK (42ms)', 'var(--info)', 300);
+        resBlock.style.display = 'block';
+        resBlock.style.color = 'var(--primary)';
+        resBlock.innerHTML = '[\n  { "id": 1, "name": "Alice" },\n  { "id": 2, "name": "Bob" }\n]';
+      } else if (selectedOp === 'order-post') {
+        await addStep('🔀 [Gateway] Routing to order-service:3012...', 'var(--secondary)', 300);
+        await addStep('🛒 [Order Service] Validating payload...', 'var(--primary)', 300);
+        await addStep('🛒 [Order Service] → Calling User Service internally', 'var(--warning)', 300);
+        await addStep('👤 [User Service] User exists ✅', 'var(--primary)', 400);
+        await addStep('🛒 [Order Service] → Calling Product Service internally', 'var(--warning)', 300);
+        await addStep('📦 [Product Service] Stock sufficient ✅', 'var(--primary)', 400);
+        await addStep('🛒 [Order Service] Committing to DB...', 'var(--primary)', 300);
+        await addStep('📱 [Client] Received 201 Created (185ms)', 'var(--info)', 300);
+        resBlock.style.display = 'block';
+        resBlock.style.color = 'var(--primary)';
+        resBlock.innerHTML = '{\n  "orderId": 99,\n  "status": "pending"\n}';
+      }
+    }
+
+    // Tab 3 Chaos Lab
+    let servicesStatus = { user: true, product: true, order: true };
+    let cbState = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
+    
+    function toggleService(svc) {
+      servicesStatus[svc] = !servicesStatus[svc];
+      const tog = document.getElementById(`tog-${svc}`);
+      if (servicesStatus[svc]) {
+        tog.classList.remove('off');
+        log(`[Ops] ${svc} Service restarted manually.`);
+      } else {
+        tog.classList.add('off');
+        log(`[Ops] ${svc} Service taken OFFLINE.`);
+      }
+    }
+
+    function log(msg) {
+      const con = document.getElementById('chaos-log');
+      const time = new Date().toISOString().split('T')[1].slice(0, 8);
+      con.innerHTML += `<div>[${time}] ${msg}</div>`;
+      con.scrollTop = con.scrollHeight;
+    }
+
+    async function fireChaosRequests() {
+      log('Starting burst of 10 requests...');
+      let failures = 0;
+      cbState = 'CLOSED';
+      updateDiagram('CLOSED');
+
+      for (let i = 1; i <= 10; i++) {
+        log(`Request #${i} initiated...`);
+        
+        if (cbState === 'OPEN') {
+          log(`   ❌ Request #${i} FAST-FAILED by Gateway (Circuit OPEN). Wait time: 0ms.`);
+          continue;
+        }
+
+        if (servicesStatus.user) {
+          log(`   ✅ Request #${i} Success (35ms)`);
+        } else {
+          log(`   ⚠️ Request #${i} Timeout! (3000ms)`);
+          failures++;
+          if (failures >= 3 && cbState === 'CLOSED') {
+            cbState = 'OPEN';
+            log(`   ⚡ CIRCUIT BREAKER TRIPPED! State changed to OPEN.`);
+            updateDiagram('OPEN');
+            
+            // Auto half-open after 5 seconds
+            setTimeout(() => {
+              if (cbState === 'OPEN') {
+                cbState = 'HALF_OPEN';
+                log(`   🔄 Timeout elapsed. Circuit changed to HALF-OPEN. Testing next request...`);
+                updateDiagram('HALF_OPEN');
+              }
+            }, 5000);
+          }
+        }
+        
+        // Wait a bit before next request
+        await new Promise(r => setTimeout(r, 400));
+      }
+    }
+
+    function updateDiagram(state) {
+      const diag = document.getElementById('cb-diagram');
+      let text = `
+[CLOSED] ←── success ────────────┐
+     │                           │
+failures >= 3                    │
+     ↓                      test success
+[OPEN] ── timeout elapsed ──→ [HALF-OPEN]
+                                 │
+                             test fails
+                                 │
+                                 ↓
+                            back to OPEN
+      `;
+      if (state === 'CLOSED') text = text.replace('[CLOSED]', '[CLOSED ✅]');
+      if (state === 'OPEN') text = text.replace('[OPEN]', '[OPEN ❌]');
+      if (state === 'HALF_OPEN') text = text.replace('[HALF-OPEN]', '[HALF-OPEN 🔄]');
+      diag.innerHTML = text;
+    }
+
+    // Tab 4 Quiz
+    function checkAns(el, isCorrect) {
+      const parent = el.parentElement;
+      Array.from(parent.children).forEach(c => c.style.pointerEvents = 'none');
+      if (isCorrect) {
+        el.classList.add('correct');
+      } else {
+        el.classList.add('wrong');
+        // highlight correct one
+        Array.from(parent.children).forEach(c => {
+          if (c.textContent.includes('unit;') || c.textContent.includes('entry point') || c.textContent.includes('hidden coupling')) {
+            c.classList.add('correct');
+          }
+        });
+      }
+    }
+  </script>
+</body>
+</html>
