@@ -190,6 +190,47 @@ volumes:
 
 ---
 
+## ☁️ 11. Connecting Your Container to a Real Cloud Database
+
+This is a CRITICAL real-world distinction: in local development, we use a PostgreSQL container in docker-compose. In PRODUCTION, you should NEVER run your database inside a Docker container on the same server as your app. Use a managed cloud DB (Neon, Supabase, Railway) instead.
+
+Explain WHY this matters:
+- Database containers don't survive `docker rm -v` (data loss risk)
+- Named volumes on a single server = no automatic backups, no failover
+- Managed cloud DBs: automated daily backups, point-in-time recovery, multi-region failover, connection pooling
+- Your app container becomes stateless — it can be killed and recreated any time without data loss
+
+Show the three ways to pass a cloud DATABASE_URL to a running container:
+
+1. Runtime flag: `docker run -e DATABASE_URL="postgresql://..." my-api`
+2. Env file: `docker run --env-file .env.production my-api`
+3. Docker Compose env_file:
+```yaml
+services:
+  api:
+    image: my-api:latest
+    env_file:
+      - .env.production   # Contains DATABASE_URL=postgresql://neon.tech/...
+```
+
+> [!TIP]
+> **Pro tip:** Your Dockerfile should NEVER contain DATABASE_URL! It should come from runtime environment variables so the same image can connect to dev, staging, or production databases.
+
+---
+
+## ⚖️ 12. Docker in Development vs Production — The Key Differences
+
+| Concern | Development (docker-compose) | Production (Cloud deployment) |
+|---------|------------------------------|-------------------------------|
+| Database | PostgreSQL container + named volume | Managed cloud DB (Neon/Supabase/RDS) |
+| Secrets | .env file (gitignored) | Environment variables via Kubernetes Secrets / Vercel env vars |
+| Image registry | Local Docker daemon | Docker Hub / GitHub Container Registry |
+| Scaling | Single machine | Kubernetes / ECS auto-scaling |
+| SSL/TLS | Not needed locally | Cloud load balancer terminates TLS |
+| Logging | docker logs (local terminal) | CloudWatch / Datadog / Grafana |
+
+---
+
 ## 📝 Activities & Exercises
 1. **Pre-Session**: Install Docker Desktop on Windows/macOS or Docker Engine on Linux. Open terminal and verify by running `docker --version` and `docker run hello-world`.
 2. **In-Session Lab**: Open our interactive **Lesson 43 Glassmorphism Lab** (`examples/docker-simulator-lab/index.html`) in your browser! Experiment with the Dockerfile Layer Caching Simulator, test your Dockerfile syntax against our live performance linter, and practice Docker CLI commands in the lifecycle workbench.

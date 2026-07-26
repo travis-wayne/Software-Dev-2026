@@ -279,3 +279,52 @@ As you build professional projects, you will encounter both Next.js Pages Router
 | **Login button silently redirects without logging in** | In Credentials `authorize()`, returning an object without an `.id` property. | Always ensure `authorize()` returns an object containing `{ id: String(user.id), ... }`. |
 | **Using `getSession({ req })` inside API routes** | Client-oriented `getSession` makes unnecessary loopback network requests when used on servers. | Use `await getServerSession(req, res, authOptions)` in all backend code. |
 | **OAuth Error: `redirect_uri_mismatch` in GitHub console** | The callback URL in GitHub developer console doesn't match NextAuth's pattern. | Set OAuth callback URL precisely to: `http://localhost:3000/api/auth/callback/github`. |
+| **Storing JWT token in localStorage** | XSS attack can steal token from localStorage — any injected script reads it | Use httpOnly cookies (NextAuth default) — JS cannot access httpOnly cookies |
+| **Forgetting to add production domain to GitHub OAuth app** | OAuth callback returns 404 or redirect_uri_mismatch error in production | Add all deployment domains (Vercel, custom domain) to GitHub OAuth App authorized callback URLs |
+| **Using getStaticProps with getServerSession** | Build-time crash: getServerSession only works in runtime server context | Use getServerSideProps for authenticated pages, or check session client-side with useSession |
+
+---
+
+## 9. NextAuth v4 vs Auth.js v5 — What Changed?
+
+NextAuth.js was rebranded to 'Auth.js' in version 5 and the API changed significantly to support Next.js App Router and React Server Components natively.
+
+### Key Differences:
+- **v4 Setup:** `import NextAuth from 'next-auth'` in `pages/api/auth/[...nextauth].js`
+- **v5 Setup:** `import NextAuth from 'next-auth'` in an `auth.ts` config file, and `app/api/auth/[...nextauth]/route.ts` just exports handlers.
+- **v4 Server Session:** `getServerSession(authOptions)` is used in `getServerSideProps` or API routes.
+- **v5 Server Session:** A unified `auth()` helper can be used seamlessly in Server Components, Middleware, and API Routes.
+
+> **Migration Note:** We use v4 in this lesson (Pages Router), but you should use v5 for new greenfield App Router projects.
+
+### v5 `auth.ts` Example
+```typescript
+import NextAuth from "next-auth"
+import Credentials from "next-auth/providers/credentials"
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  providers: [
+    Credentials({
+      credentials: { email: {}, password: {} },
+      authorize: async (credentials) => {
+        // DB verify logic here
+        return { id: "1", name: "Travis" }
+      },
+    }),
+  ],
+})
+```
+
+---
+
+## 10. OAuth Callback URL Checklist
+
+Configuring OAuth callback URLs incorrectly is the #1 deployment failure for authentication. Use this step-by-step checklist:
+
+1. **Local dev:** Ensure callback URL `http://localhost:3000/api/auth/callback/github` is in your GitHub OAuth App settings.
+2. **Staging:** Add `https://your-staging-domain.com/api/auth/callback/github`.
+3. **Production:** Add `https://your-production-domain.com/api/auth/callback/github`.
+4. **Vercel Preview Deployments:** Use the `NEXTAUTH_URL_INTERNAL` environment variable to dynamically map preview URLs.
+5. **Security Rule:** Never use the same OAuth App credentials for dev and production! Create separate OAuth apps for each environment.
+
+> **Testing Without GitHub OAuth:** Start with the Credentials provider — it requires ZERO external setup and allows you to test your session logic locally before wrestling with OAuth developer consoles!

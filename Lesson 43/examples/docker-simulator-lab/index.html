@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lesson 43: Docker Containerization & Architecture Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-dark: #0b1120;
@@ -13,14 +14,14 @@
       --violet: #8b5cf6;
       --amber: #f59e0b;
       --rose: #f43f5e;
-      --sky: #38bdf8;
+      --sky: #06b6d4;
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-family: 'Inter', sans-serif;
       background-color: var(--bg-dark);
       color: var(--text-main);
       min-height: 100vh;
@@ -35,9 +36,37 @@
       margin-bottom: 35px;
       padding-bottom: 25px;
       border-bottom: 1px solid var(--card-border);
+      position: relative;
     }
     h1 { font-size: 2.2rem; background: linear-gradient(135deg, var(--sky), var(--emerald)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
     .subtitle { color: var(--text-muted); font-size: 1.05rem; max-width: 700px; margin: 0 auto; }
+    
+    /* Toggle Pill */
+    .mode-toggle {
+      display: inline-flex;
+      background: rgba(0,0,0,0.5);
+      border-radius: 30px;
+      padding: 4px;
+      border: 1px solid var(--card-border);
+      margin-top: 15px;
+    }
+    .mode-btn {
+      padding: 8px 16px;
+      border-radius: 26px;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .mode-btn.active {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--emerald);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+    }
     
     /* Status Badge */
     .status-bar {
@@ -75,13 +104,40 @@
       font-size: 0.95rem;
       transition: all 0.2s ease;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
     .tab-btn:hover { background: rgba(255, 255, 255, 0.1); color: var(--text-main); }
+    
+    @keyframes borderPulse {
+      0% { border-image-source: linear-gradient(90deg, var(--emerald), var(--violet)); }
+      50% { border-image-source: linear-gradient(90deg, var(--violet), var(--emerald)); }
+      100% { border-image-source: linear-gradient(90deg, var(--emerald), var(--violet)); }
+    }
+    
     .tab-btn.active {
       background: rgba(16, 185, 129, 0.15);
-      border-color: var(--emerald);
       color: var(--emerald);
-      box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+      border: 3px solid transparent;
+      background-clip: padding-box;
+    }
+    
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 0;
+      z-index: -1;
+      margin: -3px;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--emerald), var(--violet));
+      background-size: 200% 200%;
+      animation: gradientShift 3s ease infinite;
+    }
+    
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
     }
     
     /* Tab Contents */
@@ -97,6 +153,11 @@
       border-radius: 14px;
       padding: 25px;
       margin-bottom: 25px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.3);
     }
     .card h2 { font-size: 1.4rem; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; color: var(--sky); }
     .card p { color: var(--text-muted); margin-bottom: 15px; }
@@ -108,6 +169,7 @@
       border: none;
       padding: 10px 18px;
       border-radius: 8px;
+      font-family: 'Inter', sans-serif;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
@@ -125,7 +187,7 @@
       border: 1px solid rgba(255,255,255,0.15);
       border-radius: 10px;
       padding: 18px;
-      font-family: 'JetBrains Mono', monospace, consolas;
+      font-family: 'JetBrains Mono', monospace;
       font-size: 0.88rem;
       color: #34d399;
       overflow-x: auto;
@@ -133,7 +195,20 @@
       white-space: pre-wrap;
       max-height: 400px;
       box-shadow: inset 0 0 20px rgba(0,0,0,0.8);
+      position: relative;
     }
+    
+    .cursor-blink {
+      display: inline-block;
+      width: 8px;
+      height: 15px;
+      background: #34d399;
+      animation: blink 1s step-end infinite;
+      vertical-align: middle;
+      margin-left: 2px;
+    }
+    
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
     /* Grid Layouts */
     .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -149,13 +224,14 @@
       border: 1px solid var(--card-border);
       border-radius: 8px;
       margin-bottom: 10px;
-      font-family: monospace;
+      font-family: 'JetBrains Mono', monospace;
       transition: all 0.3s ease;
     }
     .layer-badge {
       padding: 4px 10px;
       border-radius: 20px;
       font-size: 0.75rem;
+      font-family: 'Inter', sans-serif;
       font-weight: bold;
     }
     .badge-cache { background: rgba(16,185,129,0.2); color: var(--emerald); border: 1px solid var(--emerald); }
@@ -217,6 +293,19 @@
       color: var(--text-muted);
       display: none;
     }
+    
+    /* Code Viewer for DB pattern */
+    .code-viewer {
+        background: #000;
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.85rem;
+        color: #e2e8f0;
+        border: 1px solid var(--card-border);
+        white-space: pre;
+        overflow-x: auto;
+    }
   </style>
 </head>
 <body>
@@ -224,6 +313,10 @@
     <header>
       <h1>🐳 Lesson 43: Docker Container Architecture Lab</h1>
       <p class="subtitle">Interactive glassmorphism workbench to master Dockerfile layer caching, security linting, container lifecycle orchestration, and CLI commands.</p>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="btnDevMode" onclick="setMode('dev')">Dev Mode</button>
+        <button class="mode-btn" id="btnProdMode" onclick="setMode('prod')">Prod Mode</button>
+      </div>
     </header>
 
     <div class="status-bar">
@@ -239,13 +332,11 @@
     <div class="tabs">
       <button class="tab-btn active" onclick="switchTab('tab-cacher')">⚡ 1. Layer Caching Simulator</button>
       <button class="tab-btn" onclick="switchTab('tab-linter')">🛡️ 2. Dockerfile Linter & Audit</button>
-      <button class="tab-btn" onclick="switchTab('tab-terminal')">💻 3. Docker CLI Lifecycle Terminal</button>
-      <button class="tab-btn" onclick="switchTab('tab-quiz')">🎓 4. Mastery Quiz (7 Qs)</button>
+      <button class="tab-btn" onclick="switchTab('tab-terminal')">💻 3. Docker CLI Terminal</button>
+      <button class="tab-btn" onclick="switchTab('tab-quiz')">🎓 4. Mastery Quiz (9 Qs)</button>
     </div>
 
-    <!-- =========================================================================
-         TAB 1: ARCHITECT & LAYER CACHING SIMULATOR
-         ========================================================================= -->
+    <!-- TAB 1 -->
     <div id="tab-cacher" class="tab-content active">
       <div class="card">
         <h2>🏗️ Containers vs. Virtual Machines Architecture</h2>
@@ -254,7 +345,7 @@
           <div style="background: rgba(244,63,94,0.05); border: 1px solid rgba(244,63,94,0.3); padding: 18px; border-radius: 10px;">
             <h3 style="color: var(--rose); margin-bottom: 10px;">🖥️ Traditional Virtual Machine (VM)</h3>
             <p style="font-size: 0.85rem; color: #cbd5e1;">Replicates entire Guest OS for every single app. Extremely heavy resource consumption.</p>
-            <div style="font-family: monospace; font-size: 0.8rem; line-height: 1.8; background: #000; padding: 12px; border-radius: 6px; color: #f8fafc;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.8; background: #000; padding: 12px; border-radius: 6px; color: #f8fafc;">
               [App A (50MB)]  [App B (50MB)]<br/>
               [Guest OS 4GB]  [Guest OS 4GB] &lt;-- Heavy waste!<br/>
               ==============================<br/>
@@ -266,7 +357,7 @@
           <div style="background: rgba(16,185,129,0.05); border: 1px solid rgba(16,185,129,0.3); padding: 18px; border-radius: 10px;">
             <h3 style="color: var(--emerald); margin-bottom: 10px;">🐳 Docker Containerization</h3>
             <p style="font-size: 0.85rem; color: #cbd5e1;">Shares Host OS kernel via Linux Namespaces & cgroups. Lightweight and instant boot!</p>
-            <div style="font-family: monospace; font-size: 0.8rem; line-height: 1.8; background: #000; padding: 12px; border-radius: 6px; color: #34d399;">
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; line-height: 1.8; background: #000; padding: 12px; border-radius: 6px; color: #34d399;">
               [App A (50MB)]  [App B (50MB)]<br/>
               [Container NS]  [Container NS] &lt;-- Millisecond lock!<br/>
               ==============================<br/>
@@ -280,38 +371,47 @@
 
       <div class="card">
         <h2>⚡ Live Dockerfile Layer Caching Simulator</h2>
-        <p>In Docker, every instruction creates a cached layer. If a layer changes, all layers below it MUST be rebuilt from scratch! Click an event button below to simulate editing a file in your workspace and observe how instruction ordering impacts build times:</p>
+        <p>In Docker, every instruction creates a cached layer. If a layer changes, all layers below it MUST be rebuilt from scratch!</p>
         
         <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
-          <button class="btn btn-secondary" onclick="simulateCache('js')">✏️ Edit src/server.js (Code comment change)</button>
-          <button class="btn btn-secondary" onclick="simulateCache('pkg')">📦 Add new dependency to package.json</button>
-          <button class="btn btn-secondary" onclick="simulateCache('base')">🔄 Upgrade Node base image version</button>
+          <button class="btn btn-secondary" onclick="simulateCache('js')">✏️ Edit src/server.js</button>
+          <button class="btn btn-secondary" onclick="simulateCache('pkg')">📦 Edit package.json</button>
+          <button class="btn btn-secondary" onclick="simulateCache('base')">🔄 Edit base image</button>
         </div>
 
-        <div id="layerList">
-          <!-- Populated by JS -->
-        </div>
+        <div id="layerList"></div>
         <div id="cacheSummary" style="margin-top: 15px; padding: 15px; background: rgba(16,185,129,0.1); border: 1px solid var(--emerald); border-radius: 8px; color: var(--emerald); font-weight: bold;">
           Ready to simulate layer caching! Select an edit event above.
         </div>
       </div>
+      
+      <div class="card">
+        <h2>🛢️ Dev vs Production Database Pattern</h2>
+        <p>Observe how the architecture changes between local dev and cloud production while keeping the same application container image.</p>
+        <div style="margin-bottom: 10px;">
+            <button class="btn btn-secondary" id="btnDbDev" onclick="setDbPattern('dev')">Local Dev (docker-compose.yml)</button>
+            <button class="btn btn-secondary" id="btnDbProd" onclick="setDbPattern('prod')">Production (docker-compose.yml)</button>
+        </div>
+        <div id="dbPatternViewer" class="code-viewer"></div>
+        <div style="margin-top: 15px; padding: 15px; background: rgba(139, 92, 246, 0.1); border: 1px solid var(--violet); border-radius: 8px; color: #c4b5fd;">
+            <strong style="color: var(--violet);">Same Docker image, different environments. That's the power of stateless containers!</strong>
+        </div>
+      </div>
     </div>
 
-    <!-- =========================================================================
-         TAB 2: DOCKERFILE LINTER & AUDIT
-         ========================================================================= -->
+    <!-- TAB 2 -->
     <div id="tab-linter" class="tab-content">
       <div class="card">
         <h2>🛡️ Interactive Dockerfile Security & Performance Linter</h2>
-        <p>Select a preset Dockerfile or modify the code below. Click <strong>"Audit & Grade Dockerfile"</strong> to analyze build performance, layer order, image bloat, and root security violations!</p>
+        <p>Select a preset or edit the code. The linter will catch caching issues, large base images, and hardcoded secrets.</p>
         
         <div style="display: flex; gap: 10px; margin-bottom: 15px;">
           <button class="btn btn-secondary" onclick="loadPreset('unoptimized')">❌ Preset: Legacy Unoptimized</button>
           <button class="btn btn-secondary" onclick="loadPreset('optimized')">✅ Preset: Alpine Multi-Stage</button>
-          <button class="btn btn-secondary" onclick="loadPreset('root')">⚠️ Preset: Root User Vulnerability</button>
+          <button class="btn btn-secondary" onclick="loadPreset('secret')">🔴 Preset: Hardcoded Secret</button>
         </div>
 
-        <textarea id="dockerfileEditor" style="width: 100%; height: 260px; background: #000; color: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; line-height: 1.5;"></textarea>
+        <textarea id="dockerfileEditor" style="width: 100%; height: 260px; background: #000; color: #f8fafc; border: 1px solid var(--card-border); border-radius: 8px; padding: 15px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;"></textarea>
 
         <div style="margin-top: 15px;">
           <button class="btn" onclick="auditDockerfile()">🔍 Audit & Grade Dockerfile</button>
@@ -323,7 +423,7 @@
           <div class="score-circle" id="linterGrade">A</div>
           <div>
             <h3 style="margin-bottom: 5px; color: var(--text-main);" id="linterTitle">Production Grade: Exceptional</h3>
-            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);" id="linterSummary">Estimated Image Size: ~65 MB | Rebuild Cache Time: ~0.2s</p>
+            <p style="margin: 0; font-size: 0.9rem; color: var(--text-muted);" id="linterSummary">Estimated Image Size: ~65 MB</p>
           </div>
         </div>
         <h4 style="margin-bottom: 10px; color: var(--sky);">Audit Findings & Recommendations:</h4>
@@ -331,20 +431,14 @@
       </div>
     </div>
 
-    <!-- =========================================================================
-         TAB 3: DOCKER CLI LIFECYCLE TERMINAL
-         ========================================================================= -->
+    <!-- TAB 3 -->
     <div id="tab-terminal" class="tab-content">
       <div class="card">
         <h2>💻 Docker Engine CLI Lifecycle Terminal</h2>
-        <p>Practice executing standard Docker CLI commands. This interactive console connects to our local <code>docker-cli-simulator</code> backend (with built-in JavaScript offline fallback)!</p>
-        
         <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
           <button class="btn btn-secondary" onclick="runCmd('docker ps -a')">docker ps -a</button>
-          <button class="btn btn-secondary" onclick="runCmd('docker images')">docker images</button>
-          <button class="btn btn-secondary" onclick="runCmd('docker run -d -p 8080:3000 --name api-demo node-docker-demo:latest')">docker run -d -p 8080:3000 ...</button>
-          <button class="btn btn-secondary" onclick="runCmd('docker logs -f api-server-demo')">docker logs api-server-demo</button>
-          <button class="btn btn-secondary" onclick="runCmd('docker stop api-server-demo')">docker stop api-server-demo</button>
+          <button class="btn btn-secondary" onclick="runCmd('docker run -e DATABASE_URL=neon... my-api')">docker run -e ...</button>
+          <button class="btn btn-secondary" onclick="runCmd('/api/db-health')">Test /api/db-health</button>
         </div>
 
         <div style="display: flex; gap: 10px;">
@@ -352,59 +446,47 @@
           <button class="btn" onclick="runCustomCmd()">Execute ⚡</button>
         </div>
 
-        <div class="terminal-box" id="cliOutput">[Docker Engine Daemon initialized. Ready for CLI input...]</div>
-      </div>
-
-      <div class="card">
-        <h2>📊 Active Container Telemetry Monitor</h2>
-        <p>Live view of simulated containers currently running in UnionFS memory:</p>
-        <div id="containerMonitorTable" style="overflow-x: auto;">
-          <!-- Populated by JS -->
-        </div>
+        <div class="terminal-box" id="cliOutput">[Docker Engine Daemon initialized. Ready for CLI input...]<span class="cursor-blink"></span></div>
       </div>
     </div>
 
-    <!-- =========================================================================
-         TAB 4: MASTERY QUIZ
-         ========================================================================= -->
+    <!-- TAB 4 -->
     <div id="tab-quiz" class="tab-content">
       <div class="card">
         <h2>🎓 Lesson 43 Mastery Quiz</h2>
-        <p>Test your knowledge of Docker containers, images, layer caching, and CLI syntax. Click an option to grade instantly!</p>
-        <div id="quizContainer">
-          <!-- Populated by JS -->
-        </div>
+        <div id="quizContainer"></div>
         <div id="quizScore" style="margin-top: 20px; font-size: 1.2rem; font-weight: bold; color: var(--emerald); display: none;"></div>
       </div>
     </div>
   </div>
 
   <script>
-    // Tab switching
     function switchTab(tabId) {
-      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if(btn.innerText.includes(document.querySelector(`[onclick="switchTab('${tabId}')"]`).innerText.substring(0,3))) {
+            btn.classList.add('active');
+        }
+      });
       document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
       document.getElementById(tabId).classList.add('active');
-      event.target.classList.add('active');
+    }
+    
+    let isProdMode = false;
+    function setMode(mode) {
+        isProdMode = mode === 'prod';
+        document.getElementById('btnDevMode').classList.toggle('active', !isProdMode);
+        document.getElementById('btnProdMode').classList.toggle('active', isProdMode);
+        setDbPattern(isProdMode ? 'prod' : 'dev');
     }
 
-    // Status bar check
     async function checkSimulator() {
       const dot = document.getElementById('statusDot');
       const text = document.getElementById('statusText');
-      try {
-        const res = await fetch('http://localhost:3006/api/images', { signal: AbortSignal.timeout(1500) });
-        if (res.ok) {
-          dot.classList.remove('offline');
-          text.innerHTML = 'Connected to offline Docker Engine simulator at <strong style="color: var(--emerald);">localhost:3006</strong>';
-        } else { throw new Error(); }
-      } catch (e) {
-        dot.classList.add('offline');
-        text.innerHTML = 'Backend simulator offline (Using built-in browser engine fallback)';
-      }
+      dot.classList.add('offline');
+      text.innerHTML = 'Backend simulator offline (Using built-in browser engine fallback)';
     }
 
-    // --- TAB 1: LAYER CACHER ---
     const layers = [
       { step: 'Step 1/6 : FROM node:18-alpine', desc: 'Pull lightweight Alpine Linux base image (~170MB)', time: '0.1s' },
       { step: 'Step 2/6 : WORKDIR /usr/src/app', desc: 'Create container working directory', time: '0.01s' },
@@ -418,23 +500,11 @@
       const list = document.getElementById('layerList');
       const sum = document.getElementById('cacheSummary');
       list.innerHTML = '';
-      let totalTime = 0;
-      let hitCount = 0;
-
       layers.forEach((l, idx) => {
         let isCache = true;
-        if (editType === 'js' && idx >= 4) isCache = false; // Step 5 and 6 miss
-        if (editType === 'pkg' && idx >= 2) isCache = false; // Step 3, 4, 5, 6 miss
-        if (editType === 'base') isCache = false; // All miss!
-
-        if (isCache && editType) {
-          hitCount++;
-          totalTime += 0.01;
-        } else if (!isCache && editType) {
-          totalTime += parseFloat(l.time);
-        } else {
-          totalTime += parseFloat(l.time);
-        }
+        if (editType === 'js' && idx >= 4) isCache = false;
+        if (editType === 'pkg' && idx >= 2) isCache = false;
+        if (editType === 'base') isCache = false;
 
         const badge = !editType ? '<span class="layer-badge" style="background: rgba(255,255,255,0.1);">Initial Build</span>' :
                       isCache ? '<span class="layer-badge badge-cache">HIT CACHE (0.01s)</span>' :
@@ -450,266 +520,82 @@
           </div>
         `;
       });
-
-      if (!editType) {
-        sum.innerHTML = `📦 Initial Cold Build Time: <strong>~42.8 seconds</strong> (All layers executed sequentially).`;
-      } else if (editType === 'js') {
-        sum.innerHTML = `⚡ <strong>Layer Caching Victory!</strong> Because you edited <code>src/server.js</code>, Steps 1–4 hit cache! Build completed in <strong>0.2 seconds</strong> instead of 43s!`;
-      } else if (editType === 'pkg') {
-        sum.innerHTML = `📦 <strong>Dependency Rebuild:</strong> Because <code>package.json</code> changed, Step 3 cache was invalidated. Step 4 re-ran <code>pnpm install</code>. Time: <strong>~42.7 seconds</strong>.`;
-      } else if (editType === 'base') {
-        sum.innerHTML = `⚠️ <strong>Full Rebuild:</strong> Changing the FROM base image invalidates Layer 1 and all subsequent layers! Time: <strong>~42.8 seconds</strong>.`;
-      }
+      if (!editType) sum.innerHTML = `📦 Initial Cold Build Time: <strong>~42.8 seconds</strong>`;
+      else if (editType === 'js') sum.innerHTML = `⚡ <strong>Layer Caching Victory!</strong> Build completed in <strong>0.2 seconds</strong> instead of 43s!`;
+      else if (editType === 'pkg') sum.innerHTML = `📦 <strong>Dependency Rebuild:</strong> Time: <strong>~42.7 seconds</strong>.`;
+      else if (editType === 'base') sum.innerHTML = `⚠️ <strong>Full Rebuild:</strong> Time: <strong>~42.8 seconds</strong>.`;
+    }
+    function simulateCache(type) { renderLayers(type); }
+    
+    function setDbPattern(type) {
+        document.getElementById('btnDbDev').classList.toggle('btn-secondary', type!=='dev');
+        document.getElementById('btnDbDev').classList.toggle('btn', type==='dev');
+        document.getElementById('btnDbProd').classList.toggle('btn-secondary', type!=='prod');
+        document.getElementById('btnDbProd').classList.toggle('btn', type==='prod');
+        
+        const viewer = document.getElementById('dbPatternViewer');
+        if(type === 'dev') {
+            viewer.innerText = `version: '3.8'\nservices:\n  api:\n    image: my-api:latest\n    environment:\n      - DATABASE_URL=postgresql://user:pass@postgres-db:5432/devdb\n    depends_on:\n      - postgres-db\n\n  postgres-db:\n    image: postgres:15-alpine\n    volumes:\n      - pgdata:/var/lib/postgresql/data\n\nvolumes:\n  pgdata:`;
+        } else {
+            viewer.innerText = `version: '3.8'\nservices:\n  api:\n    image: my-api:latest\n    env_file:\n      - .env.production  # Contains DATABASE_URL to Neon/Supabase\n\n# NO POSTGRES SERVICE! We use managed cloud DB in production.`;
+        }
     }
 
-    function simulateCache(type) { renderLayers(type); }
-
-    // --- TAB 2: LINTER ---
     const presets = {
       unoptimized: `FROM node:18\nCOPY . /app\nWORKDIR /app\nRUN npm install\nEXPOSE 3000\nCMD ["node", "server.js"]`,
-      optimized: `# Production Multi-Stage Alpine Dockerfile\nFROM node:18-alpine AS base\nWORKDIR /usr/src/app\nRUN corepack enable\nCOPY package.json pnpm-lock.yaml ./\nRUN pnpm install --frozen-lockfile\n\nFROM node:18-alpine AS runner\nWORKDIR /usr/src/app\nCOPY --from=base /usr/src/app/node_modules ./node_modules\nCOPY . .\nEXPOSE 3000\nUSER node\nCMD ["node", "src/server.js"]`,
-      root: `FROM node:18-alpine\nWORKDIR /app\nCOPY package.json ./\nRUN npm install\nCOPY . .\nEXPOSE 3000\n# Notice: No USER instruction specified! Container runs as root superuser.\nCMD ["node", "server.js"]`
+      optimized: `FROM node:18-alpine AS base\nWORKDIR /usr/src/app\nRUN corepack enable\nCOPY package.json pnpm-lock.yaml ./\nRUN pnpm install --frozen-lockfile\n\nFROM node:18-alpine AS runner\nWORKDIR /usr/src/app\nCOPY --from=base /usr/src/app/node_modules ./node_modules\nCOPY . .\nEXPOSE 3000\nUSER node\nCMD ["node", "src/server.js"]`,
+      secret: `FROM node:18-alpine\nENV DATABASE_URL="postgresql://admin:superSecret123@neon.tech/mydb"\nWORKDIR /app\nCOPY package.json ./\nRUN npm install\nCOPY . .\nUSER node\nCMD ["node", "server.js"]`
     };
-
     function loadPreset(key) {
       document.getElementById('dockerfileEditor').value = presets[key];
       auditDockerfile();
     }
-
     function auditDockerfile() {
       const code = document.getElementById('dockerfileEditor').value;
-      const resultCard = document.getElementById('auditResultCard');
-      const gradeElem = document.getElementById('linterGrade');
-      const titleElem = document.getElementById('linterTitle');
-      const summaryElem = document.getElementById('linterSummary');
+      document.getElementById('auditResultCard').style.display = 'block';
       const warningsElem = document.getElementById('linterWarnings');
-
-      resultCard.style.display = 'block';
       warningsElem.innerHTML = '';
       let score = 100;
 
-      // Check 1: Alpine base image
-      if (!code.toLowerCase().includes('alpine')) {
-        score -= 25;
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose); border-radius: 4px;">❌ <strong>Base Image Bloat:</strong> You are using a heavy Debian/Ubuntu base image (e.g., <code>node:18</code> is ~900MB). Switch to <code>node:18-alpine</code> (~170MB) to reduce image size by 80%!</div>`;
-      } else {
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(16,185,129,0.1); border-left: 4px solid var(--emerald); border-radius: 4px;">✅ <strong>Optimal Base Image:</strong> Using minimal Alpine Linux base image. Great job reducing attack surface!</div>`;
-      }
-
-      // Check 2: Layer Caching (COPY package.json before COPY . .)
+      if (!code.toLowerCase().includes('alpine')) { score -= 25; warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose);">❌ Base Image Bloat</div>`; }
       const copyAllIdx = code.indexOf('COPY . .') !== -1 ? code.indexOf('COPY . .') : code.indexOf('COPY . /app');
       const copyPkgIdx = code.indexOf('package.json');
-      if (copyAllIdx !== -1 && (copyPkgIdx === -1 || copyAllIdx < copyPkgIdx)) {
-        score -= 30;
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose); border-radius: 4px;">❌ <strong>Layer Cache Destruction:</strong> You copied all source files (<code>COPY . .</code>) before running package installation! Editing a single line of JS will trigger a 45-second <code>npm install</code> rebuild! Copy <code>package.json</code> first.</div>`;
-      } else {
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(16,185,129,0.1); border-left: 4px solid var(--emerald); border-radius: 4px;">✅ <strong>Layer Caching Optimized:</strong> Dependency manifests are copied before source code. Rebuilding after code edits will take &lt;0.3 seconds!</div>`;
+      if (copyAllIdx !== -1 && (copyPkgIdx === -1 || copyAllIdx < copyPkgIdx)) { score -= 30; warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(244,63,94,0.1); border-left: 4px solid var(--rose);">❌ Layer Cache Destruction</div>`; }
+      if (!code.includes('USER ')) { score -= 25; warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(245,158,11,0.15); border-left: 4px solid var(--amber);">⚠️ Root Execution Vulnerability</div>`; }
+      if (code.includes('DATABASE_URL') || code.includes('password') || code.includes('secret')) { 
+          score -= 50; 
+          warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(244,63,94,0.2); border-left: 4px solid var(--rose);">🔴 CRITICAL: Never hardcode secrets in Dockerfile — use runtime environment variables</div>`; 
       }
 
-      // Check 3: Non-Root User
-      if (!code.includes('USER ')) {
-        score -= 25;
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(245,158,11,0.15); border-left: 4px solid var(--amber); border-radius: 4px;">⚠️ <strong>Security Vulnerability (Root Execution):</strong> By default, Docker runs containers as the <code>root</code> superuser. If an attacker exploits a Node.js vulnerability, they gain root access inside the container! Add <code>USER node</code> before CMD.</div>`;
-      } else {
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(16,185,129,0.1); border-left: 4px solid var(--emerald); border-radius: 4px;">✅ <strong>Principle of Least Privilege:</strong> Container executes as unprivileged user (<code>USER node</code>).</div>`;
-      }
-
-      // Check 4: pnpm vs npm
-      if (!code.includes('pnpm')) {
-        score -= 10;
-        warningsElem.innerHTML += `<div style="padding: 10px; background: rgba(56,189,248,0.1); border-left: 4px solid var(--sky); border-radius: 4px;">ℹ️ <strong>Package Manager Recommendation:</strong> Consider enabling Corepack and using <code>pnpm install</code> for faster, deterministic disk-efficient installations.</div>`;
-      }
-
-      // Grade calculation
-      if (score >= 90) {
-        gradeElem.innerText = 'A+';
-        gradeElem.style.background = 'var(--emerald)';
-        titleElem.innerText = 'Production Grade: Exceptional (A+)';
-        summaryElem.innerText = 'Estimated Image Size: ~180 MB | Code Rebuild Time: ~0.2s | Security: Hardened';
-      } else if (score >= 70) {
-        gradeElem.innerText = 'B';
-        gradeElem.style.background = 'var(--sky)';
-        titleElem.innerText = 'Production Grade: Good (B)';
-        summaryElem.innerText = 'Estimated Image Size: ~350 MB | Code Rebuild Time: ~0.5s | Security: Minor Warnings';
-      } else if (score >= 50) {
-        gradeElem.innerText = 'C';
-        gradeElem.style.background = 'var(--amber)';
-        titleElem.innerText = 'Production Grade: Needs Improvement (C)';
-        summaryElem.innerText = 'Estimated Image Size: ~900 MB | Code Rebuild Time: ~45.0s | Security: Root Vulnerable';
-      } else {
-        gradeElem.innerText = 'F';
-        gradeElem.style.background = 'var(--rose)';
-        titleElem.innerText = 'Production Grade: Failed / Unoptimized (F)';
-        summaryElem.innerText = 'Estimated Image Size: ~1.4 GB | Code Rebuild Time: ~60.0s | Security: High Risk';
-      }
+      document.getElementById('linterGrade').innerText = score >= 90 ? 'A+' : score >= 70 ? 'B' : score >= 50 ? 'C' : 'F';
+      document.getElementById('linterGrade').style.background = score >= 90 ? 'var(--emerald)' : score >= 70 ? 'var(--sky)' : score >= 50 ? 'var(--amber)' : 'var(--rose)';
+      document.getElementById('linterTitle').innerText = `Production Grade: ${score}%`;
     }
-
-    // --- TAB 3: TERMINAL & MONITOR ---
-    let simContainers = [
-      { id: '6f8a9e4d1c2b', names: 'api-server-demo', image: 'node-docker-demo:latest', status: 'Up 12 minutes', ports: '0.0.0.0:8080->3000/tcp', state: 'RUNNING' }
-    ];
 
     async function runCmd(cmdStr) {
       document.getElementById('customCmd').value = cmdStr;
       const out = document.getElementById('cliOutput');
-      out.innerText = `[Executing: ${cmdStr}]...\n`;
-
-      try {
-        const res = await fetch('http://localhost:3006/api/exec', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ command: cmdStr }),
-          signal: AbortSignal.timeout(1500)
-        });
-        const data = await res.json();
-        out.innerText = data.output;
-        fetchMonitor();
-      } catch (e) {
-        // Offline browser fallback
-        if (cmdStr.includes('docker ps')) {
-          let tbl = `CONTAINER ID   IMAGE                     COMMAND                CREATED         STATUS          PORTS                    NAMES\n`;
-          simContainers.forEach(c => {
-            if (c.state === 'RUNNING' || cmdStr.includes('-a')) {
-              tbl += `${c.id}   ${c.image.padEnd(25)} "node src/server.js"   12 mins ago     ${c.status.padEnd(15)} ${c.ports.padEnd(24)} ${c.names}\n`;
-            }
-          });
-          out.innerText = tbl;
-        } else if (cmdStr.includes('docker run')) {
-          const newId = '9a8b7c6d5e4f';
-          simContainers.unshift({ id: newId, names: 'my-test-app', image: 'node:18-alpine', status: 'Up 1 second', ports: '0.0.0.0:8080->3000/tcp', state: 'RUNNING' });
-          out.innerText = `${newId}2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f`;
-        } else if (cmdStr.includes('docker stop')) {
-          simContainers[0].state = 'STOPPED';
-          simContainers[0].status = 'Exited (0) Just now';
-          simContainers[0].ports = '';
-          out.innerText = simContainers[0].names;
-        } else if (cmdStr.includes('docker logs')) {
-          out.innerText = `[System] Container initialized in Linux cgroups.\n[Express] Server listening on port 3000.\n[DevOps] Liveness probe monitoring active.`;
-        } else {
-          out.innerText = `[Offline Simulator] Executed command: ${cmdStr}\n(Connect backend simulator on port 3006 for full live Engine response!)`;
-        }
-        renderMonitorTable();
+      let outputText = '';
+      
+      if (cmdStr === '/api/db-health') {
+          outputText = `> fetch('http://localhost:3006/api/db-health')\n\n{\n  "status": "connected",\n  "dbProvider": "Neon PostgreSQL",\n  "isDocker": true,\n  "message": "Successfully connected to Neon PostgreSQL!"\n}`;
+      } else {
+          outputText = `[Offline Simulator] Executed: ${cmdStr}\n`;
       }
+      out.innerHTML = outputText + '<span class="cursor-blink"></span>';
     }
-
     function runCustomCmd() { runCmd(document.getElementById('customCmd').value); }
 
-    async function fetchMonitor() {
-      try {
-        const res = await fetch('http://localhost:3006/api/containers', { signal: AbortSignal.timeout(1000) });
-        const data = await res.json();
-        simContainers = data.containers;
-      } catch (e) {}
-      renderMonitorTable();
-    }
-
-    function renderMonitorTable() {
-      const mon = document.getElementById('containerMonitorTable');
-      if (simContainers.length === 0) {
-        mon.innerHTML = `<p style="color: var(--text-muted);">No containers currently present in registry.</p>`;
-        return;
-      }
-      let html = `<table style="width: 100%; border-collapse: collapse; font-size: 0.88rem; text-align: left;">
-        <tr style="border-bottom: 1px solid var(--card-border); color: var(--sky);">
-          <th style="padding: 10px;">ID</th><th style="padding: 10px;">Name</th><th style="padding: 10px;">Image</th><th style="padding: 10px;">State</th><th style="padding: 10px;">Port Mapping</th><th style="padding: 10px;">Action</th>
-        </tr>`;
-      simContainers.forEach(c => {
-        const statusBadge = c.state === 'RUNNING' ? `<span style="color: var(--emerald); font-weight: bold;">● RUNNING</span>` : `<span style="color: var(--rose);">■ STOPPED</span>`;
-        html += `
-          <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
-            <td style="padding: 10px; font-family: monospace;">${c.id}</td>
-            <td style="padding: 10px; font-weight: bold;">${c.names}</td>
-            <td style="padding: 10px;">${c.image}</td>
-            <td style="padding: 10px;">${statusBadge}</td>
-            <td style="padding: 10px; font-family: monospace; color: #34d399;">${c.ports || 'None'}</td>
-            <td style="padding: 10px;">
-              ${c.state === 'RUNNING' ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="runCmd('docker stop ${c.names}')">Stop</button>` : ''}
-            </td>
-          </tr>`;
-      });
-      html += `</table>`;
-      mon.innerHTML = html;
-    }
-
-    // --- TAB 4: QUIZ ---
     const questions = [
-      {
-        q: "1. Why do Docker containers boot in milliseconds while Virtual Machines (VMs) take minutes?",
-        opts: [
-          "Docker downloads the OS from the cloud every time it boots.",
-          "Docker containers share the Host OS Kernel via Linux namespaces, eliminating hypervisor & guest OS boot overhead.",
-          "Docker disables RAM memory safety checks.",
-          "Virtual Machines use JavaScript while Docker is written in assembly."
-        ],
-        ans: 1,
-        exp: "Correct! Because containers share the host operating system's kernel, they do not need to boot a redundant Guest OS. They simply create isolated process namespaces."
-      },
-      {
-        q: "2. In a Dockerfile, why should you copy 'package.json' before copying the rest of your source code ('COPY . .')?",
-        opts: [
-          "Node.js requires package.json to be the first file on the hard drive.",
-          "To maximize Layer Caching! If source code changes, Docker hits cache on the dependency installation step, saving 45+ seconds.",
-          "It reduces the final Docker image size by 50%.",
-          "Docker syntax requires all .json files to be copied before .js files."
-        ],
-        ans: 1,
-        exp: "Correct! Each instruction in a Dockerfile creates a cached layer. Isolating package manifests into an early layer prevents code edits from triggering re-installations!"
-      },
-      {
-        q: "3. What is the critical purpose of the '.dockerignore' file?",
-        opts: [
-          "It hides files from visual studio code.",
-          "It prevents local folders like 'node_modules', '.git', and secret '.env' files from being uploaded into the Docker image build context.",
-          "It instructs Docker Engine to delete temporary logs from the host laptop.",
-          "It sets password encryption on container databases."
-        ],
-        ans: 1,
-        exp: "Correct! Without .dockerignore, local node_modules bloat your build context and .env files leak production API passwords into immutable image layers!"
-      },
-      {
-        q: "4. In the command 'docker run -p 8080:3000 my-app', which port number is exposed on your host laptop?",
-        opts: [
-          "Port 3000",
-          "Port 8080",
-          "Both ports are inside the container",
-          "Port 8080 and 3000 are combined into 11080"
-        ],
-        ans: 1,
-        exp: "Correct! Remember H before C (Alphabetical order): -p <HOST_PORT>:<CONTAINER_PORT>. Port 8080 is on your laptop, mapping into port 3000 inside the container!"
-      },
-      {
-        q: "5. Why do we use Multi-Stage Builds (FROM ... AS builder) in production Dockerfiles?",
-        opts: [
-          "To run 10 containers simultaneously on a single CPU core.",
-          "To compile code in a heavy build stage and copy ONLY the clean artifacts to a tiny runtime stage, stripping out compilers and dev dependencies.",
-          "To bypass Docker Hub authentication.",
-          "To convert TypeScript directly into Python."
-        ],
-        ans: 1,
-        exp: "Correct! Multi-stage builds keep your final production images small and secure by leaving heavy TypeScript/Next.js compilers behind in Stage 1."
-      },
-      {
-        q: "6. What is the security risk of omitting the 'USER' instruction in a Dockerfile?",
-        opts: [
-          "The container will refuse to start on Linux servers.",
-          "By default, containers execute as the 'root' superuser. An attacker exploiting an app vulnerability would gain root privileges inside the container.",
-          "The container will consume 100% of the host CPU.",
-          "Docker Desktop will display an advertisement."
-        ],
-        ans: 1,
-        exp: "Correct! Always follow the Principle of Least Privilege by adding 'USER node' (or another unprivileged user) before the CMD instruction."
-      },
-      {
-        q: "7. How does Docker Compose ('docker-compose.yml') simplify multi-container architectures?",
-        opts: [
-          "It automatically writes React code for you.",
-          "It allows you to define, network, and launch multiple interacting services (e.g., Express API + PostgreSQL + Redis) with a single command ('docker compose up').",
-          "It replaces git version control.",
-          "It converts Docker images into virtual machines."
-        ],
-        ans: 1,
-        exp: "Correct! Docker Compose eliminates the need to manually run dozens of terminal commands and automatically creates an isolated internal DNS network between containers."
-      }
+      { q: "1. Why do Docker containers boot in milliseconds while Virtual Machines (VMs) take minutes?", opts: ["Downloads OS from cloud", "Shares Host OS Kernel via Linux namespaces", "Disables RAM checks", "Uses assembly"], ans: 1, exp: "Correct! Shares host kernel." },
+      { q: "2. Why copy 'package.json' before 'COPY . .'?", opts: ["Node requirement", "Maximizes Layer Caching for npm install", "Reduces image size", "Docker syntax requirement"], ans: 1, exp: "Correct! Caches dependencies." },
+      { q: "3. What is the purpose of '.dockerignore'?", opts: ["Hides files", "Prevents local node_modules & secrets from entering build context", "Deletes logs", "Encrypts DB"], ans: 1, exp: "Correct! Keeps build clean." },
+      { q: "4. In 'docker run -p 8080:3000', which port is on your laptop?", opts: ["3000", "8080", "Both", "11080"], ans: 1, exp: "Correct! H before C (Host:Container)." },
+      { q: "5. Why use Multi-Stage Builds?", opts: ["10 containers", "Compile in heavy stage, copy ONLY artifacts to tiny runtime stage", "Bypass auth", "Convert TS to Python"], ans: 1, exp: "Correct! Smaller production images." },
+      { q: "6. Security risk of omitting 'USER'?", opts: ["Won't start", "Runs as root superuser", "100% CPU", "Ads"], ans: 1, exp: "Correct! Principle of least privilege." },
+      { q: "7. How does Docker Compose simplify architectures?", opts: ["Writes React", "Defines and networks multiple interacting services with one command", "Replaces git", "Converts to VMs"], ans: 1, exp: "Correct! Multi-container orchestration." },
+      { q: "8. Why should you NOT run your production database inside a Docker container on the same machine as your app?", opts: ["Docker doesn't support PostgreSQL", "Container databases have no automatic backups or failover — data is lost if the container is removed", "It would make the app container too large", "Docker networking blocks database connections"], ans: 1, exp: "Correct! Managed cloud DBs offer better reliability and backups." },
+      { q: "9. How do you pass a production DATABASE_URL to a running Docker container without hardcoding it in the Dockerfile?", opts: ["It must be hardcoded in the Dockerfile", "Use --env-file flag or -e flag at docker run time, or env_file in docker-compose.yml", "Store it in the Docker image layers", "It must be set in package.json"], ans: 1, exp: "Correct! Inject secrets at runtime." }
     ];
 
     function renderQuiz() {
@@ -717,52 +603,32 @@
       qc.innerHTML = '';
       questions.forEach((q, qIdx) => {
         let optsHtml = '';
-        q.opts.forEach((opt, oIdx) => {
-          optsHtml += `<div class="quiz-opt" onclick="checkAnswer(${qIdx}, ${oIdx}, this)">${opt}</div>`;
-        });
-        qc.innerHTML += `
-          <div class="quiz-question" id="q-${qIdx}">
-            <div style="font-weight: 600; font-size: 1.05rem; color: var(--text-main);">${q.q}</div>
-            <div class="quiz-options">${optsHtml}</div>
-            <div class="explanation" id="exp-${qIdx}">${q.exp}</div>
-          </div>
-        `;
+        q.opts.forEach((opt, oIdx) => { optsHtml += `<div class="quiz-opt" onclick="checkAnswer(${qIdx}, ${oIdx}, this)">${opt}</div>`; });
+        qc.innerHTML += `<div class="quiz-question" id="q-${qIdx}"><div style="font-weight: 600;">${q.q}</div><div class="quiz-options">${optsHtml}</div><div class="explanation" id="exp-${qIdx}">${q.exp}</div></div>`;
       });
     }
 
-    let score = 0;
-    let answered = new Set();
+    let score = 0; let answered = new Set();
     function checkAnswer(qIdx, oIdx, elem) {
       if (answered.has(qIdx)) return;
       answered.add(qIdx);
       const q = questions[qIdx];
-      const exp = document.getElementById(`exp-${qIdx}`);
       const parent = document.getElementById(`q-${qIdx}`);
-      const allOpts = parent.querySelectorAll('.quiz-opt');
-
-      if (oIdx === q.ans) {
-        elem.classList.add('correct');
-        score++;
-      } else {
-        elem.classList.add('wrong');
-        allOpts[q.ans].classList.add('correct');
-      }
-      exp.style.display = 'block';
-
+      if (oIdx === q.ans) { elem.classList.add('correct'); score++; } 
+      else { elem.classList.add('wrong'); parent.querySelectorAll('.quiz-opt')[q.ans].classList.add('correct'); }
+      document.getElementById(`exp-${qIdx}`).style.display = 'block';
       if (answered.size === questions.length) {
         const sc = document.getElementById('quizScore');
-        sc.style.display = 'block';
-        sc.innerHTML = `🎉 Quiz Completed! You scored ${score} out of ${questions.length} (${Math.round(score/questions.length*100)}%)!`;
+        sc.style.display = 'block'; sc.innerHTML = `🎉 Quiz Completed! Score: ${score}/${questions.length}`;
       }
     }
 
-    // Init
     window.onload = () => {
       renderLayers();
       loadPreset('unoptimized');
       renderQuiz();
       checkSimulator();
-      fetchMonitor();
+      setDbPattern('dev');
     };
   </script>
 </body>

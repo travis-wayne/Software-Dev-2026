@@ -129,6 +129,9 @@ model Order {
 }
 ```
 
+### Production War Story: The N+1 Query That Brought Down the API at Scale
+A team built an e-commerce order listing page using Mongoose. For each order (100 total per page), they ran a separate `.findById()` to populate the product details — 101 database round-trips per page load. In local dev with 10 seed items it was fast. In production with 50,000 orders and real network latency to MongoDB Atlas, each page load took 8 seconds and timed out under moderate traffic. The monitoring showed 10,000 DB requests per minute. Fix: switched to `.populate('products')` — a single optimized join query, loading time dropped to 80ms.
+
 ---
 
 ## 4. Class Comprehension Questions & Answers
@@ -156,6 +159,15 @@ Finally, Mongoose stitches the retrieved user documents into the order objects i
 ### Q5: What is the impedance mismatch in software engineering?
 **Answer:** The impedance mismatch refers to the conceptual and structural conflict between **Object-Oriented Programming (OOP)** languages (like JavaScript/TypeScript, which use nested objects, arrays, references, and inheritance) and **Relational Database Management Systems (RDBMS)** (like PostgreSQL, which store flat table rows, columns, and foreign key integers). ORMs bridge this gap by translating between in-memory object graphs and relational table rows seamlessly.
 
+### Q6: Why does Prisma need two different database URLs (DATABASE_URL and DIRECT_URL) for Neon?
+**Answer:** Neon's DATABASE_URL goes through PgBouncer connection pooler (optimized for app queries). But DDL migrations (CREATE TABLE, ALTER TABLE) require advisory locks that PgBouncer blocks. DIRECT_URL bypasses PgBouncer and connects directly — only used by prisma migrate commands.
+
+### Q7: What is the difference between prisma migrate dev and prisma db push?
+**Answer:** migrate dev generates a migration SQL file saved to prisma/migrations/ and tracks history. db push pushes schema directly without creating files — useful for rapid prototyping but dangerous in production because there's no audit trail.
+
+### Q8: Can I use Prisma with MongoDB?
+**Answer:** Yes! Prisma has a MongoDB provider. However it uses a different query engine (no migrations — instead prisma db push). The Prisma schema still works the same way for defining models. Mongoose gives you more control over MongoDB-specific features like aggregation pipelines.
+
 ---
 
 ## 5. Recommended 90-Minute Timetable
@@ -167,4 +179,5 @@ Finally, Mongoose stitches the retrieved user documents into the order objects i
 | 00:25 - 00:40 | 15 min | **Database Migrations Explained** | Present *Analogy 2 (Blueprint & Time Machine)*. Demonstrate running `prisma migrate dev` vs `prisma db push` and inspect the generated SQL migration files. |
 | 00:40 - 00:55 | 15 min | **Advanced Mongoose ODM Features** | Switch to `examples/mongoose-advanced-demo`. Walk through `pre('save')` Bcrypt hashing, virtual properties (`fullName`), and cross-collection `.populate()`. |
 | 00:55 - 01:15 | 20 min | **Interactive Lab & Performance Analysis** | Open `examples/orm-migration-lab/index.html`. Have students test the ORM Translator and simulate N+1 queries versus Eager Loading. |
-| 01:15 - 01:30 | 15 min | **Q&A, Common Pitfalls & Wrap-Up** | Review the 5 Live Debug Scenarios (especially pooled vs direct URLs in Neon DB). Administer the 7-question mastery quiz in the lab UI. |
+| 01:15 - 01:25 | 10 min | **Cloud DB Provider Comparison** | Cloud DB provider comparison — choosing between Neon, Supabase and Railway. Review pros and cons. |
+| 01:25 - 01:30 | 5 min | **Q&A, Common Pitfalls & Wrap-Up** | Review the 5 Live Debug Scenarios (especially pooled vs direct URLs in Neon DB). Administer the 7-question mastery quiz in the lab UI. |

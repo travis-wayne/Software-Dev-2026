@@ -102,11 +102,65 @@ app.get('/', (req, res) => {
   `);
 });
 
+/**
+ * GET /api/db-health
+ * Tests the database connection and reports which DB mode is active
+ * Demonstrates injecting DATABASE_URL at container runtime!
+ */
+app.get('/api/db-health', async (req, res) => {
+  const dbUrl = process.env.DATABASE_URL;
+  const isDocker = isRunningInDocker();
+  
+  if (!dbUrl) {
+    return res.json({
+      status: 'no-database',
+      message: 'No DATABASE_URL set. Start with: docker run -e DATABASE_URL=postgresql://... my-api',
+      tip: 'For local dev, use docker-compose which auto-sets DATABASE_URL via service networking',
+      isDocker: isDocker,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Detect which DB provider is being used
+  const dbProvider = dbUrl.includes('neon.tech') ? 'Neon PostgreSQL'
+    : dbUrl.includes('supabase') ? 'Supabase PostgreSQL'
+    : dbUrl.includes('railway') ? 'Railway PostgreSQL'
+    : dbUrl.includes('localhost') || dbUrl.includes('postgres-db') ? 'Docker PostgreSQL Container'
+    : 'External PostgreSQL';
+
+  try {
+    // Attempt a lightweight connection test
+    const { Pool } = await import('pg').catch(() => null);
+    if (!Pool) {
+      return res.json({ status: 'pg-not-installed', dbProvider, message: 'pg package not installed. Run: pnpm add pg' });
+    }
+    const pool = new Pool({ connectionString: dbUrl, ssl: dbUrl.includes('localhost') ? false : { rejectUnauthorized: false } });
+    const result = await pool.query('SELECT NOW() as server_time, version() as pg_version');
+    await pool.end();
+    return res.json({
+      status: 'connected',
+      dbProvider,
+      serverTime: result.rows[0].server_time,
+      pgVersion: result.rows[0].pg_version.split(' ').slice(0, 2).join(' '),
+      isDocker,
+      message: `Successfully connected to ${dbProvider}!`
+    });
+  } catch (err) {
+    return res.status(503).json({
+      status: 'connection-failed',
+      dbProvider,
+      error: err.message,
+      tip: 'Check DATABASE_URL format and network connectivity'
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`\n======================================================`);
   console.log(`🐳 Lesson 43 Docker Demo API Server running on port ${PORT}`);
   console.log(`📡 Telemetry endpoint: http://localhost:${PORT}/api/info`);
   console.log(`🏥 Health check:       http://localhost:${PORT}/api/health`);
+  console.log(`🛢️  DB Health check:    http://localhost:${PORT}/api/db-health`);
   console.log(`⚡ Containerized:      ${isRunningInDocker() ? 'YES (Docker Container)' : 'NO (Native Host Machine)'}`);
   console.log(`======================================================\n`);
 });

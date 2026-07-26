@@ -289,3 +289,70 @@ When should you build your backend inside Next.js vs. spinning up a separate Exp
 | **Exposing DB secrets with `NEXT_PUBLIC_`** | Adding `NEXT_PUBLIC_DATABASE_URL` in `.env.local` exposes the string to browser JS bundles. | Name secret server environment variables without the prefix: `DATABASE_URL`. |
 | **Sending JSON POST without Content-Type header** | Calling `fetch('/api/projects', { method: 'POST', body: JSON.stringify(data) })` without headers leaves `req.body` undefined. | Always include `headers: { 'Content-Type': 'application/json' }` in `fetch`. |
 | **Hardcoding `localhost:3000` in API calls** | Writing `fetch('http://localhost:3000/api/projects')` breaks when deployed to Vercel. | Use relative paths: `fetch('/api/projects')` from your React frontend! |
+| **Using `NEXT_PUBLIC_` prefix on `DATABASE_URL`** | Neon connection string exposed in browser bundle for all visitors to read | Remove `NEXT_PUBLIC_` prefix — only use for intentionally public config |
+| **Forgetting `await` on async Prisma/pg queries** | Handler returns empty or undefined data instead of query results | Add `await` before every `db.query()` or `prisma.findMany()` call |
+| **Connection pool exhaustion on serverless cold starts** | 503 errors under load — Neon reports "too many connections" | Set pool max to 5-10 for serverless; use pgBouncer connection pooler URL |
+
+---
+
+## 9. Pages Router vs App Router — The Modern Shift
+
+Next.js 13+ introduced the App Router using the `app/` directory.
+
+### Code Comparison
+
+**Pages Router (`pages/api/projects/index.js`)**
+```javascript
+export default function handler(req, res) {
+  switch(req.method) {
+    case 'GET': return handleGet(req, res);
+    case 'POST': return handlePost(req, res);
+  }
+}
+```
+
+**App Router (`app/api/projects/route.js`)**
+```javascript
+import { NextResponse } from 'next/server';
+
+export async function GET(request) {
+  return NextResponse.json({ message: "Hello" });
+}
+
+export async function POST(request) {
+  const body = await request.json();
+  return NextResponse.json({ data: body });
+}
+```
+
+### Key Differences
+- App Router handlers receive a `Request` (Standard Web API), not a Node.js `req/res`.
+- Use `NextResponse.json()` instead of `res.json()`.
+- Named exports (`export async function GET`) per HTTP method instead of a switch-case inside a default export.
+
+### Decision Table
+| Scenario | Pages Router (`pages/api`) | App Router (`app/api/route.js`) |
+|----------|----------------------------|---------------------------------|
+| **Legacy Codebases** | ✅ Yes | ❌ No |
+| **Existing Tutorials** | ✅ Yes | ❌ No |
+| **NextAuth v4** | ✅ Yes | ❌ No |
+| **Greenfield Projects** | ❌ No | ✅ Yes |
+| **React Server Components**| ❌ No | ✅ Yes |
+| **Next.js 13+** | ❌ No | ✅ Yes |
+
+---
+
+## 10. Production War Story — The Day We Exposed Our Database URL
+
+*The Day We Exposed Our Database URL*
+
+I was deploying my first full-stack Next.js app to Vercel. I had read that environment variables in Next.js needed the `NEXT_PUBLIC_` prefix to work on the frontend, so I figured I’d be "safe" and prefix everything just in case. 
+
+My `.env.local` looked like this:
+`NEXT_PUBLIC_DATABASE_URL=postgres://admin:supersecret123@neon.tech/mydb`
+
+The app worked perfectly. But a week later, a user emailed me a screenshot. They had simply opened Chrome DevTools, went to the "Sources" tab, and searched for "postgres". There it was, hardcoded right into the client-side JavaScript bundle: my production database URL, complete with the master password. Every single visitor to the site was downloading my database credentials!
+
+**What went wrong?** Next.js compiles any environment variable prefixed with `NEXT_PUBLIC_` directly into the browser JavaScript bundle during the build process. This is great for public API keys (like Stripe), but catastrophic for secrets. 
+
+**The Fix:** I immediately rotated my database password and changed the variable to simply `DATABASE_URL`. Variables without the prefix remain strictly server-side and are completely hidden from the browser. Lesson learned: never use `NEXT_PUBLIC_` for secrets!

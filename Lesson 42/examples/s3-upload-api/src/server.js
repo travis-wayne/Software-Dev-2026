@@ -8,6 +8,15 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { mockS3 } from "./mockS3.js";
 
+// Supabase Storage client (zero-credit-card real cloud storage!)
+let supabaseClient = null;
+if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+  import('@supabase/supabase-js').then(({ createClient }) => {
+    supabaseClient = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    console.log('✅ Supabase Storage connected!');
+  }).catch(() => console.log('⚠️ Supabase SDK not installed. Run: pnpm add @supabase/supabase-js'));
+}
+
 dotenv.config();
 
 const app = express();
@@ -39,6 +48,46 @@ app.get("/api/status", (req, res) => {
     totalObjects: hasAwsCredentials ? "Cloud Bucket Managed" : mockS3.listObjects().length,
     timestamp: new Date().toISOString()
   });
+});
+
+/**
+ * POST /api/supabase/upload
+ * Uploads a file directly to Supabase Storage bucket
+ * Zero credit card required! 5GB free tier.
+ */
+app.post('/api/supabase/upload', async (req, res) => {
+  if (!supabaseClient) {
+    // Simulate successful upload with mock response
+    const mockPath = `files/${Date.now()}-demo-upload.jpg`;
+    return res.json({
+      success: true,
+      mode: 'mock',
+      path: mockPath,
+      publicUrl: `https://placeholder.supabase.co/storage/v1/object/public/lesson-42-uploads/${mockPath}`,
+      message: 'Mock upload successful! Set SUPABASE_URL and SUPABASE_ANON_KEY in .env for real cloud upload.'
+    });
+  }
+
+  try {
+    const { filename = 'test-upload.jpg', contentType = 'image/jpeg' } = req.body;
+    const path = `files/${Date.now()}-${filename}`;
+    // Simulate file content (in real app this would be multipart form data)
+    const mockContent = Buffer.from('Lesson 42 Supabase Storage Upload Demo');
+    
+    const { data, error } = await supabaseClient.storage
+      .from('lesson-42-uploads')
+      .upload(path, mockContent, { contentType, upsert: true });
+
+    if (error) throw error;
+
+    const { data: urlData } = supabaseClient.storage
+      .from('lesson-42-uploads')
+      .getPublicUrl(data.path);
+
+    res.json({ success: true, mode: 'supabase-cloud', path: data.path, publicUrl: urlData.publicUrl });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 /**

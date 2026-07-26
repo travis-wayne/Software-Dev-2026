@@ -285,6 +285,9 @@ Result: Exactly 2 optimized queries! API response time: ~45ms!
 | **Mongoose Password Double-Hash** | Updating a user profile (`user.name = 'Bob'; await user.save()`) triggers `pre('save')` and hashes the already-hashed password string. | Always include the guard clause: `if (!this.isModified('password')) return;` inside your `pre('save')` middleware! |
 | **Mongoose Middleware Hangs** | Defining `userSchema.pre('save', async function(next) { ... })` and forgetting to call `next()`. | In Mongoose 5.x/6.x/7.x/8.x, if your middleware function is `async`, **do not pass the `next` parameter at all**. Simply return or let the async promise resolve! |
 | **Unindexed Foreign Key Slowness** | Querying orders by `userId` without indexing `userId` in PostgreSQL causes slow Full Table Scans. | Add `@@index([userId])` to your relational models in `schema.prisma`. |
+| **Running prisma migrate dev against Neon with pooled connection URL** | DDL commands blocked by PgBouncer — "advisory lock" error | Always use DIRECT_URL (non-pooled connection) for migrations; keep DATABASE_URL (pooled) for app queries |
+| **Mongoose pre(save) hook running twice on password hash** | bcrypt hashes an already-hashed password → login always fails | Add if (!this.isModified(password)) return; guard at the start of the pre(save) hook |
+| **Using await with Prisma inside a forEach loop** | N+1 queries — each iteration sends a separate DB round-trip | Use Promise.all(array.map(async (item) => prisma.query(item))) or restructure to a single findMany with include |
 
 ---
 
@@ -297,3 +300,40 @@ Result: Exactly 2 optimized queries! API response time: ~45ms!
 * **Connection Pooling:** Keeping a cache of reusable database connections (e.g., via PgBouncer) to prevent serverless function spikes from exhausting database memory slots.
 * **Eager Loading:** Retrieving parent records and their associated child records simultaneously in optimized batched queries (`include` or `.populate()`).
 * **Virtual Property:** A calculated document property in Mongoose that exists in Node.js runtime memory but is never stored in MongoDB storage.
+
+---
+
+## 9. Choosing Your Cloud PostgreSQL Provider — Neon vs Supabase vs Railway
+
+Create a detailed comparison table:
+| Feature | Neon | Supabase | Railway |
+|---------|------|----------|---------|
+| Free tier storage | 512MB | 500MB | 1GB (trial) |
+| Connection pooling | Built-in PgBouncer | Built-in PgBouncer | No built-in pooler |
+| Prisma compatibility | ✅ Full (needs directUrl) | ✅ Full (needs directUrl) | ✅ Full |
+| Auto-suspend (cold start) | Yes (5min idle) | No | No |
+| Built-in Auth | No | Yes (Supabase Auth) | No |
+| Built-in Storage | No | Yes (Supabase Storage) | No |
+| Dashboard quality | Good | Excellent | Simple |
+| Best for | Raw PostgreSQL power, Prisma-first projects | Full-stack BaaS apps with Auth+DB+Storage | Simple hobby projects and quick prototyping |
+
+- **When to choose Neon:** You want maximum PostgreSQL control, using Prisma migrations heavily, comfortable with raw SQL.
+- **When to choose Supabase:** You want a complete backend platform with auth, real-time, storage, and edge functions in one place — less code overall.
+- **When to choose Railway:** You just want a quick Postgres DB with a simple GUI and don't need advanced features.
+
+---
+
+## 10. MongoDB Atlas — Connecting Mongoose to the Real Cloud
+
+The difference between local MongoMemoryServer (what we use for offline dev) and MongoDB Atlas (real cloud cluster) is that Atlas runs on distributed servers that maintain data permanently across replicas, whereas MongoMemoryServer loses data when the process exits.
+
+**Step-by-step Atlas free cluster setup:**
+1. Go to cloud.mongodb.com → Create free M0 cluster
+2. Create DB user with password
+3. Add IP address to Network Access (0.0.0.0/0 for dev)
+4. Click 'Connect' → 'Compass' → copy connection string
+5. Replace `<password>` in connection string
+6. Set `MONGODB_URI` in `.env` → MongoMemoryServer fallback automatically deactivates!
+
+**Atlas Search overview:** how to add full-text search indexes on top of your existing collections for powerful typo-tolerant search capabilities without needing external services like Algolia.
+**Change Streams:** receiving real-time change events from Atlas (like WebSockets for your database). Use it to listen for database changes and push them instantly to connected clients.

@@ -231,6 +231,75 @@ spec:
 
 ---
 
+## 🔒 7. Injecting Real Database Credentials into Kubernetes — The K8s Secrets Pattern
+
+One of the most common questions: 'How do I give my Express container running in Kubernetes access to my Neon/Supabase database URL without hardcoding it?'
+
+Never do this (hardcoded in YAML):
+```yaml
+env:
+  - name: DATABASE_URL
+    value: "postgresql://admin:SuperSecret@db.neon.tech/prod"  # NEVER! This YAML might be committed to Git!
+```
+
+The correct Kubernetes Secrets pattern:
+
+Step 1: Create the Secret (run this in your terminal — do NOT commit this command to Git):
+```bash
+kubectl create secret generic db-credentials \
+  --from-literal=DATABASE_URL="postgresql://admin:SuperSecret@db.neon.tech/prod" \
+  --from-literal=JWT_SECRET="your-super-secure-jwt-key"
+```
+
+Step 2: Reference the Secret in your Deployment manifest using `secretKeyRef`:
+```yaml
+spec:
+  containers:
+    - name: express-api-container
+      image: ghcr.io/myuser/my-api:latest
+      env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials     # Secret name from kubectl create secret
+              key: DATABASE_URL        # Key within the Secret
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: db-credentials
+              key: JWT_SECRET
+```
+
+Step 3: Verify the Secret exists before deploying:
+```bash
+kubectl get secrets
+kubectl describe secret db-credentials  # Shows keys but NOT values (they are encrypted in etcd)
+```
+
+Important Security Rules:
+1. NEVER commit Kubernetes Secret YAML files with real values to Git (even in a private repo)
+2. K8s Secrets are stored in etcd with base64 encoding — this is NOT encryption! Enable etcd encryption at rest in production clusters.
+3. Use external secret managers (AWS Secrets Manager, HashiCorp Vault, or Kubernetes External Secrets Operator) for highly sensitive production credentials
+4. Always include `*.secret.yaml` in `.gitignore`
+
+---
+
+## 🏗️ 8. Complete Database-Connected K8s Architecture
+
+```
+[GitHub Push] → [GitHub Actions] → [Build Docker Image] → [Push to ghcr.io]
+                                                                    ↓
+                                          [Kubernetes Deployment pulls image]
+                                                                    ↓
+                                     [Pod runs: kubectl create secret applies DATABASE_URL]
+                                                                    ↓
+                                [Express container connects to Neon PostgreSQL via DATABASE_URL]
+                                                                    ↓
+                            [Neon PostgreSQL (managed cloud DB — backups, failover, pooling)]
+```
+
+---
+
 ## 📝 Activities & Exercises
 1. **Pre-Session**: Verify your GitHub account and ensure you have an existing Dockerized Node.js project.
 2. **In-Session Lab**: Open our interactive **Lesson 44 Advanced CI/CD & Kubernetes Lab** (`examples/cicd-k8s-lab/index.html`) in your web browser!

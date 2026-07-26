@@ -20,7 +20,8 @@ By the end of this 90-minute session, students will transition from manually wri
 | **10:00–25:00** | **Core Theory** | Catch-All Routes & NextAuth Providers | How `pages/api/auth/[...nextauth].js` automates `/login`, `/logout`, `/callback`, and session cookies. |
 | **25:00–45:00** | **Live Coding** | Configuring NextAuth with Neon DB | Setting up Credentials Provider with bcrypt, connecting GitHub OAuth, and wrapping `_app.js` with `<SessionProvider>`. |
 | **45:00–70:00** | **Guided Lab** | Interactive Glassmorphism Auth Lab | Students test simulated OAuth flows, inspect JWT sanitization callbacks, and verify route guards. |
-| **70:00–85:00** | **Security & Debug** | Protecting API Routes & Common Pitfalls | Using `getServerSession` in `pages/api/*`, fixing missing secrets, and debugging callback race conditions. |
+| **70:00–75:00** | **Security & Debug** | Protecting API Routes & Common Pitfalls | Using `getServerSession` in `pages/api/*`, fixing missing secrets, and debugging callback race conditions. |
+| **75:00–85:00** | **Auth.js v5** | Auth.js v5 syntax preview + migration overview | Highlighting the differences and how `auth()` replaces `getServerSession()`. |
 | **85:00–90:00** | **Wrap-Up** | Comprehension check & assignment brief | Q&A, summarizing when to use Credentials vs. OAuth social logins. |
 
 ---
@@ -75,6 +76,10 @@ Then ask:
   ```
   Paste this value directly into `.env.local` as `NEXTAUTH_SECRET=...` and add it to Vercel project settings immediately.
 
+> **Production Incident: The Rotate-AUTH_SECRET Outage**
+> A startup engineer decided to rotate the `AUTH_SECRET` (or `NEXTAUTH_SECRET`) environment variable on their live Vercel deployment as a security best practice, but didn't realize that all existing user session cookies are signed with the old secret. The very moment the new secret deployed, every logged-in user across the world was silently signed out because their existing JWT cookies became cryptographically invalid. Hundreds of support tickets flooded in about "getting logged out while typing."
+> **Lesson:** `AUTH_SECRET` rotation = forced global logout. Always communicate this to users in advance and rotate during low-traffic maintenance windows.
+
 ### Pitfall 4: Storing Passwords in Plaintext with Credentials Provider
 - **What students do:** Write a query inside `authorize(credentials)` like: `SELECT * FROM users WHERE email = ? AND password = ?`.
 - **The Symptom:** If the database is ever leaked, all user passwords are exposed in plain ASCII text.
@@ -111,6 +116,12 @@ Then ask:
 
 ### Q5: How do you prevent unauthenticated users from executing a `DELETE` request in a Next.js serverless API route?
 **Answer:** By calling `const session = await getServerSession(req, res, authOptions)` at the very top of the API handler function. If `!session` is true (or if `session.user` is missing), immediately return an HTTP status code of `401 Unauthorized` (`res.status(401).json({ error: 'Unauthorized' })`) and terminate execution before querying the database.
+
+### Q6: Can two different OAuth providers (GitHub + Google) resolve to the same user account?
+**Answer:** No by default — NextAuth creates separate accounts for each provider. You need to implement a custom `signIn` callback that checks if the email already exists in your database and manually links the OAuth accounts to prevent duplicate profiles.
+
+### Q7: What happens when the JWT expires mid-session while the user is browsing?
+**Answer:** NextAuth silently refreshes the session on the next request via the session callback if the `maxAge` hasn't passed (if rolling sessions are configured). The user stays logged in. Once the absolute `maxAge` has passed, the session is cleared and they're redirected to the login page on their next protected action.
 
 ---
 

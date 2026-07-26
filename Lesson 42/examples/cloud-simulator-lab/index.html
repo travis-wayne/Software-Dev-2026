@@ -51,6 +51,12 @@
     .glass-card:hover {
       border-color: rgba(6, 182, 212, 0.3);
       box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transform: translateY(-2px);
+    }
+    @keyframes borderGradient {
+      0% { border-color: #06b6d4; }
+      50% { border-color: #8b5cf6; }
+      100% { border-color: #06b6d4; }
     }
     .tab-btn {
       transition: all 0.2s ease;
@@ -59,6 +65,7 @@
     .tab-btn.active {
       color: #22d3ee;
       font-weight: 600;
+      animation: borderGradient 3s infinite linear;
     }
     .tab-btn.active::after {
       content: '';
@@ -103,7 +110,12 @@
       </div>
       <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-700/60 text-xs font-mono">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
-        <span>Dual-Mode Simulator: <strong class="text-emerald-400">ONLINE / OFFLINE</strong></span>
+        <span>Status: <strong class="text-emerald-400">CONNECTED</strong></span>
+        <select id="storage-provider-select" class="ml-2 bg-slate-800 border border-slate-600 text-white rounded p-1 focus:outline-none">
+          <option value="supabase">Supabase</option>
+          <option value="s3">AWS S3</option>
+          <option value="mock">Mock</option>
+        </select>
       </div>
     </header>
 
@@ -125,7 +137,7 @@
 
     <!-- TAB 1: Cloud Architect Map -->
     <section id="tab-architect" class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
         <div class="glass-card p-6 space-y-3">
           <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border border-red-500/20">IaaS</div>
           <h3 class="text-lg font-semibold text-white">Infrastructure as a Service</h3>
@@ -159,6 +171,18 @@
           <div class="pt-2 border-t border-slate-800 flex justify-between text-xs text-cyan-400 font-mono">
             <span>Idle Cost: $0.00</span>
             <span>Maintenance: ZERO</span>
+          </div>
+        </div>
+        
+        <div class="glass-card p-6 space-y-3 shadow-lg" style="border-color: rgba(139, 92, 246, 0.4);">
+          <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold text-lg border border-violet-500/20">Supa</div>
+          <h3 class="text-lg font-semibold text-violet-300">Supabase Platform</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            PostgreSQL + Auth + Storage + Edge Functions. Best for full-stack apps and zero-config backends.
+          </p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between text-xs text-violet-400 font-mono">
+            <span>Free Tier: 5GB</span>
+            <span>Setup: INSTANT</span>
           </div>
         </div>
       </div>
@@ -229,16 +253,16 @@
             </div>
 
             <button onclick="generatePresignedUrl()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium text-sm shadow-lg shadow-cyan-500/20 hover:brightness-110 transition flex items-center justify-center gap-2">
-              <span>🔐 Request Cryptographic Presigned URL</span>
+              <span id="btn-request-text">🔐 Request Upload URL</span>
             </button>
           </div>
 
           <!-- URL Inspector -->
           <div id="url-inspector" class="hidden pt-4 border-t border-slate-800 space-y-3">
-            <h4 class="text-xs font-mono uppercase tracking-wider text-emerald-400">✅ URL Generated & Signed</h4>
+            <h4 class="text-xs font-mono uppercase tracking-wider text-emerald-400" id="url-inspector-title">✅ URL Generated & Signed</h4>
             <div class="code-box p-3.5 rounded-lg text-xs break-all text-slate-300 space-y-2">
               <div class="text-cyan-400 font-bold" id="dsp-url-target">http://localhost:3003/api/mock-s3-bucket/uploads/12345-avatar.png</div>
-              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400" id="url-inspector-meta">
                 <div><strong>Algorithm:</strong> AWS4-HMAC-SHA256</div>
                 <div><strong>Expires In:</strong> 900 seconds (15m)</div>
                 <div class="col-span-2 truncate"><strong>Signature:</strong> <span id="dsp-signature" class="text-violet-300">...</span></div>
@@ -320,6 +344,14 @@
               </div>
             </label>
 
+            <label onclick="selectTrigger('supabase')" class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 cursor-pointer transition trigger-card hover:border-slate-700" id="trig-supabase">
+              <input type="radio" name="trig" class="text-cyan-500 focus:ring-0" />
+              <div>
+                <div class="text-xs font-semibold text-white">Supabase Webhook (Database INSERT)</div>
+                <div class="text-[11px] text-slate-400">Triggers Edge Function on row insert</div>
+              </div>
+            </label>
+
             <label onclick="selectTrigger('cron')" class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 cursor-pointer transition trigger-card hover:border-slate-700" id="trig-cron">
               <input type="radio" name="trig" class="text-cyan-500 focus:ring-0" />
               <div>
@@ -397,7 +429,7 @@
           </div>
           <div class="text-right">
             <span class="text-xs text-slate-400 font-mono">Your Score:</span>
-            <div id="quiz-score" class="text-xl font-bold text-cyan-400 font-mono">0 / 7</div>
+            <div id="quiz-score" class="text-xl font-bold text-cyan-400 font-mono">0 / 9</div>
           </div>
         </div>
 
@@ -493,25 +525,35 @@
     async function generatePresignedUrl() {
       const filename = document.getElementById('s3-filename').value || "photo.jpg";
       const fileType = document.getElementById('s3-filetype').value || "image/png";
+      const provider = document.getElementById('storage-provider-select').value;
 
       try {
-        // Attempt to call local running s3-upload-api server on port 3003
-        const res = await fetch("http://localhost:3003/api/upload-url", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ filename, fileType })
-        });
-        const data = await res.json();
-        currentPresignedUrl = data.uploadUrl;
-        document.getElementById('dsp-url-target').textContent = data.uploadUrl;
+        if (provider === 'supabase') {
+          document.getElementById('url-inspector-title').textContent = '✅ Supabase Upload Mode';
+          document.getElementById('url-inspector-meta').innerHTML = '<div><strong>SDK:</strong> @supabase/supabase-js</div>';
+          document.getElementById('dsp-url-target').textContent = `await supabase.storage.from('bucket').upload(...)`;
+          currentPresignedUrl = "supabase";
+        } else {
+          document.getElementById('url-inspector-title').textContent = '✅ URL Generated & Signed';
+          // Attempt to call local running s3-upload-api server on port 3003
+          const res = await fetch("http://localhost:3003/api/upload-url", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ filename, fileType })
+          });
+          const data = await res.json();
+          currentPresignedUrl = data.uploadUrl;
+          document.getElementById('dsp-url-target').textContent = data.uploadUrl;
+          document.getElementById('dsp-signature').textContent = currentPresignedUrl.split('X-Amz-Signature=')[1] || "e9b8a7c6d5e4f3a2b1";
+        }
       } catch (err) {
         // Offline JS Fallback if demo API is not running in terminal
         const mockSig = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         currentPresignedUrl = `http://localhost:3003/api/mock-s3-bucket/uploads/${Date.now()}-${filename}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MOCK%2F2026%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=900&X-Amz-Signature=${mockSig}`;
         document.getElementById('dsp-url-target').textContent = currentPresignedUrl;
+        document.getElementById('dsp-signature').textContent = mockSig;
       }
 
-      document.getElementById('dsp-signature').textContent = currentPresignedUrl.split('X-Amz-Signature=')[1] || "e9b8a7c6d5e4f3a2b1";
       document.getElementById('url-inspector').classList.remove('hidden');
     }
 
@@ -519,18 +561,27 @@
       const filename = document.getElementById('s3-filename').value || "photo.jpg";
       const fileType = document.getElementById('s3-filetype').value || "image/png";
       const btn = document.getElementById('btn-do-upload');
+      const provider = document.getElementById('storage-provider-select').value;
       
       btn.innerHTML = `<span>⏳ Simulating Direct Browser PUT Upload to Cloud...</span>`;
       btn.disabled = true;
 
       setTimeout(async () => {
         try {
-          // Attempt real PUT to mock server
-          await fetch(currentPresignedUrl, {
-            method: "PUT",
-            headers: { "Content-Type": fileType },
-            body: "SIMULATED_BINARY_BLOB_DATA"
-          });
+          if (provider === 'supabase') {
+            await fetch("http://localhost:3003/api/supabase/upload", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ filename, contentType: fileType })
+            });
+          } else {
+            // Attempt real PUT to mock server
+            await fetch(currentPresignedUrl, {
+              method: "PUT",
+              headers: { "Content-Type": fileType },
+              body: "SIMULATED_BINARY_BLOB_DATA"
+            });
+          }
         } catch (e) { /* Ignore offline error */ }
 
         btn.innerHTML = `<span>✅ Upload Successful (200 OK with ETag)!</span>`;
@@ -604,6 +655,14 @@
               object: { key: "products/new-shirt-4k.webp", size: 245760 }
             }
           }]
+        }, null, 2);
+      } else if (type === 'supabase') {
+        preview.textContent = JSON.stringify({
+          type: "INSERT",
+          table: "users",
+          schema: "public",
+          record: { id: 1, email: "user@example.com", name: "Alice" },
+          old_record: null
         }, null, 2);
       } else {
         preview.textContent = JSON.stringify({
@@ -763,6 +822,28 @@
         ],
         correct: 1,
         exp: "S3 Event Triggers allow asynchronous background processing (like thumbnail generation or metadata extraction) immediately upon file upload!"
+      },
+      {
+        q: "8. What is the main advantage of Supabase Storage over AWS S3 for students learning cloud storage?",
+        options: [
+          "Supabase is faster than S3.",
+          "No credit card required for the free tier.",
+          "Supabase has unlimited free storage.",
+          "AWS S3 is no longer available."
+        ],
+        correct: 1,
+        exp: "Supabase offers a generous free tier without requiring a credit card, making it ideal for students."
+      },
+      {
+        q: "9. Why are Presigned URLs preferable to routing file uploads through your backend server?",
+        options: [
+          "They are cheaper than S3.",
+          "The browser uploads directly to S3/Supabase, bypassing server memory and bandwidth limits.",
+          "They work without internet access.",
+          "They encrypt file contents automatically."
+        ],
+        correct: 1,
+        exp: "Direct-to-cloud uploads save your backend servers from being bottlenecked by heavy binary file streams."
       }
     ];
 

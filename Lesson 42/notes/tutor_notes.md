@@ -34,11 +34,22 @@ In this session, students transition from managing monolithic on-premise servers
 
 When guiding students through the AWS Management Console during class, the sheer number of services (200+) can cause immediate cognitive overload. Follow these strict pedagogical steps:
 
-### Part 1: Creating an S3 Bucket
+### Part 1: Creating an S3 Bucket (AWS Teaching Script)
+- 'Think of a Bucket like a Google Drive folder — but globally distributed and infinitely scalable'
+- 'An ARN is like a social security number for every AWS resource — globally unique'
+- 'IAM least privilege: your waiter doesn't need the keys to the whole restaurant, just the serving area'
+
 1. **Navigating**: In the AWS console search bar, type `S3` and click **Simple Storage Service**.
 2. **Bucket Naming**: Click **Create bucket**. Emphasize the **Global Uniqueness Rule**: bucket names are like domain names; `my-test-bucket` is already taken by someone else in the world. Advise them to use a structured prefix like `software-dev-2026-alice-profile-imgs`.
 3. **Block Public Access**: Keep **Block all public access** checked! Explain that making entire buckets public read is a massive security vulnerability. We will access objects securely using IAM IAM roles or time-limited Presigned URLs.
 4. **CORS Configuration**: Show them where to paste the CORS (Cross-Origin Resource Sharing) JSON in the bucket permissions tab so that browser frontend scripts can perform direct `PUT` uploads!
+
+### Part 1B: Supabase Storage Teaching Script
+- Open supabase.com, walk through creating project
+- Show the Storage dashboard
+- Create bucket, toggle between private and public
+- Show the dashboard file browser after an upload
+- Explain RLS policies in simple terms
 
 ### Part 2: Creating an AWS Lambda Function
 1. **Navigating**: Search for `Lambda` and click **Create function**.
@@ -58,6 +69,19 @@ When guiding students through the AWS Management Console during class, the sheer
 
 ---
 
+## 🌪️ Production War Story
+**'The Lambda Cold Start That Lost Us the Demo'**
+Demo day at a startup. Investor meeting. CTO hits the 'Generate Report' button. 8 second pause. Everyone stares. The Lambda function had been idle for 15 minutes (cold start: boot Node.js runtime + download dependencies + initialize DB connection pool). Fix: Lambda Provisioned Concurrency (keep N functions pre-warmed), or switch to an always-running container for latency-critical paths.
+
+---
+
+## ⚠️ Common Gotchas (Additional)
+- S3 CORS: 'Access-Control-Allow-Origin' missing when browser tries direct PUT to bucket
+- Lambda timeout default is only 3 seconds — image processing often needs 15-30s
+- Lambda memory affects CPU: 1536MB RAM = 1 full vCPU, 256MB = 0.17 vCPU
+- Supabase anon key is SAFE to use client-side (it's public) — but RLS policies protect your data
+- Never store files in a database as BLOB/BYTEA — always use object storage (S3/Supabase)
+
 ## ⚠️ Common Student Gotchas & Debugging Guide
 
 | Symptom / Error | Root Cause | Pedagogical Solution |
@@ -71,9 +95,19 @@ When guiding students through the AWS Management Console during class, the sheer
 
 ---
 
+## 🤔 Expanded Q&A
+- **Q: 'Why can't we just store uploaded images in our PostgreSQL database as binary data?'**
+  - **Answer:** SQL databases are designed for structured relational data, not binary blobs. Storing a 5MB image in Postgres: takes 5MB of expensive managed database storage, cannot be cached by CDN, cannot be served via HTTP without an extra server round-trip, and dramatically slows backup/restore. Object storage (S3/Supabase Storage) costs 10-50x less per GB, serves files directly via CDN, and is purpose-built for this use case.
+- **Q: 'What is the difference between a Presigned URL and a regular S3 URL?'**
+  - **Answer:** A regular public S3 URL is permanently accessible to anyone with the link (bad for private files). A Presigned URL is a temporary URL (you choose: 5 minutes, 1 hour, 7 days) that cryptographically proves the backend authorized this specific upload/download operation. After the expiry time, the URL becomes invalid.
+
+---
+
 ## 📋 Recommended Class Structure (90 Minutes)
 1. **00–15m**: Theory & Analogies (IaaS vs FaaS, Hard Drive in the Sky, Serverless Kitchen).
-2. **15–35m**: Interactive Lab Tab 1 & Tab 2 (Exploring Presigned URL generation and direct S3 uploads).
-3. **35–55m**: Live Coding Demonstration (Walk through `examples/s3-upload-api` and `examples/lambda-serverless-demo`).
-4. **55–75m**: Student Hands-On Practice (Executing `pnpm dev` on simulators and testing custom event payloads in Tab 3).
-5. **75–90m**: Mastery Quiz (Tab 4) & Q&A wrap-up.
+2. **15-30m**: **Path selection demo** — show Supabase Storage bucket creation (live, takes 3 min)
+3. **30-45m**: Supabase Storage upload demo in the interactive lab
+4. **45-60m**: AWS S3 conceptual walkthrough + Presigned URL architecture
+5. **60-70m**: Lambda functions, Cold Start anatomy, event triggers
+6. **70-80m**: Interactive Cloud lab Tabs 3 & 4
+7. **80-90m**: Mastery Quiz

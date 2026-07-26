@@ -25,6 +25,31 @@ In this session, students transition from managing individual Docker containers 
 * **Unorchestrated Containers**: Running Docker containers manually with `docker run` is like having 50 talented musicians sitting on a stage playing their instruments independently without a conductor. What happens if the lead violinist (your Express API container) suddenly gets dizzy and faints (crashes due to an out-of-memory error)? The music stops, the audience boos, and you have to personally run onto the stage, revive the musician, and tell them what measure to play from!
 * **Kubernetes (K8s) Orchestration**: Kubernetes is the **Master Symphony Conductor** standing on the podium. The conductor holds the authoritative musical score (your **Declarative YAML Manifest**), which states: *"We MUST have exactly 3 violins playing at all times."* While conducting, the maestro continuously watches every musician. If a violinist faints, the conductor doesn't panic—they instantly flick their baton toward an understudy waiting in the wings (boots a fresh replacement **Pod** in 200 milliseconds) and seamlessly routes the acoustic sound to the audience (**LoadBalancer Service**) without missing a single beat! That is automated self-healing and orchestration!
 
+### 3. Production War Story: 'The Kubernetes Secret That Wasn't a Secret'
+A team was deploying their app to Kubernetes for the first time. An excited engineer created a `k8s-secrets.yaml` file:
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: db-credentials
+data:
+  DATABASE_URL: cG9zdGdyZXM6Ly9hZG1pbjpTdXBlclNlY3JldA==  # base64 of real password!
+```
+They committed this file to GitHub. Base64 is NOT encryption — anyone can decode it with `echo "cG9zdGdyZXM..." | base64 --decode`. A security researcher found it 6 hours later using GitHub code search. They immediately had access to the production database. Lesson: NEVER commit Secret YAML with real values to Git. Use `kubectl create secret generic` from your terminal, or use an External Secrets Operator that fetches from AWS Secrets Manager / HashiCorp Vault. Add `*.secret.yaml` to `.gitignore`.
+
+### 4. Neon PostgreSQL + Kubernetes Architecture Diagram
+```
+[GitHub Push] → [GitHub Actions] → [Build Docker Image] → [Push to ghcr.io]
+                                                                    ↓
+                                          [Kubernetes Deployment pulls image]
+                                                                    ↓
+                                     [Pod runs: kubectl create secret applies DATABASE_URL]
+                                                                    ↓
+                                [Express container connects to Neon PostgreSQL via DATABASE_URL]
+                                                                    ↓
+                            [Neon PostgreSQL (managed cloud DB — backups, failover, pooling)]
+```
+
 ---
 
 ## 🛠️ The Tagging Anti-Pattern: Why `:latest` is Dangerous! (Core Teaching Moment)
@@ -65,6 +90,9 @@ When introducing Kubernetes concepts, students will encounter new error states. 
 | `CreateContainerConfigError` | The Deployment YAML references a `ConfigMap` or `Secret` (e.g., via `envFrom` or `valueFrom`) that does not exist in the current Kubernetes namespace! | Run `kubectl get configmaps` and `kubectl get secrets` to verify that the required configuration resources were applied BEFORE deploying the application! |
 | Cannot access LoadBalancer service from browser (`Connection refused` or timeout) | Mismatch between the Service's `port` and `targetPort`, or the Service selector `spec.selector` does not match the Pod labels `metadata.labels`! | Explain K8s networking: `port` is what the external Service listens on (e.g., port 80); `targetPort` MUST match the port your Express server listens on inside the container (e.g., port 3000). Ensure `spec.selector.app: my-api` matches `metadata.labels.app: my-api` exactly! |
 | Push to Docker Hub fails in GitHub Actions (`denied: requested access to the resource is denied`) | Attempting to push without logging in, or using a raw account password when Docker Hub requires a Personal Access Token (PAT), or wrong username namespace. | Verify that `docker/login-action@v3` ran first. Ensure the secret `DOCKERHUB_TOKEN` contains a generated Access Token from Docker Hub Account Settings, NOT the user's login password! |
+| Forgetting `imagePullPolicy: Always` | Kubernetes caches Docker images on worker nodes. | This causes Kubernetes to serve a cached stale Docker image even after pushing a new one to GHCR. |
+| Updating K8s Secret doesn't update Pods | Secrets are injected at Pod startup. | Updating a K8s Secret does NOT automatically restart running Pods — you must run `kubectl rollout restart deployment/your-deployment-name`. |
+| Confusing ConfigMap and Secret | Conceptual misunderstanding. | ConfigMaps are for non-sensitive config (NODE_ENV=production, PORT=3007). Secrets are for sensitive data (DATABASE_URL, JWT_SECRET, API keys). Both support the same `envFrom`/`secretKeyRef` injection pattern. |
 
 ---
 
@@ -73,4 +101,5 @@ When introducing Kubernetes concepts, students will encounter new error states. 
 2. **15–35m**: Interactive Lab Tab 1 (GitHub Actions Docker Pipeline Visualizer & Builder).
 3. **35–55m**: Kubernetes Foundations (Conductor analogy, Control Plane vs Worker Nodes, YAML manifest anatomy).
 4. **55–75m**: Interactive Lab Tab 2 & Tab 3 (Cluster Orchestrator, Pod Crash Simulator & Manifest Linter).
-5. **75–90m**: Mastery Quiz (Tab 4) & Q&A wrap-up.
+5. **75–80m**: Mastery Quiz (Tab 4).
+6. **80-90m**: K8s Secrets + real DB credentials injection demo & Q&A wrap-up.

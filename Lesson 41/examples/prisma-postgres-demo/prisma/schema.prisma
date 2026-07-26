@@ -1,11 +1,22 @@
-// Lesson 41 — Prisma Declarative Database Schema
-// Learn more about Prisma schema file syntax: https://pris.ly/d/prisma-schema
+// ============================================================
+// DATABASE CONFIGURATION
+// Default: Neon PostgreSQL (cloud) — set DATABASE_URL in .env
+// For local offline dev without Neon: uncomment SQLite block below
+// and comment out the postgresql block
+// ============================================================
 
+// --- OPTION A: Neon / Supabase / Railway PostgreSQL (Default) ---
 datasource db {
-  provider = "sqlite" // Change to "postgresql" when connecting to Neon Cloud PostgreSQL!
-  url      = env("DATABASE_URL")
-  // directUrl = env("DIRECT_URL") // Uncomment when provider is "postgresql" for Neon DB Migrations!
+  provider = "postgresql"
+  url      = env("DATABASE_URL")    // Pooled connection URL (for app queries)
+  directUrl = env("DIRECT_URL")     // Direct connection URL (for migrations only!)
 }
+
+// --- OPTION B: Local SQLite (offline fallback) ---
+// datasource db {
+//   provider = "sqlite"
+//   url      = "file:./dev.db"
+// }
 
 generator client {
   provider = "prisma-client-js"

@@ -20,7 +20,8 @@ By the end of this 90-minute session, students will transition from thinking of 
 | **10:00–25:00** | **Core Theory** | File-System Routing in `pages/api/` | How `pages/api/projects/[id].js` maps to `/api/projects/123`. |
 | **25:00–45:00** | **Live Coding** | Building a CRUD API with Neon PostgreSQL | Connecting `pg` Pool, writing parameterized queries, handling CORS & status codes. |
 | **45:00–70:00** | **Guided Lab** | Interactive Glassmorphism API Lab | Students test endpoints, simulate serverless routing, and inspect SQL traces. |
-| **70:00–85:00** | **Security & Debug** | API Key protection & common pitfalls | Protecting `POST`/`DELETE`, debugging hanging requests, handling `.env.local`. |
+| **70:00–75:00** | **Security & Debug** | API Key protection & common pitfalls | Protecting `POST`/`DELETE`, debugging hanging requests, handling `.env.local`. |
+| **75:00–85:00** | **App Router** | App Router API Routes live code demo | Showing the shift from pages/api to app/api/route.js. |
 | **85:00–90:00** | **Wrap-Up** | Comprehension check & assignment brief | Q&A, summarizing when to use Next.js APIs vs dedicated backend servers. |
 
 ---
@@ -104,6 +105,9 @@ Use this diagram on the whiteboard to help students understand architectural tra
 - **What students do:** Name their database connection string `NEXT_PUBLIC_DATABASE_URL` in `.env.local` because they got used to prefixing variables in React.
 - **The Symptom:** Next.js bundles the database password directly into the browser's JavaScript bundle! Anyone viewing Page Source can steal the database credentials.
 - **How to fix:** Enforce the golden rule: **`NEXT_PUBLIC_` is for browser public data ONLY (like UI themes or Stripe public keys). NEVER use `NEXT_PUBLIC_` for database URLs, JWT secrets, or private API keys.**
+
+> **Production Incident: The Day We Exposed Our Database URL**
+> Share this story with students: "A junior developer on a project once prefixed their private database URL with `NEXT_PUBLIC_` to 'make sure it worked'. Next.js faithfully compiled the entire connection string, including the master password, right into the client-side JavaScript. Anyone who opened DevTools and searched for 'postgres' could read it. Why? Because `NEXT_PUBLIC_` variables are literally hardcoded into the compiled browser bundle at build time. Only environment variables *without* the prefix are kept securely on the Node.js server."
 
 ### Pitfall 4: Creating a New Database Connection Pool on Every Request
 - **What students do:** Write `const pool = new Pool({ connectionString: ... })` inside the route handler function itself.
@@ -226,3 +230,18 @@ During the live demonstration, intentionally introduce these bugs and have the c
     ssl: isProdOrNeon ? { rejectUnauthorized: false } : undefined
   });
   ```
+
+### Debug Scenario 6: Cold-Start Connection Pool Exhaustion
+- **Buggy Code:** Students have 10-20 API routes, all creating new Postgres pools, and quickly refresh the page during development.
+- **Student Diagnosis:** Under load, or during cold starts, Neon reports "too many connections" (503 error) and crashes the app.
+- **The Fix:** Serverless functions can spawn hundreds of instances rapidly. Standard connection strings quickly max out Neon's connection limits. Show them how to use a connection pooler URL (e.g., pgBouncer on Neon, typically by adding `-pooler` to the connection string) and limiting the pool max size to 5-10 for serverless environments.
+
+### Debug Scenario 7: Missing `export default` on API Route File
+- **Buggy Code:**
+  ```javascript
+  export async function handler(req, res) {
+    res.status(200).json({ success: true });
+  }
+  ```
+- **Student Diagnosis:** Every request to this endpoint returns a 404 Not Found, even though the file is exactly where it should be.
+- **The Fix:** In the Pages Router, Next.js explicitly requires `export default` for API handlers. It's incredibly easy to omit the `default` keyword. Without it, Next.js ignores the file entirely, causing the 404.

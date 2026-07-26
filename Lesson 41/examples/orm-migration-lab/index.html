@@ -72,17 +72,6 @@
       gap: 8px;
     }
     .tab-btn:hover { background: var(--glass-hover); color: #ffffff; }
-    .tab-btn.active {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(139, 92, 246, 0.2));
-      border-color: var(--accent-emerald);
-      color: #ffffff;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-    }
-
-    /* Tab Content */
-    .tab-content { max-width: 1200px; margin: 0 auto; display: none; }
-    .tab-content.active { display: block; }
-
     .glass-card {
       background: var(--glass-bg);
       backdrop-filter: blur(12px);
@@ -92,7 +81,19 @@
       margin-bottom: 24px;
       transition: all 0.2s ease;
     }
-    .glass-card:hover { border-color: rgba(255, 255, 255, 0.18); }
+    .glass-card:hover { border-color: rgba(255, 255, 255, 0.18); transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
+
+    @keyframes gradientBorder {
+      0% { border-color: var(--accent-emerald); }
+      50% { border-color: var(--accent-violet); }
+      100% { border-color: var(--accent-emerald); }
+    }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(139, 92, 246, 0.2));
+      animation: gradientBorder 2s infinite linear;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
 
     .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
     .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
@@ -189,10 +190,16 @@
       <h1>⚡ Advanced Backend <span>Interactive Lab</span></h1>
       <p class="subtitle">Lesson 41 — Explore Prisma ORM, Mongoose ODM, Schema Migrations, and N+1 Performance Optimization</p>
     </div>
-    <div style="display: flex; gap: 12px; align-items: center;">
+    <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
       <span class="badge badge-emerald">Prisma v5.22</span>
       <span class="badge badge-violet">Mongoose v8.3</span>
       <span class="badge badge-blue">Neon PostgreSQL</span>
+      <span class="badge badge-emerald">Status: Connected</span>
+      <div style="background: rgba(0,0,0,0.3); padding: 4px; border-radius: 8px; display: flex; gap: 4px; border: 1px solid var(--glass-border);">
+        <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: var(--accent-emerald); color: #000; font-weight: bold;">Prisma</span>
+        <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; cursor: pointer;">Mongoose</span>
+        <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; cursor: pointer; background: var(--accent-violet); color: #fff; font-weight: bold;">Both</span>
+      </div>
     </div>
   </header>
 
@@ -308,6 +315,14 @@
               <div style="font-size: 0.8rem; color: #94a3b8;">Major release: Create Orders table with foreign key reference to User and B-Tree index.</div>
             </div>
           </div>
+
+          <div class="timeline-step" id="time-step-4" onclick="selectTimeline(4)">
+            <div class="step-badge">v3.0</div>
+            <div>
+              <div style="font-weight: 700; color: #fff;">Step 5: Cloud Deployment</div>
+              <div style="font-size: 0.8rem; color: #94a3b8;">prisma migrate deploy on Neon. DIRECT_URL required!</div>
+            </div>
+          </div>
         </div>
 
         <div class="glass-card" style="background: rgba(0,0,0,0.3); padding: 16px; margin-top: 16px; margin-bottom: 0;">
@@ -369,6 +384,11 @@
 
         <div id="analyzer-explainer" style="margin-top: 20px; font-size: 0.85rem; color: #94a3b8; background: rgba(0,0,0,0.3); padding: 14px; border-radius: 8px; border-left: 4px solid #f43f5e;">
           Select a test above to simulate network round-trips and response latency.
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 20px;">
+          <span class="badge badge-blue">Neon PostgreSQL: ~2ms per query with pooler</span>
+          <span class="badge badge-emerald">MongoDB Atlas: ~5ms per query with populated join</span>
+          <span class="badge badge-violet">Railway PG: ~3ms per query direct connection</span>
         </div>
       </div>
 
@@ -514,7 +534,8 @@ const user = await User.create({
       for (let i = 1; i <= 4; i++) {
         document.getElementById('trans-btn-' + i).className = i === id ? 'btn btn-ghost active' : 'btn btn-ghost';
       }
-      document.getElementById('trans-js').textContent = translations[id].js;
+      let highlightedJs = translations[id].js.replace(/\b(async|await|include|populate|\$transaction)\b/g, '<span style="color: #f59e0b; font-weight: bold;">$1</span>');
+      document.getElementById('trans-js').innerHTML = highlightedJs;
       document.getElementById('trans-sql').textContent = translations[id].sql;
     }
 
@@ -583,11 +604,26 @@ ALTER TABLE "Order" ADD CONSTRAINT "Order_userId_fkey" FOREIGN KEY ("userId") RE
 | 2 | 20260710_add_phone | c4b2... | 2026-07-10 14:22:10 |
 | 3 | 20260718_add_role_enum | e9d1... | 2026-07-18 09:15:45 |
 | 4 | 20260726_create_orders | 7b8a... | 2026-07-26 23:10:00 |`
+      },
+      {
+        sql: `-- Run command:
+$ npx prisma migrate deploy
+
+// Deploys pending migrations without modifying schema.prisma
+// Must use DIRECT_URL to bypass PgBouncer in Neon!`,
+        log: `_prisma_migrations tracking table:
+| id | migration_name | checksum | finished_at |
+|---|---|---|---|
+| 1 | 20260701_init | a8f9... | 2026-07-01 10:00:00 |
+| 2 | 20260710_add_phone | c4b2... | 2026-07-10 14:22:10 |
+| 3 | 20260718_add_role_enum | e9d1... | 2026-07-18 09:15:45 |
+| 4 | 20260726_create_orders | 7b8a... | 2026-07-26 23:10:00 |
+| 5 | cloud_deployment_verified | e8f0... | <NOW> |`
       }
     ];
 
     function selectTimeline(idx) {
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         document.getElementById('time-step-' + i).className = i === idx ? 'timeline-step active' : 'timeline-step';
       }
       document.getElementById('time-sql').textContent = timelineData[idx].sql;

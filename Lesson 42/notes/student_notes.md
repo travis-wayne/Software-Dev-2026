@@ -3,6 +3,13 @@
 
 ---
 
+### Quick Start Paths
+- **Path A (Recommended):** Supabase Storage — Zero credit card, 5GB free, live cloud bucket in 2 minutes
+- **Path B:** AWS S3 Free Tier — Real enterprise storage but requires credit card for signup
+- **Path C:** Local Offline Mock — No internet required, mockS3.js simulator
+
+*Students can follow ANY path and still learn the same concepts.*
+
 ## 1. Introduction to Cloud Computing
 
 In traditional web development, deploying an application required buying physical computer hardware, installing a Linux operating system, connecting networking cables, and keeping the server running in a temperature-controlled room 24 hours a day, 7 days a week. If your web application suddenly went viral and received a million visitors overnight, your physical server would run out of RAM and crash. Expanding required ordering more hardware and waiting weeks for shipping.
@@ -62,7 +69,42 @@ A common mistake made by beginner developers is storing uploaded user profile pi
 
 ---
 
-## 4. Security & Least Privilege: AWS IAM Architecture
+## 4B. Supabase Storage — S3-Compatible Cloud Buckets with Zero Setup
+
+What Supabase Storage is: built on top of S3 under the hood, but with a friendly dashboard and JS SDK.
+
+**Setup steps:**
+1. Go to supabase.com → New project
+2. Go to Storage in sidebar → Create new bucket (name: 'lesson-42-uploads', set to Public for dev)
+3. Go to Project Settings → API → copy SUPABASE_URL and SUPABASE_ANON_KEY
+4. Set in .env: `SUPABASE_URL=...` `SUPABASE_ANON_KEY=...`
+
+**JavaScript SDK upload pattern:**
+```javascript
+import { createClient } from '@supabase/supabase-js';
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const { data, error } = await supabase.storage
+  .from('lesson-42-uploads')
+  .upload(`files/${Date.now()}-${filename}`, fileBuffer, { contentType: mimeType });
+```
+
+**How to get the public URL:** `supabase.storage.from('lesson-42-uploads').getPublicUrl(data.path)`
+
+**Row Level Security (RLS) policies:** RLS policies allow you to write rules using PostgreSQL to control exactly who can read, upload, update, or delete files in your buckets. They are critical in production to ensure users can only modify their own files.
+
+**Comparison table: Supabase Storage vs AWS S3**
+| Feature | Supabase Storage | AWS S3 |
+|---------|-----------------|--------|
+| Credit card required | No | Yes |
+| Free storage | 5GB | 5GB (12 months) |
+| SDK complexity | Simple (20 lines) | Complex (presigned URLs, IAM) |
+| Dashboard | Excellent GUI | Complex console |
+| Use in production | Yes (up to enterprise) | Yes (industry standard) |
+| S3 compatible API | Yes | Native |
+
+---
+
+## 5. Security & Least Privilege: AWS IAM Architecture
 
 To interact with AWS services securely from Node.js, you never use your root account credentials. Instead, you use **AWS IAM (Identity and Access Management)** to create granular access rules.
 
@@ -177,3 +219,9 @@ AWS API Gateway sits in front of Lambda, converting incoming HTTP `GET`, `POST`,
 ### 2. S3 Bucket Events (Asynchronous Processing)
 You can configure an S3 bucket to trigger a Lambda function automatically whenever an event like `s3:ObjectCreated:Put` occurs.
 * **Real-World Example**: A user uploads a high-resolution 10MB photo to your S3 bucket. S3 instantly fires an event to your image-resizing Lambda function. The Lambda downloads the 10MB photo, compresses it into a 50KB thumbnail using sharp/jimp, and saves the thumbnail back to a `/thumbnails` folder in S3! This happens asynchronously in the background without slowing down your user interface!
+
+---
+
+## 8. War Story: The Day Our Lambda Function Ran Out of Concurrent Executions
+A startup had a Lambda that resized images on upload. During a product launch, 10,000 users uploaded profile photos simultaneously. AWS Lambda hit the default 1,000 concurrent execution limit in the region. Every upload after that returned 429 Too Many Requests. The CDN didn't cache the error, so the same image upload requests kept hammering Lambda. 
+**Fix:** increase concurrent execution limit via AWS Support, implement exponential backoff retry on the client, and offload image resizing to an async SQS queue instead of synchronous API Gateway triggers.

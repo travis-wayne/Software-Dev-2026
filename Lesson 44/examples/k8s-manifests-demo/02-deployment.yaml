@@ -40,6 +40,17 @@ spec:
                 name: express-api-config
             - secretRef:
                 name: express-api-secrets
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secrets
+                  key: DATABASE_URL
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: express-api-secrets
+                  key: JWT_SECRET
           # Resource constraints to prevent CPU/Memory starvation
           resources:
             requests:

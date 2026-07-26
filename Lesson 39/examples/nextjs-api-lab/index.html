@@ -9,11 +9,11 @@
 
     :root {
       --bg-dark: #0b1120;
-      --card-bg: rgba(255, 255, 255, 0.04);
+      --card-bg: rgba(255, 255, 255, 0.05);
       --card-border: rgba(255, 255, 255, 0.1);
       --accent-emerald: #10b981;
       --accent-violet: #8b5cf6;
-      --accent-blue: #3b82f6;
+      --accent-blue: #06b6d4;
       --accent-amber: #f59e0b;
       --accent-rose: #f43f5e;
       --text-main: #f8fafc;
@@ -31,14 +31,32 @@
     }
 
     .bg-blob-1, .bg-blob-2 {
-      position: fixed; border-radius: 50%; filter: blur(140px); z-index: -1; opacity: 0.2; pointer-events: none;
+      position: fixed; border-radius: 50%; filter: blur(140px); z-index: -1; opacity: 0.15; pointer-events: none;
     }
     .bg-blob-1 { top: -100px; left: -100px; width: 500px; height: 500px; background: var(--accent-emerald); }
     .bg-blob-2 { bottom: -100px; right: -100px; width: 600px; height: 600px; background: var(--accent-violet); }
 
-    header { max-width: 1100px; margin: 0 auto 30px; }
+    header { 
+      max-width: 1100px; margin: 0 auto 30px; 
+      display: flex; justify-content: space-between; align-items: center;
+      background: var(--card-bg); backdrop-filter: blur(12px); 
+      border: 1px solid var(--card-border); border-radius: 16px; padding: 20px;
+    }
     h1 { font-size: 2.2rem; font-weight: 700; background: linear-gradient(to right, var(--accent-emerald), var(--accent-violet)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
     p.subtitle { color: var(--text-muted); margin-top: 6px; }
+
+    .status-badge {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 16px; border-radius: 99px;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid var(--accent-emerald);
+      color: var(--accent-emerald); font-weight: 600; font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+    .status-badge.offline {
+      background: rgba(245, 158, 11, 0.1); border-color: var(--accent-amber); color: var(--accent-amber);
+    }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-emerald); box-shadow: 0 0 10px var(--accent-emerald); }
+    .offline .status-dot { background: var(--accent-amber); box-shadow: 0 0 10px var(--accent-amber); }
 
     /* Navigation Tabs */
     .tabs-nav {
@@ -46,16 +64,31 @@
     }
     .tab-btn {
       background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: var(--text-muted);
-      padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
+      position: relative; overflow: hidden;
     }
     .tab-btn:hover { color: var(--text-main); background: rgba(255,255,255,0.1); }
-    .tab-btn.active { background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); border-color: var(--accent-emerald); }
+    .tab-btn.active { 
+      background: rgba(16, 185, 129, 0.15); color: var(--accent-emerald); 
+      border-color: transparent;
+    }
+    .tab-btn.active::before {
+      content: ''; position: absolute; inset: 0; padding: 1px;
+      border-radius: 8px; background: linear-gradient(90deg, var(--accent-emerald), var(--accent-violet));
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor; mask-composite: exclude;
+    }
+    .tab-btn.active::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+      background: var(--accent-emerald);
+    }
 
     /* Glass Cards */
     .glass-card {
       background: var(--card-bg); border: 1px solid var(--card-border); backdrop-filter: blur(12px);
-      border-radius: 16px; padding: 24px; transition: all 0.2s;
+      border-radius: 16px; padding: 24px; transition: all 0.3s ease;
     }
+    .glass-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5); border-color: rgba(255,255,255,0.15); }
     .content-area { max-width: 1100px; margin: 0 auto; display: none; }
     .content-area.active { display: block; animation: fadeIn 0.3s ease; }
 
@@ -63,7 +96,7 @@
 
     /* Buttons & Inputs */
     .btn {
-      padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s;
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     }
     .btn-emerald { background: linear-gradient(135deg, var(--accent-emerald), #059669); color: #fff; }
     .btn-emerald:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(16,185,129,0.3); }
@@ -74,20 +107,26 @@
 
     input, textarea, select {
       background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); color: #fff;
-      padding: 10px 14px; border-radius: 8px; font-family: inherit; width: 100%; outline: none;
+      padding: 10px 14px; border-radius: 8px; font-family: inherit; width: 100%; outline: none; transition: all 0.2s;
     }
-    input:focus, textarea:focus { border-color: var(--accent-emerald); }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent-emerald); background: rgba(0,0,0,0.5); }
 
     .code-box {
-      font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.4); padding: 14px;
-      border-radius: 8px; border: 1px solid rgba(255,255,255,0.08); font-size: 0.85rem; overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace; background: rgba(0,0,0,0.5); padding: 16px;
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem; overflow-x: auto;
+      color: #e2e8f0; line-height: 1.5;
     }
 
-    /* Table Styles */
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 0.9rem; }
-    th { color: var(--accent-emerald); font-weight: 600; background: rgba(255,255,255,0.02); }
-    tr:hover { background: rgba(255,255,255,0.03); }
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 8px 16px; border-radius: 12px; border: 1px solid var(--card-border);
+    }
+    .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--accent-violet); transition: .4s; border-radius: 34px; }
+    .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--accent-emerald); }
+    input:checked + .slider:before { transform: translateX(24px); }
 
     /* Quiz Styles */
     .quiz-option {
@@ -104,8 +143,14 @@
       background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); margin-bottom: 10px;
       transition: all 0.3s;
     }
-    .sim-step.active { border-color: var(--accent-emerald); background: rgba(16,185,129,0.1); transform: scale(1.01); }
+    .sim-step.active { border-color: var(--accent-emerald); background: rgba(16,185,129,0.1); transform: scale(1.02); box-shadow: 0 4px 15px rgba(16,185,129,0.1); }
     .sim-icon { font-size: 1.5rem; width: 40px; text-align: center; }
+
+    /* Split Panel */
+    .split-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .panel { padding: 16px; border-radius: 12px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); }
+    .panel.safe { border-left: 4px solid var(--accent-emerald); }
+    .panel.unsafe { border-left: 4px solid var(--accent-rose); }
   </style>
 </head>
 <body>
@@ -113,13 +158,19 @@
   <div class="bg-blob-2"></div>
 
   <header>
-    <h1>Lesson 39: Next.js API Routes & Database Lab</h1>
-    <p class="subtitle">Interactive Visualizer for Serverless Architecture, Parameterized SQL, and RESTful Routing</p>
+    <div>
+      <h1>Lesson 39: Next.js API Routes</h1>
+      <p class="subtitle">Interactive Visualizer for Serverless Architecture, App Router, and SQL</p>
+    </div>
+    <div class="status-badge" id="conn-status" onclick="toggleStatus()" style="cursor: pointer;">
+      <div class="status-dot"></div>
+      <span id="conn-text">Simulator Active</span>
+    </div>
   </header>
 
   <nav class="tabs-nav">
     <button class="tab-btn active" onclick="switchTab('sim-tab')">⚡ 1. API Route Simulator</button>
-    <button class="tab-btn" onclick="switchTab('sql-tab')">🛡️ 2. SQL Query Tester</button>
+    <button class="tab-btn" onclick="switchTab('sql-tab')">🛡️ 2. SQL Guard</button>
     <button class="tab-btn" onclick="switchTab('postman-tab')">📡 3. Endpoint Explorer</button>
     <button class="tab-btn" onclick="switchTab('quiz-tab')">🧠 4. Mastery Quiz</button>
   </nav>
@@ -128,62 +179,73 @@
   <section id="sim-tab" class="content-area active">
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px;">
       <div class="glass-card">
-        <h2 style="font-size: 1.25rem; margin-bottom: 15px; color: var(--accent-emerald);">Serverless Execution Flow</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h2 style="font-size: 1.25rem; color: var(--accent-emerald);">Execution Flow</h2>
+          <div class="toggle-container">
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">Pages Router</span>
+            <label class="switch">
+              <input type="checkbox" id="router-toggle" onchange="updateRouterUI()">
+              <span class="slider"></span>
+            </label>
+            <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">App Router</span>
+          </div>
+        </div>
+
         <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-          Click a simulated browser request to watch how Next.js routes it through serverless functions and Neon PostgreSQL.
+          Trace how Next.js handles API requests in the serverless backend.
         </p>
 
         <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
-          <button class="btn btn-outline" onclick="runSimulation('get')">🌐 Simulate GET /api/projects</button>
-          <button class="btn btn-outline" onclick="runSimulation('post')">🔐 Simulate POST /api/projects (with API Key)</button>
-          <button class="btn btn-outline" onclick="runSimulation('unauth')">🚫 Simulate DELETE without API Key</button>
+          <button class="btn btn-outline" onclick="runSimulation('get')">🌐 GET /api/projects</button>
+          <button class="btn btn-outline" onclick="runSimulation('post')">🔐 POST /api/projects (with Key)</button>
+          <button class="btn btn-outline" onclick="runSimulation('unauth')">🚫 DELETE (No Key)</button>
         </div>
 
-        <div class="code-box" id="sim-log">
-          // Simulation Status: Ready. Click a button above to start trace.
+        <div class="code-box" id="sim-log" style="height: 180px;">
+          // Ready. Click a button to simulate execution.
         </div>
       </div>
 
       <div class="glass-card">
-        <h3 style="font-size: 1.1rem; margin-bottom: 15px;">Architecture Trace Traceback</h3>
+        <h3 style="font-size: 1.1rem; margin-bottom: 15px;">Architecture Traceback</h3>
         
         <div id="step-1" class="sim-step">
           <div class="sim-icon">💻</div>
           <div>
-            <div style="font-weight: 600;">1. Frontend Browser Request</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">fetch('/api/projects') executed on same domain (Zero CORS needed)</div>
+            <div style="font-weight: 600;">1. Browser Request</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">fetch('/api/projects') from frontend</div>
           </div>
         </div>
 
         <div id="step-2" class="sim-step">
           <div class="sim-icon">⚡</div>
           <div>
-            <div style="font-weight: 600;">2. Next.js Serverless Router</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">Matches filename in pages/api/ and wakes up Lambda handler</div>
+            <div style="font-weight: 600;">2. Serverless Router</div>
+            <div id="step-2-desc" style="font-size: 0.8rem; color: var(--text-muted);">Matches pages/api/projects/index.js -> handler(req, res)</div>
           </div>
         </div>
 
         <div id="step-3" class="sim-step">
           <div class="sim-icon">🛡️</div>
           <div>
-            <div style="font-weight: 600;">3. Security & req.method Check</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">Verifies X-API-Key header and routes to GET/POST/DELETE handler</div>
+            <div style="font-weight: 600;">3. Security & Method Check</div>
+            <div id="step-3-desc" style="font-size: 0.8rem; color: var(--text-muted);">Switch (req.method) + API Key Verification</div>
           </div>
         </div>
 
         <div id="step-4" class="sim-step">
           <div class="sim-icon">🗄️</div>
           <div>
-            <div style="font-weight: 600;">4. Neon PostgreSQL Cloud DB</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">Executes parameterized SQL query via pg Pool connection</div>
+            <div style="font-weight: 600;">4. Neon Database</div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Parameterized query via connection pool</div>
           </div>
         </div>
 
         <div id="step-5" class="sim-step">
           <div class="sim-icon">📦</div>
           <div>
-            <div style="font-weight: 600;">5. JSON Response Delivered</div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">res.status(200).json(...) returned to browser and Lambda spins down</div>
+            <div style="font-weight: 600;">5. JSON Response</div>
+            <div id="step-5-desc" style="font-size: 0.8rem; color: var(--text-muted);">res.status(200).json(...) returned to client</div>
           </div>
         </div>
       </div>
@@ -193,29 +255,33 @@
   <!-- TAB 2: SQL QUERY TESTER -->
   <section id="sql-tab" class="content-area">
     <div class="glass-card">
-      <h2 style="font-size: 1.25rem; margin-bottom: 10px; color: var(--accent-violet);">Parameterized SQL Tester (SQL Injection Defense)</h2>
+      <h2 style="font-size: 1.25rem; margin-bottom: 10px; color: var(--accent-violet);">SQL Injection Guard (Parameterized Queries)</h2>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-        In API routes, concatenating strings like <code style="color:#fb7185">"WHERE category = '" + cat + "'"</code> allows SQL injection. Test how parameterized queries (<code style="color:#34d399">$1, $2</code> or <code style="color:#34d399">?</code>) safely isolate user input!
+        Compare parameterized safe queries vs vulnerable string concatenation.
       </p>
 
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 25px;">
-        <div>
-          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">SIMULATED SQL QUERY (WITH PARAMETERS)</label>
-          <input type="text" id="sql-input" value="SELECT * FROM projects WHERE tech_stack LIKE ? AND created_at > ?" style="font-family: 'JetBrains Mono', monospace;" />
+      <div class="split-panel">
+        <div class="panel safe">
+          <h3 style="color: var(--accent-emerald); font-size: 1rem; margin-bottom: 10px;">🛡️ Safe (Parameterized)</h3>
+          <code style="display:block; color: #34d399; margin-bottom: 10px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 4px;">
+            query('SELECT * FROM projects WHERE tech = $1', [input])
+          </code>
+          <p style="font-size: 0.85rem; color: #cbd5e1;">Parameters are sent separately to the Postgres engine. Injection attempts are treated as literal strings, not executable code.</p>
+          <button class="btn btn-emerald" style="margin-top: 15px; width: 100%;" onclick="testSql(true)">Execute Safe Query</button>
         </div>
-        <div>
-          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">PARAMETER VALUES (JSON ARRAY)</label>
-          <input type="text" id="params-input" value='["%Next.js%", "2026-01-01"]' style="font-family: 'JetBrains Mono', monospace;" />
+
+        <div class="panel unsafe">
+          <h3 style="color: var(--accent-rose); font-size: 1rem; margin-bottom: 10px;">⚠️ Unsafe (String Concat)</h3>
+          <code style="display:block; color: #fb7185; margin-bottom: 10px; background: rgba(0,0,0,0.4); padding: 8px; border-radius: 4px;">
+            query("SELECT * FROM projects WHERE tech = '" + input + "'")
+          </code>
+          <p style="font-size: 0.85rem; color: #cbd5e1;">Malicious input like <code style="color: #f43f5e;">' OR 1=1;--</code> alters the SQL logic, bypassing auth or dropping tables.</p>
+          <button class="btn btn-outline" style="border-color: var(--accent-rose); color: var(--accent-rose); margin-top: 15px; width: 100%;" onclick="testSql(false)">Simulate Injection Attack</button>
         </div>
       </div>
 
-      <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <button class="btn btn-emerald" onclick="testSql(true)">🚀 Execute Parameterized Query (Safe)</button>
-        <button class="btn btn-outline" style="border-color: var(--accent-rose); color: #fb7185;" onclick="testSql(false)">⚠️ Simulate Vulnerable String Concat</button>
-      </div>
-
-      <div class="code-box" id="sql-output">
-        // Ready. Execute query above to inspect translated Postgres syntax and mock DB rows.
+      <div class="code-box" id="sql-output" style="margin-top: 20px;">
+        // Ready. Run a query above to see the result.
       </div>
     </div>
   </section>
@@ -223,10 +289,17 @@
   <!-- TAB 3: ENDPOINT EXPLORER -->
   <section id="postman-tab" class="content-area">
     <div class="glass-card">
-      <h2 style="font-size: 1.25rem; margin-bottom: 10px; color: var(--accent-blue);">Serverless Endpoint Explorer</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
-        Test simulated Next.js API Routes. Experiment with changing HTTP methods, headers, and JSON payloads.
-      </p>
+      <h2 style="font-size: 1.25rem; margin-bottom: 10px; color: var(--accent-blue);">Endpoint Explorer</h2>
+      
+      <div style="background: rgba(0,0,0,0.3); padding: 12px 16px; border-radius: 12px; display: flex; align-items: center; gap: 15px; margin-bottom: 20px; border: 1px solid var(--card-border);">
+        <label style="font-size: 0.85rem; font-weight: 600; color: #94a3b8; white-space: nowrap;">Target Backend:</label>
+        <select id="target-backend" style="margin: 0; background: rgba(0,0,0,0.5);" onchange="updateTargetHeaders()">
+          <option value="local">Local Dev Server (localhost:3000)</option>
+          <option value="supabase">Supabase REST (Demo)</option>
+          <option value="custom">Custom URL...</option>
+        </select>
+        <span id="target-hint" style="font-size: 0.8rem; color: var(--accent-blue);">Testing local Next.js APIs.</span>
+      </div>
 
       <div style="display: grid; grid-template-columns: 140px 1fr 180px; gap: 10px; margin-bottom: 20px;">
         <select id="req-method" style="font-weight: 600; color: var(--accent-emerald);">
@@ -241,21 +314,21 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
         <div>
-          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">REQUEST HEADERS & BODY</label>
-          <textarea id="req-body" rows="8" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">{
+          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">REQUEST PAYLOAD (JSON)</label>
+          <textarea id="req-body" rows="9" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">{
   "headers": {
     "Content-Type": "application/json",
     "X-API-Key": "secret_key_2026"
   },
   "body": {
     "title": "New Next.js Portfolio",
-    "tech_stack": "Next.js, Neon DB, Tailwind"
+    "tech": "Next.js, Tailwind"
   }
 }</textarea>
         </div>
         <div>
-          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">SIMULATED RESPONSE</label>
-          <div class="code-box" id="res-output" style="height: 175px; overflow-y: auto;">
+          <label style="display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">RESPONSE</label>
+          <div class="code-box" id="res-output" style="height: 195px; overflow-y: auto;">
             // Response payload will appear here...
           </div>
         </div>
@@ -265,181 +338,177 @@
 
   <!-- TAB 4: MASTERY QUIZ -->
   <section id="quiz-tab" class="content-area">
-    <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+    <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h2 style="font-size: 1.25rem; color: var(--accent-emerald);">Next.js Full-Stack Mastery Quiz</h2>
-        <span id="quiz-score" style="font-weight: 700; background: rgba(255,255,255,0.08); padding: 6px 14px; border-radius: 20px;">Score: 0 / 7</span>
+        <span id="quiz-score" style="font-weight: 700; background: rgba(255,255,255,0.1); padding: 6px 14px; border-radius: 20px;">Score: 0 / 9</span>
       </div>
-
       <div id="quiz-container"></div>
     </div>
   </section>
 
   <script>
-    // Tab Switching Logic
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.content-area').forEach(area => area.classList.remove('active'));
-      
       event.currentTarget.classList.add('active');
       document.getElementById(tabId).classList.add('active');
     }
 
-    // Tab 1: Simulator Logic
+    let isOffline = false;
+    function toggleStatus() {
+      isOffline = !isOffline;
+      const badge = document.getElementById('conn-status');
+      const text = document.getElementById('conn-text');
+      if (isOffline) {
+        badge.classList.add('offline');
+        text.innerText = 'Offline Mode';
+      } else {
+        badge.classList.remove('offline');
+        text.innerText = 'Simulator Active';
+      }
+    }
+
+    function updateRouterUI() {
+      const isApp = document.getElementById('router-toggle').checked;
+      if (isApp) {
+        document.getElementById('step-2-desc').innerText = "Matches app/api/projects/route.js -> GET(request)";
+        document.getElementById('step-3-desc').innerText = "Calls exported GET or POST function directly";
+        document.getElementById('step-5-desc').innerText = "NextResponse.json(...) returned to client";
+      } else {
+        document.getElementById('step-2-desc').innerText = "Matches pages/api/projects/index.js -> handler(req, res)";
+        document.getElementById('step-3-desc').innerText = "Switch (req.method) + API Key Verification";
+        document.getElementById('step-5-desc').innerText = "res.status(200).json(...) returned to client";
+      }
+    }
+
+    function updateTargetHeaders() {
+      const target = document.getElementById('target-backend').value;
+      const hint = document.getElementById('target-hint');
+      const reqBody = document.getElementById('req-body');
+      let data = {};
+      try { data = JSON.parse(reqBody.value); } catch(e) { data = { headers: {}, body: {} }; }
+
+      if (target === 'supabase') {
+        hint.innerText = "Auto-injecting SUPABASE_ANON_KEY into Authorization header.";
+        data.headers['Authorization'] = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+        data.headers['apikey'] = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...';
+      } else {
+        hint.innerText = target === 'local' ? "Testing local Next.js APIs." : "Custom endpoint.";
+        delete data.headers['Authorization'];
+        delete data.headers['apikey'];
+        data.headers['X-API-Key'] = "secret_key_2026";
+      }
+      reqBody.value = JSON.stringify(data, null, 2);
+    }
+
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+
     async function runSimulation(type) {
+      if (isOffline) {
+        document.getElementById('sim-log').innerHTML = "❌ Network Error: Simulator is offline. Click badge to reconnect.";
+        return;
+      }
+
       const log = document.getElementById('sim-log');
       const steps = [1, 2, 3, 4, 5].map(id => document.getElementById(`step-${id}`));
       steps.forEach(s => s.classList.remove('active'));
+      const isApp = document.getElementById('router-toggle').checked;
 
       if (type === 'get') {
-        log.innerHTML = "🚀 [Browser] Initiating fetch('/api/projects')...\n";
+        log.innerHTML = "🚀 [Browser] fetch('/api/projects')...\n";
         steps[0].classList.add('active');
-        await sleep(600);
+        await sleep(500);
         
-        log.innerHTML += "⚡ [Router] File pages/api/projects/index.js matched. Lambda booting...\n";
+        log.innerHTML += isApp ? "⚡ [App Router] Waking up app/api/projects/route.js GET()...\n" : "⚡ [Pages Router] Waking up pages/api/projects/index.js handler()...\n";
         steps[0].classList.remove('active'); steps[1].classList.add('active');
-        await sleep(600);
+        await sleep(500);
 
-        log.innerHTML += "🛡️ [Handler] req.method is 'GET'. Public read allowed.\n";
+        log.innerHTML += isApp ? "🛡️ [Method] GET exported function invoked directly.\n" : "🛡️ [Method] Switch(req.method) matched 'GET'.\n";
         steps[1].classList.remove('active'); steps[2].classList.add('active');
+        await sleep(500);
+
+        log.innerHTML += "🗄️ [DB] Executing: SELECT * FROM projects;\n";
+        steps[2].classList.remove('active'); steps[3].classList.add('active');
         await sleep(600);
 
-        log.innerHTML += "🗄️ [Neon DB] Executing: SELECT * FROM projects ORDER BY created_at DESC;\n";
-        steps[2].classList.remove('active'); steps[3].classList.add('active');
-        await sleep(800);
-
-        log.innerHTML += "✅ [Response] 200 OK — Returned 3 project records in JSON format.\n";
+        log.innerHTML += isApp ? "✅ [Response] NextResponse.json() delivered.\n" : "✅ [Response] res.status(200).json() delivered.\n";
         steps[3].classList.remove('active'); steps[4].classList.add('active');
       } else if (type === 'post') {
-        log.innerHTML = "🚀 [Browser] fetch('/api/projects', { method: 'POST', headers: {'X-API-Key': 'secret'} })...\n";
-        steps[0].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "⚡ [Router] File pages/api/projects/index.js matched.\n";
-        steps[0].classList.remove('active'); steps[1].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "🛡️ [Handler] req.method is 'POST'. Verifying X-API-Key header... VALID!\n";
-        steps[1].classList.remove('active'); steps[2].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "🗄️ [Neon DB] Executing parameterized INSERT INTO projects ($1, $2, $3)...\n";
-        steps[2].classList.remove('active'); steps[3].classList.add('active');
-        await sleep(800);
-
-        log.innerHTML += "🎉 [Response] 201 Created — New project item persisted.\n";
+        log.innerHTML = "🚀 [Browser] fetch('/api/projects', { method: 'POST', headers: {'X-API-Key': '...'} })...\n";
+        steps[0].classList.add('active'); await sleep(500);
+        log.innerHTML += "⚡ [Router] Route matched. Waking Lambda...\n";
+        steps[0].classList.remove('active'); steps[1].classList.add('active'); await sleep(500);
+        log.innerHTML += "🛡️ [Security] Validating API Key... VALID. Proceeding to POST handler.\n";
+        steps[1].classList.remove('active'); steps[2].classList.add('active'); await sleep(500);
+        log.innerHTML += "🗄️ [DB] Executing INSERT INTO projects parameterized query...\n";
+        steps[2].classList.remove('active'); steps[3].classList.add('active'); await sleep(600);
+        log.innerHTML += "🎉 [Response] 201 Created sent to client.\n";
         steps[3].classList.remove('active'); steps[4].classList.add('active');
       } else if (type === 'unauth') {
-        log.innerHTML = "🚀 [Browser] fetch('/api/projects/101', { method: 'DELETE' })... (No API Key!)\n";
-        steps[0].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "⚡ [Router] File pages/api/projects/[id].js matched. Extracting id = 101.\n";
-        steps[0].classList.remove('active'); steps[1].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "🚫 [Handler] req.method is 'DELETE'. Checking X-API-Key... MISSING!\n";
-        steps[1].classList.remove('active'); steps[2].classList.add('active');
-        await sleep(600);
-
-        log.innerHTML += "❌ [Response] 401 Unauthorized — Execution terminated BEFORE touching database!\n";
+        log.innerHTML = "🚀 [Browser] fetch('/api/projects/1', { method: 'DELETE' })...\n";
+        steps[0].classList.add('active'); await sleep(500);
+        log.innerHTML += "⚡ [Router] Route matched.\n";
+        steps[0].classList.remove('active'); steps[1].classList.add('active'); await sleep(500);
+        log.innerHTML += "🚫 [Security] Checking API Key... MISSING! Rejecting request.\n";
+        steps[1].classList.remove('active'); steps[2].classList.add('active'); await sleep(500);
+        log.innerHTML += "❌ [Response] 401 Unauthorized. Database was completely protected.\n";
         steps[2].classList.remove('active'); steps[4].classList.add('active');
       }
     }
 
-    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
-
-    // Tab 2: SQL Tester Logic
     function testSql(isSafe) {
       const output = document.getElementById('sql-output');
-      const sql = document.getElementById('sql-input').value;
-      const params = document.getElementById('params-input').value;
-
       if (isSafe) {
-        output.innerHTML = `✅ SAFE PARAMETERIZED EXECUTION\n` +
-          `───────────────────────────────────────────────\n` +
-          `Input Query : ${sql}\n` +
-          `Params Array: ${params}\n\n` +
-          `[pg Driver] : Translating '?' placeholders to '$1, $2' syntax...\n` +
-          `[Postgres]  : Prepared Statement created. Parameters sent SEPARATELY over wire.\n` +
-          `[Result]    : Returned 2 matching rows. 100% immune to SQL injection!`;
+        output.innerHTML = `✅ SAFE (PARAMETERIZED)\n─────────────────────────────────\nQuery: SELECT * FROM projects WHERE tech = $1\nParams: ["Next.js"]\n\nResult: The Postgres engine safely bound the parameter. No injection possible.`;
+        output.style.color = '#34d399';
       } else {
-        output.innerHTML = `⚠️ DANGEROUS STRING CONCATENATION SIMULATION\n` +
-          `───────────────────────────────────────────────\n` +
-          `Code: "SELECT * FROM projects WHERE tech_stack LIKE '" + userInput + "'"\n\n` +
-          `If an attacker enters: "%' OR '1'='1" as userInput...\n` +
-          `[Resulting SQL]: SELECT * FROM projects WHERE tech_stack LIKE '%' OR '1'='1';\n\n` +
-          `🚨 CRITICAL SECURITY BREACH: The OR '1'='1' clause bypasses filtering and dumps every table row!`;
+        output.innerHTML = `⚠️ VULNERABLE (STRING CONCAT)\n─────────────────────────────────\nQuery: SELECT * FROM projects WHERE tech = '' OR 1=1;--'\n\nResult: The input escaped the string! The OR 1=1 condition is true for all rows. ALL user data was dumped!`;
+        output.style.color = '#fb7185';
       }
     }
 
-    // Tab 3: Postman Explorer Logic
     function sendMockRequest() {
       const method = document.getElementById('req-method').value;
-      const url = document.getElementById('req-url').value;
-      const resOutput = document.getElementById('res-output');
-      let bodyData = {};
-      try { bodyData = JSON.parse(document.getElementById('req-body').value); } catch(e) {}
-
-      const apiKey = bodyData?.headers?.['X-API-Key'];
-      const isAuth = apiKey === 'secret_key_2026';
-
-      if (method === 'GET' && url === '/api/projects') {
-        resOutput.innerHTML = `HTTP/1.1 200 OK\nContent-Type: application/json\n\n` + JSON.stringify({
-          success: true, count: 2,
-          data: [
-            { id: 'proj_101', title: 'E-Commerce Capstone', tech: 'Next.js + Neon' },
-            { id: 'proj_102', title: 'State Lab Simulator', tech: 'React + Zustand' }
-          ]
-        }, null, 2);
-      } else if ((method === 'POST' || method === 'PUT' || method === 'DELETE') && !isAuth) {
-        resOutput.innerHTML = `HTTP/1.1 401 Unauthorized\nContent-Type: application/json\n\n` + JSON.stringify({
-          success: false, error: 'Unauthorized. Please provide valid X-API-Key header.'
-        }, null, 2);
-      } else if (method === 'POST') {
-        resOutput.innerHTML = `HTTP/1.1 201 Created\nContent-Type: application/json\n\n` + JSON.stringify({
-          success: true, message: 'Project created successfully',
-          data: { id: `proj_${Date.now()}`, ...bodyData.body }
-        }, null, 2);
-      } else if (method === 'DELETE') {
-        resOutput.innerHTML = `HTTP/1.1 200 OK\nContent-Type: application/json\n\n` + JSON.stringify({
-          success: true, message: 'Project deleted successfully from Neon database.'
-        }, null, 2);
+      const res = document.getElementById('res-output');
+      let data = {};
+      try { data = JSON.parse(document.getElementById('req-body').value); } catch(e){}
+      
+      const isAuth = data?.headers?.['X-API-Key'] === 'secret_key_2026' || data?.headers?.['Authorization'];
+      
+      if (['POST', 'PUT', 'DELETE'].includes(method) && !isAuth) {
+        res.innerHTML = "HTTP/1.1 401 Unauthorized\n\n" + JSON.stringify({ error: "Missing API Key" }, null, 2);
+        res.style.color = '#fb7185';
       } else {
-        resOutput.innerHTML = `HTTP/1.1 200 OK\n\n` + JSON.stringify({ success: true, method, url }, null, 2);
+        res.innerHTML = `HTTP/1.1 ${method === 'POST' ? '201 Created' : '200 OK'}\n\n` + JSON.stringify({ success: true, action: method }, null, 2);
+        res.style.color = '#34d399';
       }
     }
 
-    // Tab 4: Mastery Quiz Logic
     const questions = [
-      { q: "1. Where do files in Next.js API Routes must be placed to become serverless endpoints?", options: ["src/components/api/", "pages/api/ (or app/api/)", "public/backend/", "server/routes/"], ans: 1 },
-      { q: "2. What is a key benefit of Next.js API Routes over a standalone Express server?", options: ["Zero CORS required because frontend and backend share the same domain", "They run faster inside the web browser", "They don't require any Node.js environment", "They can't connect to databases"], ans: 0 },
-      { q: "3. How do you handle multiple HTTP methods (GET, POST) inside a single API route file?", options: ["Create separate files like index.get.js and index.post.js", "Use a switch(req.method) statement inside the handler function", "Next.js doesn't support POST requests", "Use if (window.method === 'POST')"], ans: 1 },
-      { q: "4. Why should you NEVER use the NEXT_PUBLIC_ prefix for your database connection URL?", options: ["It makes the database query run too slow", "It exposes your secret database password directly inside the browser JS bundle!", "Next.js will refuse to start", "PostgreSQL doesn't allow uppercase variables"], ans: 1 },
-      { q: "5. What HTTP status code should you return when creating a new resource via a POST request?", options: ["200 OK", "201 Created", "204 No Content", "404 Not Found"], ans: 1 },
-      { q: "6. How do you extract the ID parameter from a dynamic API route named pages/api/projects/[id].js?", options: ["req.params.id", "req.query.id", "req.body.id", "window.location.id"], ans: 1 },
-      { q: "7. Why must database queries in API routes use parameterized syntax (e.g., $1 or ?)?", options: ["To prevent SQL Injection attacks from malicious user input", "Because PostgreSQL doesn't understand strings", "To make the text color green in VS Code", "To compress the database payload size"], ans: 0 }
+      { q: "1. Where do files in Next.js API Routes must be placed (Pages Router)?", options: ["src/api/", "pages/api/", "public/", "server/"], ans: 1 },
+      { q: "2. What is a key benefit of Next.js API Routes over Express?", options: ["Zero CORS configuration needed for same-domain frontend calls", "It runs inside the browser", "No Node.js needed", "It is slower"], ans: 0 },
+      { q: "3. How do you handle multiple HTTP methods in a single Pages Router API file?", options: ["Multiple files", "switch(req.method)", "Next.js blocks POSTs", "if (window.method)"], ans: 1 },
+      { q: "4. Why should you NEVER use NEXT_PUBLIC_ for database URLs?", options: ["It breaks DB connections", "It compiles the URL into the public browser JS bundle", "It is deprecated", "Vercel blocks it"], ans: 1 },
+      { q: "5. What status code is best for a successful POST resource creation?", options: ["200", "201", "204", "404"], ans: 1 },
+      { q: "6. How do you extract the ID from pages/api/projects/[id].js?", options: ["req.params.id", "req.query.id", "req.body.id", "window.location"], ans: 1 },
+      { q: "7. Why use parameterized SQL queries?", options: ["Prevent SQL Injection", "Faster typing", "Color coding", "Saves bandwidth"], ans: 0 },
+      { q: "8. In App Router, what is the correct way to export a GET handler in app/api/route.js?", options: ["export default function GET", "export async function GET(request)", "module.exports = { GET }", "router.get('/', handler)"], ans: 1 },
+      { q: "9. What is the key risk of prefixing a secret env var with NEXT_PUBLIC_?", options: ["It runs slower", "It gets compiled into the browser JavaScript bundle, exposing it to all visitors", "It only works in production", "It breaks TypeScript"], ans: 1 }
     ];
 
     let score = 0;
     const answered = new Set();
-
-    function renderQuiz() {
-      const container = document.getElementById('quiz-container');
-      container.innerHTML = questions.map((item, qIdx) => `
-        <div style="margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);">
-          <div style="font-weight: 600; margin-bottom: 12px; font-size: 1.05rem;">${item.q}</div>
-          ${item.options.map((opt, oIdx) => `
-            <div class="quiz-option" id="q-${qIdx}-o-${oIdx}" onclick="checkAns(${qIdx}, ${oIdx})">${opt}</div>
-          `).join('')}
-        </div>
-      `).join('');
-    }
+    document.getElementById('quiz-container').innerHTML = questions.map((item, qIdx) => `
+      <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+        <div style="font-weight: 600; margin-bottom: 10px;">${item.q}</div>
+        ${item.options.map((opt, oIdx) => `<div class="quiz-option" id="q-${qIdx}-o-${oIdx}" onclick="checkAns(${qIdx}, ${oIdx})">${opt}</div>`).join('')}
+      </div>
+    `).join('');
 
     function checkAns(qIdx, oIdx) {
       if (answered.has(qIdx)) return;
       answered.add(qIdx);
-      
       const correct = questions[qIdx].ans;
       if (oIdx === correct) {
         document.getElementById(`q-${qIdx}-o-${oIdx}`).classList.add('correct');
@@ -448,10 +517,8 @@
         document.getElementById(`q-${qIdx}-o-${oIdx}`).classList.add('wrong');
         document.getElementById(`q-${qIdx}-o-${correct}`).classList.add('correct');
       }
-      document.getElementById('quiz-score').innerText = `Score: ${score} / ${questions.length}`;
+      document.getElementById('quiz-score').innerText = `Score: ${score} / 9`;
     }
-
-    renderQuiz();
   </script>
 </body>
 </html>

@@ -29,6 +29,9 @@ In this session, students tackle the fundamental DevOps skill of **Containerizat
 * **Docker Image**: The read-only architectural blueprint or culinary recipe. You cannot eat a recipe; it simply contains written instructions (`FROM node`, `COPY . .`, `RUN pnpm install`) for how to create the dish.
 * **Docker Container**: The live, physical baked cake sitting on your kitchen table! When you run `docker run my-image`, Docker takes the read-only recipe, adds a thin writable layer on top, executes the code in memory, and serves a live application! You can bake 1,000 cakes (containers) from a single recipe (image).
 
+### 4. Production War Story: 'The Database Volume That Disappeared'
+A junior developer at a startup was deploying a Node.js API with a Postgres container in docker-compose. Everything worked perfectly in staging. Before deploying to production, they ran `docker-compose down` to clean up. They forgot that `down` without `-v` flag removes containers but keeps named volumes — but they had accidentally used `docker-compose down -v`. The named volume `pgdata` was deleted. The entire production database — 3 months of user data — was gone. No backups because they had been running Postgres in a container instead of a managed cloud service. Lesson: managed cloud databases (Neon, Supabase, RDS) have automatic daily backups, point-in-time recovery, and multi-AZ failover. Never run your production database in a container on the same machine as your app.
+
 ---
 
 ## 🛠️ Dockerfile Layer Caching Deep-Dive (The #1 Student Gotcha)
@@ -68,6 +71,8 @@ CMD ["node", "src/server.js"]
 | `docker build` takes 5 minutes and image size is 1.5 GB | Forgot to create a `.dockerignore` file! Docker copied the local `node_modules/`, `.git/`, and log folders into the build context. | Always create `.dockerignore` listing `node_modules`, `.git`, `.env`, and `*.log` before building! Use Alpine Linux (`node:18-alpine`) to reduce base image size from 900MB to 170MB. |
 | `EACCES: permission denied` inside container when writing files | Running container as root user (default) and encountering Linux ownership conflicts, or violating security standards. | Teach the Principle of Least Privilege: add `USER node` before `CMD` in the Dockerfile so the container executes as an unprivileged user! |
 | Cannot connect to Neon PostgreSQL / MongoDB from inside Docker container using `localhost:5432` | Inside a Docker container, `localhost` refers to the container's own internal loopback network, not your laptop or other containers! | In Docker Compose, refer to database containers by their service name (e.g., `postgres-db:5432`). To reach a host laptop service from Docker Desktop, use `host.docker.internal`. |
+| Container cannot reach the Postgres container by hostname | A student uses `localhost:5432` in their API's `DATABASE_URL` inside docker-compose. | This fails because within the Docker bridge network, `localhost` inside the API container refers to the API container itself — not the postgres container. Fix: use the Docker service name as the hostname: `postgres-db:5432` (matching the service name in docker-compose.yml). |
+| Data persists after `docker stop` but disappears after `docker rm` | Student confused about container vs volume lifecycle. | Explain: `docker stop` only pauses the container — data in named volumes survives. `docker rm` removes the container but named volumes still exist. `docker rm -v` removes the container AND its anonymous volumes. Named volumes (`pgdata:`) survive `rm` and must be explicitly deleted with `docker volume rm pgdata`. |
 
 ---
 
@@ -76,4 +81,5 @@ CMD ["node", "src/server.js"]
 2. **15–35m**: Interactive Lab Tab 1 & Tab 2 (Layer Caching Simulator and Dockerfile Linter).
 3. **35–55m**: Live Coding Demonstration (Walk through `examples/node-docker-demo` Dockerfile optimization and multi-stage builds).
 4. **55–75m**: Student Hands-On Practice (Running CLI simulator in Tab 3 or testing real Docker commands).
-5. **75–90m**: Mastery Quiz (Tab 4) & Q&A wrap-up.
+5. **75–80m**: Mastery Quiz (Tab 4).
+6. **80-90m**: Cloud DB injection into containers — development vs production architecture & Q&A wrap-up.

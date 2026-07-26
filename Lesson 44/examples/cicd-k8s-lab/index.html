@@ -24,12 +24,7 @@
       --code-bg: #0f172a;
     }
 
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background-color: var(--bg-dark);
       color: var(--text-main);
@@ -42,7 +37,7 @@
         radial-gradient(circle at 15% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 40%),
         radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 40%);
     }
-
+    
     header {
       padding: 1.75rem 2.5rem;
       border-bottom: 1px solid var(--border-color);
@@ -55,501 +50,154 @@
       top: 0;
       z-index: 100;
     }
-
-    .logo-container {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo-icon {
-      font-size: 2rem;
-      background: linear-gradient(135deg, var(--primary), var(--secondary));
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .logo-text h1 {
-      font-size: 1.35rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-      background: linear-gradient(to right, #fff, #cbd5e1);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .logo-text p {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-    }
-
+    
+    .logo-container { display: flex; align-items: center; gap: 1rem; }
+    .logo-icon { font-size: 2rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-text h1 { font-size: 1.35rem; font-weight: 700; background: linear-gradient(to right, #fff, #cbd5e1); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .logo-text p { font-size: 0.8rem; color: var(--text-muted); }
+    
     .status-badge {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: rgba(16, 185, 129, 0.1);
-      border: 1px solid rgba(16, 185, 129, 0.25);
-      padding: 0.4rem 0.85rem;
-      border-radius: 9999px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      color: var(--primary);
+      display: flex; align-items: center; gap: 0.5rem;
+      background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.25);
+      padding: 0.4rem 0.85rem; border-radius: 9999px;
+      font-size: 0.8rem; font-weight: 500; color: var(--primary);
     }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: pulse 2s infinite; }
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
 
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--primary);
-      box-shadow: 0 0 8px var(--primary);
-      animation: pulse 2s infinite;
-    }
+    .breadcrumb { font-size: 0.75rem; color: var(--text-muted); background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 12px; margin-top: 5px; }
 
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.15); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-
-    nav {
-      display: flex;
-      gap: 0.5rem;
-      padding: 1rem 2.5rem 0;
-      border-bottom: 1px solid var(--border-color);
-      background: rgba(11, 17, 32, 0.6);
-      overflow-x: auto;
-    }
-
+    nav { display: flex; gap: 0.5rem; padding: 1rem 2.5rem 0; border-bottom: 1px solid var(--border-color); background: rgba(11, 17, 32, 0.6); overflow-x: auto; }
     .tab-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-muted);
-      padding: 0.85rem 1.4rem;
-      font-size: 0.95rem;
-      font-weight: 500;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      white-space: nowrap;
+      background: transparent; border: none; color: var(--text-muted); padding: 0.85rem 1.4rem;
+      font-size: 0.95rem; font-weight: 500; cursor: pointer; border-bottom: 2px solid transparent;
+      transition: all 0.2s ease; display: flex; align-items: center; gap: 0.6rem; white-space: nowrap; position: relative;
     }
-
-    .tab-btn:hover {
-      color: var(--text-main);
-      background: rgba(255, 255, 255, 0.02);
+    .tab-btn:hover { color: var(--text-main); background: rgba(255, 255, 255, 0.02); }
+    
+    @keyframes borderPulse {
+      0% { border-image-source: linear-gradient(90deg, var(--primary), var(--secondary)); }
+      50% { border-image-source: linear-gradient(90deg, var(--secondary), var(--primary)); }
+      100% { border-image-source: linear-gradient(90deg, var(--primary), var(--secondary)); }
     }
-
     .tab-btn.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-      background: rgba(16, 185, 129, 0.05);
+      color: var(--primary); border-bottom-color: var(--primary); background: rgba(16, 185, 129, 0.05);
+      border-image: linear-gradient(to right, var(--primary), var(--secondary)) 1;
+      border-bottom: 3px solid; border-top: 0; border-left: 0; border-right: 0;
     }
 
-    main {
-      flex: 1;
-      padding: 2.5rem;
-      max-width: 1440px;
-      width: 100%;
-      margin: 0 auto;
-    }
+    main { flex: 1; padding: 2.5rem; max-width: 1440px; width: 100%; margin: 0 auto; }
+    .tab-pane { display: none; animation: fadeIn 0.3s ease; }
+    .tab-pane.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-    .tab-pane {
-      display: none;
-      animation: fadeIn 0.3s ease;
-    }
+    .card { background: var(--bg-card); backdrop-filter: blur(12px); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.75rem; margin-bottom: 1.75rem; }
+    .card-title { font-size: 1.15rem; font-weight: 600; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem; color: #fff; }
+    .card-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.5; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.75rem; }
+    @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
 
-    .tab-pane.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card {
-      background: var(--bg-card);
-      backdrop-filter: blur(12px);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 1.75rem;
-      margin-bottom: 1.75rem;
-    }
-
-    .card-title {
-      font-size: 1.15rem;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: #fff;
-    }
-
-    .card-subtitle {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      margin-bottom: 1.5rem;
-      line-height: 1.5;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.75rem;
-    }
-
-    @media (max-width: 1024px) {
-      .grid-2 { grid-template-columns: 1fr; }
-    }
-
-    /* Form Elements */
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #cbd5e1;
-      margin-bottom: 0.4rem;
-    }
-
+    label { display: block; font-size: 0.85rem; font-weight: 500; color: #cbd5e1; margin-bottom: 0.4rem; }
     select, input[type="text"], input[type="number"] {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      background: rgba(15, 23, 42, 0.8);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      color: var(--text-main);
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      margin-bottom: 1.25rem;
-      transition: all 0.2s ease;
+      width: 100%; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border-color);
+      border-radius: 8px; color: var(--text-main); font-family: 'Inter', sans-serif; font-size: 0.9rem; margin-bottom: 1.25rem; transition: all 0.2s ease;
     }
+    select:focus, input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-glow); }
 
-    select:focus, input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px var(--primary-glow);
+    .btn { background: linear-gradient(135deg, var(--primary), #059669); color: #fff; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2); }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35); }
+    .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: var(--text-main); box-shadow: none; }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.14); box-shadow: none; }
+    .btn-error { background: linear-gradient(135deg, var(--error), #be123c); box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2); }
+    .btn-error:hover { box-shadow: 0 6px 16px rgba(244, 63, 94, 0.35); }
+
+    .terminal-window { background: var(--code-bg); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+    .terminal-header { background: rgba(255, 255, 255, 0.04); padding: 0.6rem 1rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+    .terminal-dots { display: flex; gap: 6px; } .dot { width: 10px; height: 10px; border-radius: 50%; } .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+    .terminal-body { padding: 1rem; max-height: 360px; overflow-y: auto; line-height: 1.6; }
+    .terminal-line { margin-bottom: 0.35rem; word-break: break-all; }
+    .t-green { color: var(--primary); } .t-violet { color: var(--secondary); } .t-amber { color: var(--warning); } .t-rose { color: var(--error); } .t-cyan { color: var(--info); } .t-muted { color: var(--text-muted); }
+
+    .pipeline-stepper { display: flex; justify-content: space-between; margin: 1.5rem 0 2rem; position: relative; }
+    .pipeline-stepper::before { content: ''; position: absolute; top: 18px; left: 30px; right: 30px; height: 2px; background: rgba(255, 255, 255, 0.1); z-index: 1; }
+    .step-item { display: flex; flex-direction: column; align-items: center; position: relative; z-index: 2; width: 18%; }
+    .step-circle { width: 38px; height: 38px; border-radius: 50%; background: rgba(15, 23, 42, 0.9); border: 2px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.9rem; color: var(--text-muted); transition: all 0.3s ease; position: relative; overflow: hidden; }
+    
+    @keyframes flowingShimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
     }
-
-    .btn {
-      background: linear-gradient(135deg, var(--primary), #059669);
-      color: #fff;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    
+    .step-item.active .step-circle::after {
+      content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      animation: flowingShimmer 1.5s infinite;
     }
+    
+    .step-item.active .step-circle { border-color: var(--primary); background: rgba(16, 185, 129, 0.15); color: var(--primary); box-shadow: 0 0 12px var(--primary-glow); }
+    .step-item.completed .step-circle { border-color: var(--primary); background: var(--primary); color: #fff; }
+    .step-label { font-size: 0.75rem; font-weight: 500; color: var(--text-muted); margin-top: 0.5rem; text-align: center; }
+    .step-item.active .step-label { color: #fff; font-weight: 600; } .step-item.completed .step-label { color: var(--primary); }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
+    .pod-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem; margin-top: 1.25rem; }
+    
+    @keyframes cardSpawn {
+      0% { opacity: 0; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1); }
     }
+    .pod-card { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.25rem; position: relative; transition: all 0.3s ease; animation: cardSpawn 0.4s ease-out forwards; }
+    .pod-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+    .pod-card.running { border-left: 4px solid var(--primary); } .pod-card.terminating { border-left: 4px solid var(--error); opacity: 0.6; } .pod-card.pending { border-left: 4px solid var(--warning); }
+    .pod-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
+    .pod-name { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; font-weight: 600; color: #fff; word-break: break-all; }
+    .pod-badge { font-size: 0.7rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+    .badge-running { background: rgba(16, 185, 129, 0.15); color: var(--primary); } .badge-terminating { background: rgba(244, 63, 94, 0.15); color: var(--error); } .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .pod-stat-row { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+    .pod-stat-val { font-family: 'JetBrains Mono', monospace; color: #cbd5e1; }
 
-    .btn-secondary {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid var(--border-color);
-      color: var(--text-main);
-      box-shadow: none;
+    .quiz-card { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 10px; padding: 1.5rem; margin-bottom: 1.25rem; }
+    .quiz-q { font-weight: 600; font-size: 1rem; margin-bottom: 1rem; color: #fff; }
+    .quiz-opt { display: block; width: 100%; text-align: left; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); padding: 0.85rem 1.25rem; border-radius: 8px; color: var(--text-main); font-size: 0.9rem; margin-bottom: 0.6rem; cursor: pointer; transition: all 0.2s ease; }
+    .quiz-opt:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.25); }
+    .quiz-opt.correct { background: rgba(16, 185, 129, 0.15); border-color: var(--primary); color: var(--primary); font-weight: 600; }
+    .quiz-opt.wrong { background: rgba(244, 63, 94, 0.15); border-color: var(--error); color: var(--error); }
+    .quiz-feedback { margin-top: 0.75rem; font-size: 0.85rem; padding: 0.75rem; border-radius: 6px; display: none; }
+
+    .range-container { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; background: rgba(15, 23, 42, 0.6); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--border-color); }
+    input[type="range"] { flex: 1; accent-color: var(--primary); }
+    .replica-val-badge { font-family: 'JetBrains Mono', monospace; font-size: 1.25rem; font-weight: 700; color: var(--primary); background: rgba(16, 185, 129, 0.1); padding: 0.25rem 0.75rem; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3); }
+
+    /* Registry Image Gallery */
+    .registry-gallery { display: flex; flex-direction: column; gap: 10px; margin-top: 15px; }
+    .registry-image { background: rgba(0,0,0,0.4); padding: 15px; border: 1px solid var(--border-color); border-radius: 8px; display: flex; justify-content: space-between; align-items: center; }
+    .registry-image-details { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+
+    /* Database Connection Panel */
+    .db-panel { background: rgba(15, 23, 42, 0.6); border: 1px solid var(--primary); border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    
+    @keyframes statusPulse {
+      0% { opacity: 0.6; }
+      50% { opacity: 1; }
+      100% { opacity: 0.6; }
     }
-
-    .btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.14);
-      box-shadow: none;
-    }
-
-    .btn-error {
-      background: linear-gradient(135deg, var(--error), #be123c);
-      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.2);
-    }
-
-    .btn-error:hover {
-      box-shadow: 0 6px 16px rgba(244, 63, 94, 0.35);
-    }
-
-    /* Terminal Console */
-    .terminal-window {
-      background: var(--code-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      overflow: hidden;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-    }
-
-    .terminal-header {
-      background: rgba(255, 255, 255, 0.04);
-      padding: 0.6rem 1rem;
-      border-bottom: 1px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .terminal-dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-    }
-
-    .dot-red { background: #ff5f56; }
-    .dot-yellow { background: #ffbd2e; }
-    .dot-green { background: #27c93f; }
-
-    .terminal-body {
-      padding: 1rem;
-      max-height: 360px;
-      overflow-y: auto;
-      line-height: 1.6;
-    }
-
-    .terminal-line {
-      margin-bottom: 0.35rem;
-      word-break: break-all;
-    }
-
-    .t-green { color: var(--primary); }
-    .t-violet { color: var(--secondary); }
-    .t-amber { color: var(--warning); }
-    .t-rose { color: var(--error); }
-    .t-cyan { color: var(--info); }
-    .t-muted { color: var(--text-muted); }
-
-    /* Pipeline Progress Tracker */
-    .pipeline-stepper {
-      display: flex;
-      justify-content: space-between;
-      margin: 1.5rem 0 2rem;
-      position: relative;
-    }
-
-    .pipeline-stepper::before {
-      content: '';
-      position: absolute;
-      top: 18px;
-      left: 30px;
-      right: 30px;
-      height: 2px;
-      background: rgba(255, 255, 255, 0.1);
-      z-index: 1;
-    }
-
-    .step-item {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      position: relative;
-      z-index: 2;
-      width: 18%;
-    }
-
-    .step-circle {
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
-      background: rgba(15, 23, 42, 0.9);
-      border: 2px solid var(--border-color);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-muted);
-      transition: all 0.3s ease;
-    }
-
-    .step-item.active .step-circle {
-      border-color: var(--primary);
-      background: rgba(16, 185, 129, 0.15);
-      color: var(--primary);
-      box-shadow: 0 0 12px var(--primary-glow);
-    }
-
-    .step-item.completed .step-circle {
-      border-color: var(--primary);
-      background: var(--primary);
-      color: #fff;
-    }
-
-    .step-label {
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--text-muted);
-      margin-top: 0.5rem;
-      text-align: center;
-    }
-
-    .step-item.active .step-label { color: #fff; font-weight: 600; }
-    .step-item.completed .step-label { color: var(--primary); }
-
-    /* K8s Pod Grid */
-    .pod-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 1.25rem;
-      margin-top: 1.25rem;
-    }
-
-    .pod-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 1.25rem;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .pod-card.running { border-left: 4px solid var(--primary); }
-    .pod-card.terminating { border-left: 4px solid var(--error); opacity: 0.6; }
-    .pod-card.pending { border-left: 4px solid var(--warning); }
-
-    .pod-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .pod-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: #fff;
-      word-break: break-all;
-    }
-
-    .pod-badge {
-      font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-
-    .badge-running { background: rgba(16, 185, 129, 0.15); color: var(--primary); }
-    .badge-terminating { background: rgba(244, 63, 94, 0.15); color: var(--error); }
-    .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
-
-    .pod-stat-row {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-    }
-
-    .pod-stat-val {
-      font-family: 'JetBrains Mono', monospace;
-      color: #cbd5e1;
-    }
-
-    /* Quiz Styling */
-    .quiz-card {
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid var(--border-color);
-      border-radius: 10px;
-      padding: 1.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .quiz-q {
-      font-weight: 600;
-      font-size: 1rem;
-      margin-bottom: 1rem;
-      color: #fff;
-    }
-
-    .quiz-opt {
-      display: block;
-      width: 100%;
-      text-align: left;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid var(--border-color);
-      padding: 0.85rem 1.25rem;
-      border-radius: 8px;
-      color: var(--text-main);
-      font-size: 0.9rem;
-      margin-bottom: 0.6rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .quiz-opt:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.25);
-    }
-
-    .quiz-opt.correct {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: var(--primary);
-      color: var(--primary);
-      font-weight: 600;
-    }
-
-    .quiz-opt.wrong {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: var(--error);
-      color: var(--error);
-    }
-
-    .quiz-feedback {
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
-      padding: 0.75rem;
-      border-radius: 6px;
-      display: none;
-    }
-
-    /* Slider styling */
-    .range-container {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-      margin-bottom: 1.5rem;
-      background: rgba(15, 23, 42, 0.6);
-      padding: 1rem 1.5rem;
-      border-radius: 8px;
-      border: 1px solid var(--border-color);
-    }
-
-    input[type="range"] {
-      flex: 1;
-      accent-color: var(--primary);
-    }
-
-    .replica-val-badge {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-      background: rgba(16, 185, 129, 0.1);
-      padding: 0.25rem 0.75rem;
-      border-radius: 6px;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
+    .db-status-dot { width: 10px; height: 10px; background: var(--primary); border-radius: 50%; display: inline-block; animation: statusPulse 1.5s infinite; margin-right: 8px; }
+    .db-url { font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: #cbd5e1; background: #000; padding: 4px 8px; border-radius: 4px; margin-left: 10px; }
+    
+    /* Modal */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.8); }
+    .modal-content { background-color: var(--bg-dark); margin: 15% auto; padding: 20px; border: 1px solid var(--border-color); width: 80%; max-width: 600px; border-radius: 12px; }
+    .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+    .close:hover { color: #fff; }
   </style>
 </head>
 <body>
-
   <header>
     <div class="logo-container">
       <div class="logo-icon">🐳☸️</div>
       <div class="logo-text">
         <h1>Lesson 44: Advanced CI/CD & Kubernetes</h1>
         <p>Industrial Container Pipelines & Self-Healing Orchestration Workbench</p>
+        <div class="breadcrumb">Full Stack: GitHub → K8s → Neon DB</div>
       </div>
     </div>
     <div class="status-badge" id="cluster-status-badge">
@@ -562,39 +210,22 @@
     <button class="tab-btn active" onclick="switchTab('tab-pipeline')">🚀 1. CI/CD Docker Pipeline Builder</button>
     <button class="tab-btn" onclick="switchTab('tab-k8s')">☸️ 2. K8s Cluster Orchestrator</button>
     <button class="tab-btn" onclick="switchTab('tab-yaml')">📜 3. YAML Manifest Inspector</button>
-    <button class="tab-btn" onclick="switchTab('tab-quiz')">🎓 4. Mastery Quiz (7 Qs)</button>
+    <button class="tab-btn" onclick="switchTab('tab-quiz')">🎓 4. Mastery Quiz (9 Qs)</button>
   </nav>
 
   <main>
-    <!-- ====================================================================== -->
-    <!-- TAB 1: CI/CD DOCKER PIPELINE BUILDER -->
-    <!-- ====================================================================== -->
+    <!-- TAB 1 -->
     <div id="tab-pipeline" class="tab-pane active">
       <div class="card">
         <h2 class="card-title">🚀 Automated CI/CD Container Pipeline Simulator</h2>
         <p class="card-subtitle">Configure your GitHub Actions workflow trigger, select your container registry target, and observe real-time Docker Buildx layer caching and SHA tagging!</p>
         
         <div class="pipeline-stepper" id="pipeline-stepper">
-          <div class="step-item active" id="step-1">
-            <div class="step-circle">1</div>
-            <div class="step-label">Checkout Code</div>
-          </div>
-          <div class="step-item" id="step-2">
-            <div class="step-circle">2</div>
-            <div class="step-label">Setup Buildx</div>
-          </div>
-          <div class="step-item" id="step-3">
-            <div class="step-circle">3</div>
-            <div class="step-label">Registry Auth</div>
-          </div>
-          <div class="step-item" id="step-4">
-            <div class="step-circle">4</div>
-            <div class="step-label">Build Image</div>
-          </div>
-          <div class="step-item" id="step-5">
-            <div class="step-circle">5</div>
-            <div class="step-label">Push & Tag</div>
-          </div>
+          <div class="step-item active" id="step-1"><div class="step-circle">1</div><div class="step-label">Checkout Code</div></div>
+          <div class="step-item" id="step-2"><div class="step-circle">2</div><div class="step-label">Setup Buildx</div></div>
+          <div class="step-item" id="step-3"><div class="step-circle">3</div><div class="step-label">Registry Auth</div></div>
+          <div class="step-item" id="step-4"><div class="step-circle">4</div><div class="step-label">Build Image</div></div>
+          <div class="step-item" id="step-5"><div class="step-circle">5</div><div class="step-label">Push & Tag</div></div>
         </div>
       </div>
 
@@ -631,36 +262,53 @@
           <button class="btn" onclick="triggerPipeline()">🚀 Trigger Git Push & Run Pipeline</button>
         </div>
 
-        <div class="card">
-          <h3 class="card-title">💻 GitHub Actions Runner Console</h3>
-          <p class="card-subtitle">Live output from simulated runner <code>ubuntu-latest</code>.</p>
-          <div class="terminal-window">
-            <div class="terminal-header">
-              <span style="color: var(--text-muted); font-size: 0.75rem;">runner@github-actions:~/.github/workflows/docker-publish.yml</span>
-              <div class="terminal-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+        <div>
+          <div class="card">
+            <h3 class="card-title">💻 GitHub Actions Runner Console</h3>
+            <div class="terminal-window">
+              <div class="terminal-header">
+                <span style="color: var(--text-muted); font-size: 0.75rem;">runner@github-actions:~/.github/workflows/docker-publish.yml</span>
+                <div class="terminal-dots"><div class="dot dot-red"></div><div class="dot dot-yellow"></div><div class="dot dot-green"></div></div>
+              </div>
+              <div class="terminal-body" id="pipeline-logs">
+                <div class="terminal-line t-muted">Ready to execute workflow. Click 'Trigger Git Push' to begin...</div>
+              </div>
             </div>
-            <div class="terminal-body" id="pipeline-logs">
-              <div class="terminal-line t-muted">Ready to execute workflow. Click 'Trigger Git Push' to begin...</div>
+          </div>
+          
+          <div class="card">
+            <h3 class="card-title">📦 Registry Image Gallery</h3>
+            <div class="registry-gallery" id="registry-gallery">
+                <div class="registry-image" style="justify-content: center; color: var(--text-muted); padding: 20px;">
+                    No images published yet. Run pipeline to push images.
+                </div>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- TAB 2: KUBERNETES CLUSTER ORCHESTRATOR -->
-    <!-- ====================================================================== -->
+    <!-- TAB 2 -->
     <div id="tab-k8s" class="tab-pane">
       <div class="card">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h2 class="card-title">☸️ Live Kubernetes Cluster Orchestrator & Self-Healing Engine</h2>
-            <p class="card-subtitle" style="margin-bottom: 0;">Watch the K8s Controller Manager continuously reconcile physical state against your desired replica count.</p>
+            <h2 class="card-title">☸️ Live Kubernetes Cluster Orchestrator</h2>
+            <p class="card-subtitle" style="margin-bottom: 0;">Watch the K8s Controller Manager continuously reconcile physical state against desired replica count.</p>
           </div>
           <div style="display: flex; gap: 0.75rem;">
             <button class="btn" onclick="sendTrafficSim()">⚡ Send 20 HTTP Requests</button>
             <button class="btn btn-secondary" onclick="fetchClusterState()">🔄 Refresh Cluster</button>
           </div>
+        </div>
+        
+        <div class="db-panel" style="margin-top: 15px;">
+            <div>
+                <span class="db-status-dot"></span>
+                <span style="font-weight: 600; color: var(--primary);">Connected to Neon PostgreSQL (via K8s Secret: db-credentials)</span>
+                <span class="db-url">postgresql://admin:***@ep-xxxxx.neon.tech/neondb</span>
+            </div>
+            <button class="btn btn-secondary" onclick="showSecretsModal()" style="padding: 5px 10px; font-size: 0.8rem;">ℹ️ How Secrets Work</button>
         </div>
 
         <div style="margin-top: 1.5rem;">
@@ -672,32 +320,30 @@
             <div class="replica-val-badge" id="replica-val-display">3</div>
           </div>
         </div>
-
+        
         <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 1rem; border-radius: 8px; font-size: 0.85rem; color: #d1fae5;">
-          💡 <strong>Self-Healing Chaos Experiment:</strong> Click <strong>"💥 Kill Pod (Sim OOM Crash)"</strong> on any running Pod card below! Notice how the card turns red (Terminating), and within 500 milliseconds, the Kubernetes Controller Manager detects the missing replica and boots a fresh replacement Pod!
+          💡 <strong>Self-Healing Chaos Experiment:</strong> Click <strong>"💥 Kill Pod (Sim OOM Crash)"</strong> on any running Pod card below! Notice how the card turns red, and within 500ms, the Controller Manager boots a replacement!
         </div>
 
         <div class="pod-grid" id="pod-grid-container">
-          <!-- Populated dynamically -->
           <div style="color: var(--text-muted); font-size: 0.9rem;">Loading cluster pods...</div>
         </div>
       </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- TAB 3: YAML MANIFEST INSPECTOR -->
-    <!-- ====================================================================== -->
+    <!-- TAB 3 -->
     <div id="tab-yaml" class="tab-pane">
       <div class="card">
         <h2 class="card-title">📜 Declarative Kubernetes YAML Inspector & Syntax Validator</h2>
-        <p class="card-subtitle">Select a production K8s manifest template or test your debugging skills on our broken CrashLoopBackOff manifest!</p>
+        <p class="card-subtitle">Select a production K8s manifest template or test your debugging skills on our broken manifest!</p>
         
         <label for="yaml-selector">Select K8s Manifest Template:</label>
         <select id="yaml-selector" onchange="loadYamlTemplate()">
           <option value="dep">01 - High-Availability API Deployment (3 Replicas + Probes)</option>
           <option value="svc">02 - Public LoadBalancer Service (Port Routing)</option>
           <option value="cfg">03 - ConfigMap & Secret Injection (Decoupled Env)</option>
-          <option value="broken">04 - 🐞 Broken Manifest (Contains CrashLoopBackOff & Selector Bugs!)</option>
+          <option value="broken">04 - 🐞 Broken Manifest (CrashLoopBackOff & Selector Bugs!)</option>
+          <option value="secret">05 - K8s Secrets + Database Credential Injection</option>
         </select>
 
         <div class="grid-2">
@@ -725,30 +371,35 @@
       </div>
     </div>
 
-    <!-- ====================================================================== -->
-    <!-- TAB 4: MASTERY QUIZ -->
-    <!-- ====================================================================== -->
+    <!-- TAB 4 -->
     <div id="tab-quiz" class="tab-pane">
       <div class="card">
         <h2 class="card-title">🎓 Lesson 44 Mastery Assessment</h2>
-        <p class="card-subtitle">Test your knowledge of containerized CI/CD pipelines, multi-tagging strategies, and Kubernetes orchestration.</p>
         <div id="quiz-container"></div>
         <div id="quiz-score-display" style="display: none; text-align: center; margin-top: 2rem; padding: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--primary); border-radius: 12px; font-size: 1.25rem; font-weight: 700; color: var(--primary);"></div>
       </div>
     </div>
   </main>
+  
+  <div id="secretsModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h2 style="margin-bottom: 15px; color: var(--primary);">How secretKeyRef Works</h2>
+      <p style="margin-bottom: 10px;">The <code>secretKeyRef</code> pattern injects sensitive credentials into your pods without hardcoding them in YAML.</p>
+      <ol style="margin-left: 20px; line-height: 1.6; color: var(--text-muted);">
+          <li>Create a secret in the cluster (e.g. via CLI or External Secrets Operator).</li>
+          <li>Reference the secret in your deployment using <code>valueFrom: secretKeyRef</code>.</li>
+          <li>Kubernetes fetches the secret securely from etcd and mounts it as an environment variable (<code>DATABASE_URL</code>).</li>
+          <li>The container's application reads <code>process.env.DATABASE_URL</code> seamlessly!</li>
+      </ol>
+    </div>
+  </div>
 
   <script>
     const SIM_URL = 'http://localhost:3008';
     let isOfflineFallback = false;
-
-    // Local in-memory fallback state in case server.js is not running
     let fallbackCluster = {
-      clusterName: 'software-dev-browser-fallback-k8s',
-      masterStatus: 'HEALTHY',
-      desiredReplicas: 3,
-      currentImage: 'ghcr.io/software-dev/express-api-service:latest',
-      totalTrafficRequests: 0,
+      clusterName: 'software-dev-browser-fallback-k8s', masterStatus: 'HEALTHY', desiredReplicas: 3, currentImage: 'ghcr.io/software-dev/express-api-service:latest', totalTrafficRequests: 0,
       pods: [
         { id: 'pod-101', name: 'express-api-deployment-7f8b9c-x9a1d', status: 'Running', restarts: 0, ip: '10.244.0.11', node: 'worker-node-1', cpuPercent: 12, memoryMiB: 54, uptimeSeconds: 340 },
         { id: 'pod-102', name: 'express-api-deployment-7f8b9c-k2m8s', status: 'Running', restarts: 0, ip: '10.244.0.12', node: 'worker-node-2', cpuPercent: 8, memoryMiB: 48, uptimeSeconds: 340 },
@@ -756,49 +407,34 @@
       ]
     };
 
-    // Tab Switcher
     function switchTab(tabId) {
       document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
       document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-      
       const idx = ['tab-pipeline', 'tab-k8s', 'tab-yaml', 'tab-quiz'].indexOf(tabId);
-      if (idx !== -1) {
-        document.querySelectorAll('.tab-btn')[idx].classList.add('active');
-        document.getElementById(tabId).classList.add('active');
-      }
-
+      if (idx !== -1) { document.querySelectorAll('.tab-btn')[idx].classList.add('active'); document.getElementById(tabId).classList.add('active'); }
       if (tabId === 'tab-k8s') fetchClusterState();
       if (tabId === 'tab-yaml') loadYamlTemplate();
-      if (tabId === 'tab-quiz') renderQuiz();
+      if (tabId === 'tab-quiz' && document.getElementById('quiz-container').innerHTML === '') renderQuiz();
     }
 
-    // Check Simulator Health on load
     async function checkSimulatorConnection() {
       const badgeText = document.getElementById('cluster-status-text');
       const badge = document.getElementById('cluster-status-badge');
       try {
         const res = await fetch(`${SIM_URL}/api/status`);
-        if (res.ok) {
-          const data = await res.json();
-          badgeText.innerText = `Connected: ${data.clusterName} (${data.activePods} Pods)`;
-          isOfflineFallback = false;
-        } else { throw new Error(); }
+        if (res.ok) { const data = await res.json(); badgeText.innerText = `Connected: ${data.clusterName} (${data.activePods} Pods)`; isOfflineFallback = false; } else throw new Error();
       } catch (err) {
         isOfflineFallback = true;
-        badgeText.innerText = `Browser Fallback Mode (Start pnpm dev in cicd-k8s-simulator for live backend)`;
-        badge.style.borderColor = 'var(--warning)';
-        badge.style.color = 'var(--warning)';
+        badgeText.innerText = `Browser Fallback Mode (Offline Simulator)`;
+        badge.style.borderColor = 'var(--warning)'; badge.style.color = 'var(--warning)';
       }
     }
 
-    // Tag Warning Toggle
     function checkTagStrategy() {
       const val = document.getElementById('cfg-tag-strategy').value;
-      const box = document.getElementById('tag-warning-box');
-      box.style.display = (val === 'latest-only') ? 'block' : 'none';
+      document.getElementById('tag-warning-box').style.display = (val === 'latest-only') ? 'block' : 'none';
     }
 
-    // Trigger CI/CD Pipeline
     async function triggerPipeline() {
       const reg = document.getElementById('cfg-registry').value;
       const img = document.getElementById('cfg-image').value;
@@ -806,342 +442,153 @@
       const cache = document.getElementById('cfg-cache').value;
       const logs = document.getElementById('pipeline-logs');
 
-      // Reset Stepper
-      for (let i = 1; i <= 5; i++) {
-        const step = document.getElementById(`step-${i}`);
-        step.className = (i === 1) ? 'step-item active' : 'step-item';
-      }
-
+      for (let i = 1; i <= 5; i++) { document.getElementById(`step-${i}`).className = (i === 1) ? 'step-item active' : 'step-item'; }
       logs.innerHTML = '';
-      function addLog(msg, colorClass = '') {
-        logs.innerHTML += `<div class="terminal-line ${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</div>`;
-        logs.scrollTop = logs.scrollHeight;
-      }
+      function addLog(msg, colorClass = '') { logs.innerHTML += `<div class="terminal-line ${colorClass}">[${new Date().toLocaleTimeString()}] ${msg}</div>`; logs.scrollTop = logs.scrollHeight; }
 
       const randomSha = Math.random().toString(36).substring(2, 9);
-      addLog(`🚀 Triggered GitHub Actions CI/CD Pipeline (Workflow: docker-publish.yml)`, 't-cyan');
-      addLog(`👉 Target: ${reg}/software-dev/${img} | Tag Strategy: ${strat} | Cache: ${cache}`, 't-muted');
+      addLog(`🚀 Triggered GitHub Actions CI/CD Pipeline`, 't-cyan');
+      addLog(`👉 Target: ${reg}/software-dev/${img} | Tag Strategy: ${strat}`, 't-muted');
 
       if (!isOfflineFallback) {
-        try {
-          await fetch(`${SIM_URL}/api/pipeline/trigger`, {
-            header: { 'Content-Type': 'application/json' },
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ registry: reg, imageName: img, tag: strat === 'multi' ? `v2.4-${randomSha}` : 'latest', gitSha: randomSha })
-          });
-        } catch (e) {}
+        try { await fetch(`${SIM_URL}/api/pipeline/trigger`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ registry: reg, imageName: img, tag: strat === 'multi' ? `v2.4-${randomSha}` : 'latest', gitSha: randomSha }) }); } catch (e) {}
       }
 
-      // Step 1: Checkout
       addLog(`📥 Step 1: actions/checkout@v4 -> Fetching commit ${randomSha}... Done!`, 't-green');
-
-      // Step 2: Buildx
       setTimeout(() => {
-        document.getElementById('step-1').className = 'step-item completed';
-        document.getElementById('step-2').className = 'step-item active';
-        addLog(`🐳 Step 2: docker/setup-buildx-action@v3 -> Initializing container builder...`, 't-violet');
-        if (cache === 'gha') {
-          addLog(`⚡ Cache enabled (type=gha): Restoring UnionFS node_modules layers... [CACHE HIT!]`, 't-green');
-        } else {
-          addLog(`🐢 Cache disabled: All Docker layers will be compiled from scratch!`, 't-amber');
-        }
+        document.getElementById('step-1').className = 'step-item completed'; document.getElementById('step-2').className = 'step-item active';
+        addLog(`🐳 Step 2: docker/setup-buildx-action@v3 -> Initializing...`, 't-violet');
       }, 1500);
-
-      // Step 3: Auth
       setTimeout(() => {
-        document.getElementById('step-2').className = 'step-item completed';
-        document.getElementById('step-3').className = 'step-item active';
-        if (reg === 'ghcr.io') {
-          addLog(`🔐 Step 3: Authenticating to ghcr.io using zero-config \${{ secrets.GITHUB_TOKEN }}... Success!`, 't-green');
-        } else {
-          addLog(`🔐 Step 3: Authenticating to hub.docker.com using secret \${{ secrets.DOCKERHUB_TOKEN }}... Success!`, 't-green');
-        }
+        document.getElementById('step-2').className = 'step-item completed'; document.getElementById('step-3').className = 'step-item active';
+        addLog(`🔐 Step 3: Authenticating... Success!`, 't-green');
       }, 3000);
-
-      // Step 4: Build
       setTimeout(() => {
-        document.getElementById('step-3').className = 'step-item completed';
-        document.getElementById('step-4').className = 'step-item active';
-        addLog(`🔨 Step 4: Compiling Multi-Stage Alpine Dockerfile...`, 't-cyan');
-        addLog(`   -> Stage 1 (builder): pnpm install --frozen-lockfile --prod (0.8s)`, 't-muted');
-        addLog(`   -> Stage 2 (runner) : Injecting ARG GIT_SHA=${randomSha}, setting USER nodeuser`, 't-muted');
+        document.getElementById('step-3').className = 'step-item completed'; document.getElementById('step-4').className = 'step-item active';
+        addLog(`🔨 Step 4: Compiling Dockerfile...`, 't-cyan');
       }, 4500);
-
-      // Step 5: Push
       setTimeout(() => {
-        document.getElementById('step-4').className = 'step-item completed';
-        document.getElementById('step-5').className = 'step-item active';
-        addLog(`📤 Step 5: Pushing image layers to ${reg}... [142 MB Pushed]`, 't-violet');
-        addLog(`🔖 Applied tag: ${reg}/software-dev/${img}:latest`, 't-green');
-        if (strat === 'multi') {
-          addLog(`🔖 Applied immutable GitOps tag: ${reg}/software-dev/${img}:${randomSha}`, 't-green');
-        }
+        document.getElementById('step-4').className = 'step-item completed'; document.getElementById('step-5').className = 'step-item active';
+        addLog(`📤 Step 5: Pushing layers to ${reg}...`, 't-violet');
       }, 6000);
-
-      // Complete
       setTimeout(() => {
         document.getElementById('step-5').className = 'step-item completed';
-        addLog(`✅ PIPELINE COMPLETED SUCCESSFULLY! Image ready for Kubernetes cluster pull!`, 't-green');
-        if (isOfflineFallback) {
-          fallbackCluster.currentImage = `${reg}/software-dev/${img}:${strat === 'multi' ? randomSha : 'latest'}`;
-        }
+        addLog(`✅ PIPELINE COMPLETED SUCCESSFULLY!`, 't-green');
+        if (isOfflineFallback) fallbackCluster.currentImage = `${reg}/software-dev/${img}:${strat === 'multi' ? randomSha : 'latest'}`;
         fetchClusterState();
+        addToGallery(reg, img, strat === 'multi' ? randomSha : 'latest', randomSha);
       }, 7500);
     }
-
-    // Update Replica Slider Badge
-    function updateReplicaSlider(val) {
-      document.getElementById('replica-val-display').innerText = val;
+    
+    function addToGallery(reg, img, tag, sha) {
+        const gallery = document.getElementById('registry-gallery');
+        if(gallery.innerHTML.includes('No images published')) gallery.innerHTML = '';
+        const size = Math.floor(Math.random() * 50) + 100;
+        
+        gallery.innerHTML = `
+            <div class="registry-image">
+                <div class="registry-image-details">
+                    <div style="color: #fff; font-weight: bold; margin-bottom: 5px;">${reg}/software-dev/${img}:${tag}</div>
+                    <div style="color: var(--text-muted);">Git SHA: ${sha} &bull; ${size} MB &bull; Just now</div>
+                </div>
+                <button class="btn" onclick="deployToK8s('${reg}/software-dev/${img}:${tag}')">🚀 Deploy to K8s</button>
+            </div>
+        ` + gallery.innerHTML;
+    }
+    
+    function deployToK8s(image) {
+        switchTab('tab-k8s');
+        if(isOfflineFallback) fallbackCluster.currentImage = image;
+        // visual indication could be added here
     }
 
-    // Scale Cluster
+    function updateReplicaSlider(val) { document.getElementById('replica-val-display').innerText = val; }
+
     async function scaleCluster(val) {
       if (!isOfflineFallback) {
-        try {
-          await fetch(`${SIM_URL}/api/k8s/scale`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ replicas: Number(val) })
-          });
-          fetchClusterState();
-          return;
-        } catch (e) {}
+        try { await fetch(`${SIM_URL}/api/k8s/scale`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ replicas: Number(val) }) }); fetchClusterState(); return; } catch (e) {}
       }
-
-      // Browser fallback scaling
-      const target = Number(val);
-      fallbackCluster.desiredReplicas = target;
+      const target = Number(val); fallbackCluster.desiredReplicas = target;
       while (fallbackCluster.pods.length < target) {
-        const hash = Math.random().toString(36).substring(2, 7);
-        fallbackCluster.pods.push({
-          id: `pod-${Date.now()}`,
-          name: `express-api-deployment-7f8b9c-${hash}`,
-          status: 'Running',
-          restarts: 0,
-          ip: `10.244.0.${Math.floor(Math.random() * 200) + 10}`,
-          node: `worker-node-${(fallbackCluster.pods.length % 2) + 1}`,
-          cpuPercent: 10,
-          memoryMiB: 50,
-          uptimeSeconds: 1
-        });
+        fallbackCluster.pods.push({ id: `pod-${Date.now()}`, name: `express-api-deployment-7f8b9c-${Math.random().toString(36).substring(2, 7)}`, status: 'Running', restarts: 0, ip: `10.244.0.${Math.floor(Math.random()*200)+10}`, node: `worker-node-${(fallbackCluster.pods.length%2)+1}`, cpuPercent: 10, memoryMiB: 50, uptimeSeconds: 1 });
       }
-      while (fallbackCluster.pods.length > target) {
-        fallbackCluster.pods.pop();
-      }
+      while (fallbackCluster.pods.length > target) fallbackCluster.pods.pop();
       renderPods(fallbackCluster);
     }
 
-    // Fetch and Render Pods
     async function fetchClusterState() {
       let data = fallbackCluster;
-      if (!isOfflineFallback) {
-        try {
-          const res = await fetch(`${SIM_URL}/api/k8s/cluster`);
-          if (res.ok) data = await res.json();
-        } catch (e) {}
-      }
+      if (!isOfflineFallback) { try { const res = await fetch(`${SIM_URL}/api/k8s/cluster`); if (res.ok) data = await res.json(); } catch (e) {} }
       renderPods(data);
     }
 
     function renderPods(data) {
       const container = document.getElementById('pod-grid-container');
-      document.getElementById('replica-slider').value = data.desiredReplicas;
-      document.getElementById('replica-val-display').innerText = data.desiredReplicas;
-
-      if (!data.pods || data.pods.length === 0) {
-        container.innerHTML = `<div style="color: var(--warning); padding: 2rem; border: 1px dashed var(--warning); border-radius: 8px; text-align: center; width: 100%;">⚠️ 0 Replicas Configured — All Pods scaled down to zero! Drag the slider above to boot Pods.</div>`;
-        return;
-      }
-
+      document.getElementById('replica-slider').value = data.desiredReplicas; document.getElementById('replica-val-display').innerText = data.desiredReplicas;
+      if (!data.pods || data.pods.length === 0) { container.innerHTML = `<div style="color: var(--warning); padding: 2rem; border: 1px dashed var(--warning); border-radius: 8px; text-align: center; width: 100%;">⚠️ 0 Replicas Configured — All Pods scaled down to zero!</div>`; return; }
       container.innerHTML = data.pods.map(pod => `
         <div class="pod-card ${pod.status.toLowerCase()}">
-          <div class="pod-header">
-            <span class="pod-name">${pod.name}</span>
-            <span class="pod-badge badge-${pod.status.toLowerCase()}">${pod.status}</span>
-          </div>
+          <div class="pod-header"><span class="pod-name">${pod.name}</span><span class="pod-badge badge-${pod.status.toLowerCase()}">${pod.status}</span></div>
           <div class="pod-stat-row"><span>Node:</span><span class="pod-stat-val">${pod.node}</span></div>
           <div class="pod-stat-row"><span>ClusterIP:</span><span class="pod-stat-val">${pod.ip}</span></div>
           <div class="pod-stat-row"><span>Restarts:</span><span class="pod-stat-val">${pod.restarts}</span></div>
-          <div class="pod-stat-row"><span>CPU / Mem:</span><span class="pod-stat-val">${pod.cpuPercent}% / ${pod.memoryMiB} MiB</span></div>
-          <div class="pod-stat-row"><span>Uptime:</span><span class="pod-stat-val">${pod.uptimeSeconds}s</span></div>
           <button class="btn btn-error" style="width: 100%; margin-top: 0.85rem; padding: 0.5rem; font-size: 0.8rem;" onclick="killPod('${pod.id || pod.name}')">💥 Kill Pod (Sim OOM Crash)</button>
         </div>
       `).join('');
     }
 
-    // Kill Pod Chaos Test
     async function killPod(podId) {
       if (!isOfflineFallback) {
-        try {
-          await fetch(`${SIM_URL}/api/k8s/kill-pod`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ podId })
-          });
-          fetchClusterState();
-          // Re-fetch after 1s to see self-healing recovery!
-          setTimeout(fetchClusterState, 1200);
-          return;
-        } catch (e) {}
+        try { await fetch(`${SIM_URL}/api/k8s/kill-pod`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ podId }) }); fetchClusterState(); setTimeout(fetchClusterState, 1200); return; } catch (e) {}
       }
-
-      // Fallback kill
       const pod = fallbackCluster.pods.find(p => p.id === podId || p.name === podId);
       if (pod) {
-        pod.status = 'Terminating';
-        renderPods(fallbackCluster);
-        setTimeout(() => {
-          const hash = Math.random().toString(36).substring(2, 7);
-          pod.name = `express-api-deployment-7f8b9c-${hash}`;
-          pod.status = 'Running';
-          pod.restarts += 1;
-          pod.uptimeSeconds = 1;
-          renderPods(fallbackCluster);
-        }, 800);
+        pod.status = 'Terminating'; renderPods(fallbackCluster);
+        setTimeout(() => { pod.name = `express-api-deployment-7f8b9c-${Math.random().toString(36).substring(2, 7)}`; pod.status = 'Running'; pod.restarts += 1; renderPods(fallbackCluster); }, 800);
       }
     }
 
-    // Traffic Simulation
     async function sendTrafficSim() {
       if (!isOfflineFallback) {
-        try {
-          await fetch(`${SIM_URL}/api/k8s/traffic`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ requests: 20 })
-          });
-          fetchClusterState();
-          return;
-        } catch (e) {}
+        try { await fetch(`${SIM_URL}/api/k8s/traffic`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ requests: 20 }) }); fetchClusterState(); return; } catch (e) {}
       }
-      fallbackCluster.totalTrafficRequests += 20;
-      fallbackCluster.pods.forEach(p => { p.cpuPercent = Math.min(95, p.cpuPercent + 15); });
-      renderPods(fallbackCluster);
+      fallbackCluster.totalTrafficRequests += 20; fallbackCluster.pods.forEach(p => { p.cpuPercent = Math.min(95, p.cpuPercent + 15); }); renderPods(fallbackCluster);
     }
 
-    // YAML Templates
     const YAML_TEMPLATES = {
-      dep: `# High-Availability API Deployment
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: express-api-deployment
-  labels:
-    app: express-api
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: express-api
-  template:
-    metadata:
-      labels:
-        app: express-api
-    spec:
-      containers:
-        - name: express-api-container
-          image: ghcr.io/software-dev/express-api-service:latest
-          ports:
-            - containerPort: 3007
-          resources:
-            limits:
-              memory: "256Mi"
-              cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /api/health
-              port: 3007
-            initialDelaySeconds: 10
-            periodSeconds: 15`,
-      svc: `# Public LoadBalancer Service
-apiVersion: v1
-kind: Service
-metadata:
-  name: express-api-loadbalancer
-spec:
-  type: LoadBalancer
-  selector:
-    app: express-api
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 3007`,
-      cfg: `# ConfigMap & Secret Injection
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: express-api-config
-data:
-  NODE_ENV: "production"
-  PORT: "3007"
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: express-api-secrets
-type: Opaque
-data:
-  DATABASE_URL: "cG9zdGdyZXM6Ly9hZG1pbjpTZWNyZXRQYXNzQGRiLmludGVybmFsOjU0MzIvZGI="`,
-      broken: `# 🐞 BROKEN MANIFEST — Contains 3 Critical Production Bugs!
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: broken-api-deployment
-spec:
-  replicas: 2
-  selector:
-    matchLabels:
-      app: orders-backend    # BUG 1: Does NOT match pod template label below!
-  template:
-    metadata:
-      labels:
-        app: user-backend    # Mismatched label! K8s will reject this deployment!
-    spec:
-      containers:
-        - name: api-container
-          image: ghcr.io/software-dev/api:latest   # BUG 2: Using mutable :latest tag!
-          ports:
-            - containerPort: 8080
-          # BUG 3: No resource limits! A memory leak will crash the entire Worker Node!
-          # BUG 4: No liveness probe configured!`
+      dep: `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: express-api-deployment\n  labels:\n    app: express-api\nspec:\n  replicas: 3\n  selector:\n    matchLabels:\n      app: express-api\n  template:\n    metadata:\n      labels:\n        app: express-api\n    spec:\n      containers:\n        - name: express-api-container\n          image: ghcr.io/software-dev/express-api-service:latest\n          ports:\n            - containerPort: 3007\n          resources:\n            limits:\n              memory: "256Mi"\n              cpu: "500m"\n          livenessProbe:\n            httpGet:\n              path: /api/health\n              port: 3007\n            initialDelaySeconds: 10\n            periodSeconds: 15`,
+      svc: `apiVersion: v1\nkind: Service\nmetadata:\n  name: express-api-loadbalancer\nspec:\n  type: LoadBalancer\n  selector:\n    app: express-api\n  ports:\n    - protocol: TCP\n      port: 80\n      targetPort: 3007`,
+      cfg: `apiVersion: v1\nkind: ConfigMap\nmetadata:\n  name: express-api-config\ndata:\n  NODE_ENV: "production"\n  PORT: "3007"\n---\napiVersion: v1\nkind: Secret\nmetadata:\n  name: express-api-secrets\ntype: Opaque\ndata:\n  DATABASE_URL: "cG9zdGdyZXM6Ly9hZG1pbjpTZWNyZXRQYXNzQGRiLmludGVybmFsOjU0MzIvZGI="`,
+      broken: `apiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: broken-api-deployment\nspec:\n  replicas: 2\n  selector:\n    matchLabels:\n      app: orders-backend\n  template:\n    metadata:\n      labels:\n        app: user-backend\n    spec:\n      containers:\n        - name: api-container\n          image: ghcr.io/software-dev/api:latest\n          ports:\n            - containerPort: 8080`,
+      secret: `# kubectl create secret generic db-credentials --from-literal=DATABASE_URL="postgresql://..."\n\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: secret-deployment\nspec:\n  template:\n    spec:\n      containers:\n        - name: api\n          image: api:v1\n          env:\n            - name: DATABASE_URL\n              valueFrom:\n                secretKeyRef:\n                  name: db-credentials\n                  key: DATABASE_URL`
     };
 
     function loadYamlTemplate() {
       const val = document.getElementById('yaml-selector').value;
       document.getElementById('yaml-editor').value = YAML_TEMPLATES[val] || '';
-      document.getElementById('yaml-filename').innerText = val === 'svc' ? 'service.yaml' : (val === 'cfg' ? 'configmap-secret.yaml' : 'deployment.yaml');
+      document.getElementById('yaml-filename').innerText = val === 'svc' ? 'service.yaml' : (val === 'cfg' ? 'configmap-secret.yaml' : (val === 'secret' ? 'deployment-secrets.yaml' : 'deployment.yaml'));
     }
 
-    // Validate YAML Manifest
     function validateYaml() {
       const code = document.getElementById('yaml-editor').value;
       const report = document.getElementById('yaml-audit-report');
-      let score = 100;
-      let issues = [];
-      let grade = 'A+';
-      let color = 'var(--primary)';
+      let score = 100; let issues = []; let grade = 'A+'; let color = 'var(--primary)';
 
       if (!code.includes('apiVersion:')) { score -= 30; issues.push('❌ Missing mandatory `apiVersion` declaration!'); }
       if (!code.includes('kind:')) { score -= 30; issues.push('❌ Missing mandatory `kind` declaration!'); }
       if (code.includes('image:') && code.includes(':latest')) { score -= 20; issues.push('⚠️ **DevOps Anti-Pattern**: Using mutable `:latest` tag instead of Git Commit SHA!'); }
-      if (code.includes('Deployment') && !code.includes('limits:')) { score -= 25; issues.push('🚨 **Resource Starvation Vulnerability**: Container lacks CPU/Memory `limits`. An out-of-memory leak will crash the entire Worker Node!'); }
-      if (code.includes('Deployment') && !code.includes('livenessProbe:')) { score -= 15; issues.push('⚠️ **No Self-Healing Probe**: Lacks `livenessProbe`. Kubernetes will not know when to reboot deadlocked Express processes.'); }
-      if (code.includes('matchLabels:') && code.includes('app: orders-backend') && code.includes('app: user-backend')) {
-        score -= 40;
-        issues.push('🔥 **CRITICAL SELECTOR MISMATCH**: `spec.selector.matchLabels` does not match `template.metadata.labels`! The Controller Manager will refuse to boot pods!');
+      if (code.includes('Deployment') && !code.includes('limits:')) { score -= 25; issues.push('🚨 **Resource Starvation Vulnerability**: Container lacks CPU/Memory `limits`.'); }
+      if (code.includes('Deployment') && !code.includes('livenessProbe:')) { score -= 15; issues.push('⚠️ **No Self-Healing Probe**: Lacks `livenessProbe`.'); }
+      if (code.includes('matchLabels:') && code.includes('app: orders-backend') && code.includes('app: user-backend')) { score -= 40; issues.push('🔥 **CRITICAL SELECTOR MISMATCH**: Labels do not match!'); }
+      if (code.includes('secretKeyRef')) {
+          issues.push('✅ <strong style="color: var(--primary)">SECURITY AUDIT: This manifest pattern is CORRECT — credentials referenced from K8s Secret, not hardcoded. ✅</strong>');
       }
 
-      if (score < 50) { grade = 'F'; color = 'var(--error)'; }
-      else if (score < 75) { grade = 'C'; color = 'var(--warning)'; }
-      else if (score < 95) { grade = 'B+'; color = 'var(--info)'; }
+      if (score < 50) { grade = 'F'; color = 'var(--error)'; } else if (score < 75) { grade = 'C'; color = 'var(--warning)'; } else if (score < 95) { grade = 'B+'; color = 'var(--info)'; }
 
       report.innerHTML = `
         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
-          <div>
-            <div style="font-size: 0.8rem; color: var(--text-muted);">DEVOPS AUDIT SCORE</div>
-            <div style="font-size: 1.75rem; font-weight: 700; color: ${color};">${score}/100</div>
-          </div>
+          <div><div style="font-size: 0.8rem; color: var(--text-muted);">DEVOPS AUDIT SCORE</div><div style="font-size: 1.75rem; font-weight: 700; color: ${color};">${score}/100</div></div>
           <div style="font-size: 2.25rem; font-weight: 700; color: ${color};">${grade}</div>
         </div>
         <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; color: #fff;">Security & Architectural Findings:</h4>
@@ -1149,95 +596,23 @@ spec:
       `;
     }
 
-    // Quiz Data
     const QUIZ_QUESTIONS = [
-      {
-        q: "1. Why is pushing Docker images to a registry an essential step in modern CI/CD pipelines?",
-        options: [
-          "It allows developers to delete the source code repository from GitHub.",
-          "It creates an immutable, versioned artifact that any staging or production server can pull and run without running npm install or compiling dependencies.",
-          "It converts Node.js JavaScript code into native C++ assembly code.",
-          "It is required by law when using SSL certificates."
-        ],
-        correct: 1,
-        exp: "Docker images encapsulate your exact OS runtime, dependencies, and compiled application into a sealed container artifact, eliminating server drift."
-      },
-      {
-        q: "2. Why is tagging Docker images ONLY with ':latest' considered a DevOps anti-pattern?",
-        options: [
-          "Docker Hub charges extra money for images tagged as :latest.",
-          "It overwrites the previous production image, preventing instant rollbacks (kubectl rollout undo) and destroying Git commit traceability.",
-          "Kubernetes clusters refuse to boot any image tagged as :latest.",
-          "It slows down network transfer speeds during git push."
-        ],
-        correct: 1,
-        exp: "Multi-tagging with immutable Git Commit SHAs (${{ github.sha }}) ensures you can always roll back to any previous working commit instantly."
-      },
-      {
-        q: "3. How does GitHub Container Registry (ghcr.io) simplify authentication inside GitHub Actions workflows?",
-        options: [
-          "It does not require passwords or security tokens for any user.",
-          "It automatically uses the built-in ephemeral ${{ secrets.GITHUB_TOKEN }} without requiring manual Personal Access Token (PAT) creation.",
-          "It reads your Google Chrome saved passwords automatically.",
-          "It allows anonymous write access to public repositories."
-        ],
-        correct: 1,
-        exp: "Because GHCR is integrated into GitHub, the automatic GITHUB_TOKEN provides zero-configuration authentication when granted 'packages: write' permission!"
-      },
-      {
-        q: "4. In Kubernetes architecture, what is the primary responsibility of the Controller Manager?",
-        options: [
-          "To compile TypeScript code into JavaScript.",
-          "To continuously monitor physical cluster state and automatically boot replacement Pods if the running count drops below desiredReplicas (Self-Healing).",
-          "To issue SSL certificates for domain hostnames.",
-          "To manage user passwords and credit card payments."
-        ],
-        correct: 1,
-        exp: "The Controller Manager runs reconciliation control loops that enforce your declarative YAML desired state automatically."
-      },
-      {
-        q: "5. What does the Kubernetes pod status 'CrashLoopBackOff' signify?",
-        options: [
-          "The Docker image finished downloading successfully.",
-          "The Pod booted, but the application process inside crashed immediately (exit code != 0), causing K8s to repeatedly attempt restarts in an exponential delay loop.",
-          "The cluster has run out of hard drive disk space.",
-          "The Kubernetes master API server is rebooting."
-        ],
-        correct: 1,
-        exp: "CrashLoopBackOff occurs when Node.js syntax errors, missing environment variables, or database connection failures cause the app to terminate on startup."
-      },
-      {
-        q: "6. What is the key difference between a Kubernetes ClusterIP Service and a LoadBalancer Service?",
-        options: [
-          "ClusterIP is for Windows servers; LoadBalancer is for Linux servers.",
-          "ClusterIP exposes the service ONLY internally within the K8s cluster; LoadBalancer provisions an external public IP from cloud infrastructure for user traffic.",
-          "LoadBalancer is free, while ClusterIP requires an AWS enterprise license.",
-          "There is no difference; they are synonymous aliases."
-        ],
-        correct: 1,
-        exp: "ClusterIP is used for internal microservice-to-microservice communication (e.g., API to Database), whereas LoadBalancer opens public HTTP/HTTPS ports."
-      },
-      {
-        q: "7. Why do enterprise DevOps teams prefer Declarative YAML manifests (kubectl apply) over imperative terminal commands (kubectl create)?",
-        options: [
-          "Imperative commands are not supported on Apple Mac computers.",
-          "Declarative YAML files are stored in Git (GitOps), providing a complete audit trail, automated disaster recovery, and reproducible infrastructure as code.",
-          "Declarative YAML executes 10 times faster than imperative commands.",
-          "Imperative commands cannot create Kubernetes Pods."
-        ],
-        correct: 1,
-        exp: "GitOps stores declarative YAML in version control, ensuring every infrastructure modification is code-reviewed, auditable, and instantly recoverable!"
-      }
+      { q: "1. Why push Docker images to a registry?", options: ["Deletes repo", "Creates an immutable artifact any server can pull without npm install", "Converts to C++", "Required for SSL"], correct: 1, exp: "Images eliminate server drift." },
+      { q: "2. Why is tagging ONLY with ':latest' an anti-pattern?", options: ["Costs money", "Overwrites previous image, preventing rollbacks (kubectl rollout undo) and traceability", "K8s refuses it", "Slows transfer"], correct: 1, exp: "Multi-tagging with Git SHAs ensures you can roll back." },
+      { q: "3. How does GHCR simplify authentication in Actions?", options: ["No passwords", "Uses built-in ephemeral ${{ secrets.GITHUB_TOKEN }} automatically", "Reads Chrome passwords", "Anonymous write"], correct: 1, exp: "GITHUB_TOKEN provides zero-config auth." },
+      { q: "4. Primary responsibility of K8s Controller Manager?", options: ["Compiles TS", "Monitors physical state and boots replacement Pods if count drops (Self-Healing)", "Issues SSL", "Manages passwords"], correct: 1, exp: "Runs reconciliation loops for desired state." },
+      { q: "5. What does 'CrashLoopBackOff' mean?", options: ["Downloaded", "Pod booted, but process crashed immediately; K8s repeatedly attempts restarts", "No disk space", "Master reboot"], correct: 1, exp: "Usually Node syntax errors or DB connection failures." },
+      { q: "6. ClusterIP vs LoadBalancer Service?", options: ["Windows vs Linux", "ClusterIP is internal; LoadBalancer provisions external public IP for user traffic", "Free vs Paid", "No difference"], correct: 1, exp: "ClusterIP for microservices, LoadBalancer for public HTTP." },
+      { q: "7. Why prefer Declarative YAML over imperative commands?", options: ["Mac support", "Stored in Git (GitOps), providing audit trail, DR, and Infrastructure as Code", "Faster", "Pods"], correct: 1, exp: "GitOps ensures auditable infra." },
+      { q: "8. Why should you NEVER commit a Kubernetes Secret YAML file with real credential values to Git?", options: ["Kubernetes only reads secrets from kubectl commands, not YAML files", "Base64 encoding (used in K8s Secrets) is NOT encryption — anyone can decode real values from the YAML", "YAML files cannot store binary data", "GitHub automatically deletes Secret files"], correct: 1, exp: "Base64 is just encoding, not secure." },
+      { q: "9. After updating a Kubernetes Secret, what additional step is required to apply the new values to running Pods?", options: ["Nothing — pods automatically refresh secrets every 60 seconds", "Run kubectl rollout restart deployment/<deployment-name> to trigger pod replacement", "Delete and recreate the entire cluster", "Run kubectl apply -f secrets.yaml again"], correct: 1, exp: "Running pods do not auto-refresh environment variables." }
     ];
 
     function renderQuiz() {
-      const container = document.getElementById('quiz-container');
-      container.innerHTML = QUIZ_QUESTIONS.map((q, qIdx) => `
+      document.getElementById('quiz-container').innerHTML = QUIZ_QUESTIONS.map((q, qIdx) => `
         <div class="quiz-card" id="q-card-${qIdx}">
           <div class="quiz-q">${q.q}</div>
-          ${q.options.map((opt, optIdx) => `
-            <button class="quiz-opt" onclick="answerQuiz(${qIdx}, ${optIdx})">${opt}</button>
-          `).join('')}
+          ${q.options.map((opt, optIdx) => `<button class="quiz-opt" onclick="answerQuiz(${qIdx}, ${optIdx})">${opt}</button>`).join('')}
           <div class="quiz-feedback" id="feedback-${qIdx}"></div>
         </div>
       `).join('');
@@ -1249,42 +624,34 @@ spec:
       const card = document.getElementById(`q-card-${qIdx}`);
       const btns = card.querySelectorAll('.quiz-opt');
       const feedback = document.getElementById(`feedback-${qIdx}`);
-
-      btns.forEach((btn, i) => {
-        btn.disabled = true;
-        if (i === q.correct) btn.classList.add('correct');
-        if (i === optIdx && i !== q.correct) btn.classList.add('wrong');
-      });
-
+      btns.forEach((btn, i) => { btn.disabled = true; if (i === q.correct) btn.classList.add('correct'); if (i === optIdx && i !== q.correct) btn.classList.add('wrong'); });
       if (optIdx === q.correct) {
-        userScores[qIdx] = 1;
-        feedback.style.display = 'block';
-        feedback.style.background = 'rgba(16, 185, 129, 0.15)';
-        feedback.style.color = '#d1fae5';
-        feedback.style.border = '1px solid var(--primary)';
-        feedback.innerHTML = `✅ <strong>Correct!</strong> ${q.exp}`;
+        userScores[qIdx] = 1; feedback.style.display = 'block'; feedback.style.background = 'rgba(16, 185, 129, 0.15)'; feedback.style.color = '#d1fae5'; feedback.style.border = '1px solid var(--primary)'; feedback.innerHTML = `✅ <strong>Correct!</strong> ${q.exp}`;
       } else {
-        userScores[qIdx] = 0;
-        feedback.style.display = 'block';
-        feedback.style.background = 'rgba(244, 63, 94, 0.15)';
-        feedback.style.color = '#ffe4e6';
-        feedback.style.border = '1px solid var(--error)';
-        feedback.innerHTML = `❌ <strong>Incorrect.</strong> The correct answer is option ${q.correct + 1}. <br>💡 <em>Explanation:</em> ${q.exp}`;
+        userScores[qIdx] = 0; feedback.style.display = 'block'; feedback.style.background = 'rgba(244, 63, 94, 0.15)'; feedback.style.color = '#ffe4e6'; feedback.style.border = '1px solid var(--error)'; feedback.innerHTML = `❌ <strong>Incorrect.</strong> Option ${q.correct + 1} is correct. <br>💡 <em>Exp:</em> ${q.exp}`;
       }
-
       if (Object.keys(userScores).length === QUIZ_QUESTIONS.length) {
         const total = Object.values(userScores).reduce((a, b) => a + b, 0);
-        const scoreBox = document.getElementById('quiz-score-display');
-        scoreBox.style.display = 'block';
-        scoreBox.innerHTML = `🎉 Assessment Completed! Your Score: ${total} / ${QUIZ_QUESTIONS.length} (${Math.round((total/QUIZ_QUESTIONS.length)*100)}%)`;
+        const sb = document.getElementById('quiz-score-display'); sb.style.display = 'block'; sb.innerHTML = `🎉 Assessment Completed! Score: ${total} / ${QUIZ_QUESTIONS.length}`;
       }
     }
+    
+    // Modal
+    function showSecretsModal() {
+        document.getElementById('secretsModal').style.display = 'block';
+    }
+    function closeModal() {
+        document.getElementById('secretsModal').style.display = 'none';
+    }
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('secretsModal')) {
+            closeModal();
+        }
+    }
 
-    // Initialize
     window.addEventListener('DOMContentLoaded', () => {
       checkSimulatorConnection();
       loadYamlTemplate();
-      setInterval(fetchClusterState, 3000);
     });
   </script>
 </body>
