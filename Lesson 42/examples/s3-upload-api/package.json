@@ -1,0 +1,18 @@
+{
+  "name": "s3-upload-api",
+  "version": "1.0.0",
+  "description": "Lesson 42 — AWS S3 Object Storage & Presigned URL API Demo (with Offline Mock S3 fallback)",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "postinstall": "node -e \"import('fs').then(fs => !fs.existsSync('.env') && fs.copyFileSync('.env.example', '.env'));\"",
+    "dev": "node src/server.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.620.0",
+    "@aws-sdk/s3-request-presigner": "^3.620.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  }
+}

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lesson 42 — AWS S3 & Lambda Cloud Architecture Lab</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            cloud: {
+              900: '#0b1120',
+              800: '#151e32',
+              card: 'rgba(255, 255, 255, 0.05)',
+              border: 'rgba(255, 255, 255, 0.1)'
+            },
+            cyan: { 400: '#22d3ee', 500: '#06b6d4' },
+            violet: { 400: '#a78bfa', 500: '#8b5cf6' },
+            emerald: { 400: '#34d399', 500: '#10b981' }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: #0b1120;
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(255, 255, 255, 0.04);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover {
+      border-color: rgba(6, 182, 212, 0.3);
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+    .tab-btn {
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .tab-btn.active {
+      color: #22d3ee;
+      font-weight: 600;
+    }
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, #06b6d4, #8b5cf6);
+      border-radius: 2px;
+    }
+    .code-box {
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .pulse-glow {
+      animation: pulseGlow 2s infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.2); }
+      50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.5); }
+    }
+  </style>
+</head>
+<body class="p-4 md:p-8">
+  <div class="max-w-7xl mx-auto space-y-6">
+    
+    <!-- Header -->
+    <header class="glass-card p-6 md:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div>
+        <div class="flex items-center gap-3">
+          <span class="px-3 py-1 rounded-full text-xs font-semibold bg-gradient-to-r from-cyan-500 to-violet-500 text-white shadow-lg">Lesson 42</span>
+          <span class="text-xs font-mono text-cyan-400 uppercase tracking-wider">Cloud & Advanced Topics</span>
+        </div>
+        <h1 class="text-2xl md:text-3xl font-bold mt-2 bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+          AWS S3 & Lambda Serverless Cloud Lab
+        </h1>
+        <p class="text-sm text-slate-400 mt-1">
+          Interactive simulator for object storage Presigned URLs, IAM access policies, and event-driven serverless execution.
+        </p>
+      </div>
+      <div class="flex items-center gap-3 bg-slate-900/80 px-4 py-2.5 rounded-xl border border-slate-700/60 text-xs font-mono">
+        <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
+        <span>Dual-Mode Simulator: <strong class="text-emerald-400">ONLINE / OFFLINE</strong></span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="flex space-x-2 border-b border-slate-800 overflow-x-auto pb-1">
+      <button onclick="switchTab('architect')" id="btn-architect" class="tab-btn active px-5 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 whitespace-nowrap">
+        🏗️ Cloud Architect Map
+      </button>
+      <button onclick="switchTab('s3')" id="btn-s3" class="tab-btn px-5 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 whitespace-nowrap">
+        📦 S3 Presigned Uploads
+      </button>
+      <button onclick="switchTab('lambda')" id="btn-lambda" class="tab-btn px-5 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 whitespace-nowrap">
+        ⚡ Lambda Event Workbench
+      </button>
+      <button onclick="switchTab('quiz')" id="btn-quiz" class="tab-btn px-5 py-3 text-sm font-medium text-slate-400 hover:text-slate-200 whitespace-nowrap">
+        🎓 Mastery Quiz
+      </button>
+    </nav>
+
+    <!-- TAB 1: Cloud Architect Map -->
+    <section id="tab-architect" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass-card p-6 space-y-3">
+          <div class="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 font-bold text-lg border border-red-500/20">IaaS</div>
+          <h3 class="text-lg font-semibold text-white">Infrastructure as a Service</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            You rent raw virtual machines (e.g., <strong>AWS EC2</strong>). You must install Linux, manage SSH keys, configure security group firewalls, and patch OS vulnerabilities yourself.
+          </p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between text-xs text-slate-500 font-mono">
+            <span>Control: HIGH</span>
+            <span>Maintenance: HIGH</span>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 space-y-3">
+          <div class="w-10 h-10 rounded-lg bg-violet-500/10 flex items-center justify-center text-violet-400 font-bold text-lg border border-violet-500/20">PaaS</div>
+          <h3 class="text-lg font-semibold text-white">Platform as a Service</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            You upload your code repository (e.g., <strong>Heroku, Vercel, Elastic Beanstalk</strong>), and the cloud provider manages server patching, OS runtimes, and load balancing.
+          </p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between text-xs text-slate-500 font-mono">
+            <span>Control: MEDIUM</span>
+            <span>Maintenance: LOW</span>
+          </div>
+        </div>
+
+        <div class="glass-card p-6 space-y-3 border-cyan-500/30 shadow-lg shadow-cyan-500/5">
+          <div class="w-10 h-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 font-bold text-lg border border-cyan-500/20">FaaS</div>
+          <h3 class="text-lg font-semibold text-cyan-300">Serverless FaaS / Storage</h3>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            You write modular event handlers (<strong>AWS Lambda</strong>) and store static objects (<strong>AWS S3</strong>). AWS provisions containers on demand and scales from 0 to 10,000 instantly!
+          </p>
+          <div class="pt-2 border-t border-slate-800 flex justify-between text-xs text-cyan-400 font-mono">
+            <span>Idle Cost: $0.00</span>
+            <span>Maintenance: ZERO</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Architecture Decision Finder -->
+      <div class="glass-card p-6 md:p-8 space-y-6">
+        <h3 class="text-lg font-semibold text-white flex items-center gap-2">
+          <span>🔍 Cloud Architecture Decision Finder</span>
+          <span class="text-xs font-mono bg-slate-800 text-slate-300 px-2 py-0.5 rounded">Interactive Tool</span>
+        </h3>
+        <p class="text-sm text-slate-400">Select an engineering challenge below to see the recommended AWS architecture and why traditional patterns fail.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <button onclick="selectScenario('media')" id="scen-media" class="p-3.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 text-left text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20">
+            📸 Storing 500,000 User Profile Photos
+          </button>
+          <button onclick="selectScenario('resize')" id="scen-resize" class="p-3.5 rounded-xl border border-slate-800 bg-slate-900/50 text-left text-xs font-medium text-slate-400 transition hover:border-slate-700">
+            🖼️ Asynchronous Image Resizing
+          </button>
+          <button onclick="selectScenario('api')" id="scen-api" class="p-3.5 rounded-xl border border-slate-800 bg-slate-900/50 text-left text-xs font-medium text-slate-400 transition hover:border-slate-700">
+            🚀 High-Traffic Microservice API
+          </button>
+          <button onclick="selectScenario('db')" id="scen-db" class="p-3.5 rounded-xl border border-slate-800 bg-slate-900/50 text-left text-xs font-medium text-slate-400 transition hover:border-slate-700">
+            📊 Relational Orders & Joins
+          </button>
+        </div>
+
+        <div id="scenario-output" class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 space-y-4">
+          <!-- Dynamically filled -->
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: S3 Presigned Uploads -->
+    <section id="tab-s3" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- Left Column: Generator Form -->
+        <div class="glass-card p-6 md:p-8 space-y-5">
+          <div class="flex justify-between items-center">
+            <h3 class="text-lg font-semibold text-white">1. Generate S3 Presigned URL</h3>
+            <span class="text-xs font-mono px-2.5 py-1 rounded bg-slate-800 text-cyan-400">IAM Least Privilege</span>
+          </div>
+          <p class="text-xs text-slate-400">
+            Instead of routing large file uploads through your Node.js backend (which consumes RAM), generate a cryptographic URL valid for 15 minutes that lets browsers upload directly to AWS S3.
+          </p>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-mono text-slate-300 mb-1">Target Bucket Name</label>
+              <input type="text" id="s3-bucket" value="software-dev-2026-assets" readonly class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3.5 py-2 text-sm text-slate-400 font-mono cursor-not-allowed focus:outline-none" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1">File Name</label>
+                <input type="text" id="s3-filename" value="avatar-hero-4k.png" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white font-mono focus:border-cyan-500 focus:outline-none" />
+              </div>
+              <div>
+                <label class="block text-xs font-mono text-slate-300 mb-1">Content-Type</label>
+                <select id="s3-filetype" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3.5 py-2 text-sm text-white font-mono focus:border-cyan-500 focus:outline-none">
+                  <option value="image/png">image/png</option>
+                  <option value="image/jpeg">image/jpeg</option>
+                  <option value="image/webp">image/webp</option>
+                  <option value="application/pdf">application/pdf</option>
+                </select>
+              </div>
+            </div>
+
+            <button onclick="generatePresignedUrl()" class="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-medium text-sm shadow-lg shadow-cyan-500/20 hover:brightness-110 transition flex items-center justify-center gap-2">
+              <span>🔐 Request Cryptographic Presigned URL</span>
+            </button>
+          </div>
+
+          <!-- URL Inspector -->
+          <div id="url-inspector" class="hidden pt-4 border-t border-slate-800 space-y-3">
+            <h4 class="text-xs font-mono uppercase tracking-wider text-emerald-400">✅ URL Generated & Signed</h4>
+            <div class="code-box p-3.5 rounded-lg text-xs break-all text-slate-300 space-y-2">
+              <div class="text-cyan-400 font-bold" id="dsp-url-target">http://localhost:3003/api/mock-s3-bucket/uploads/12345-avatar.png</div>
+              <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
+                <div><strong>Algorithm:</strong> AWS4-HMAC-SHA256</div>
+                <div><strong>Expires In:</strong> 900 seconds (15m)</div>
+                <div class="col-span-2 truncate"><strong>Signature:</strong> <span id="dsp-signature" class="text-violet-300">...</span></div>
+              </div>
+            </div>
+            
+            <button onclick="simulateDirectUpload()" id="btn-do-upload" class="w-full py-2.5 rounded-lg bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 font-medium text-xs hover:bg-emerald-500/30 transition flex items-center justify-center gap-2">
+              <span>🚀 Step 2: Simulate Direct Browser PUT Upload</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right Column: Live S3 Storage Inspector -->
+        <div class="glass-card p-6 md:p-8 space-y-5 flex flex-col justify-between">
+          <div>
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-lg font-semibold text-white">2. S3 Bucket Explorer</h3>
+              <button onclick="fetchBucketObjects()" class="text-xs font-mono text-cyan-400 hover:underline">🔄 Refresh Objects</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4">
+              Below represents objects stored in the target S3 bucket (or our zero-setup offline mock storage engine).
+            </p>
+
+            <div class="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/60">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="border-b border-slate-800 bg-slate-900/80 text-slate-400 font-mono">
+                    <th class="p-3">Object Key</th>
+                    <th class="p-3">Size</th>
+                    <th class="p-3">Type</th>
+                    <th class="p-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody id="s3-objects-table" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+                  <tr>
+                    <td colspan="4" class="p-6 text-center text-slate-500">No objects uploaded yet. Generate a Presigned URL and simulate an upload!</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-violet-500/10 border border-violet-500/20 text-xs text-violet-300 space-y-1">
+            <div class="font-bold flex items-center gap-1.5">
+              <span>💡 Pedagogical Advantage</span>
+            </div>
+            <p class="text-slate-400">
+              In real production, when 1,000 concurrent users upload 10MB images via Presigned URLs, your backend Node.js server experiences <strong>0 MB of RAM load</strong> and <strong>0 MB of network bandwidth</strong>!
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 3: Lambda Event Workbench -->
+    <section id="tab-lambda" class="space-y-6 hidden">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- Trigger Selector -->
+        <div class="glass-card p-6 space-y-4">
+          <h3 class="text-lg font-semibold text-white">1. Select Event Trigger</h3>
+          <p class="text-xs text-slate-400">AWS Lambda functions do not run as web servers. They execute asynchronously when triggered by JSON event payloads.</p>
+
+          <div class="space-y-2.5 pt-2">
+            <label onclick="selectTrigger('api')" class="flex items-center gap-3 p-3.5 rounded-xl border border-cyan-500/50 bg-cyan-500/10 cursor-pointer transition trigger-card" id="trig-api">
+              <input type="radio" name="trig" checked class="text-cyan-500 focus:ring-0" />
+              <div>
+                <div class="text-xs font-semibold text-white">API Gateway HTTP Request</div>
+                <div class="text-[11px] text-slate-400">Synchronous GET /api/quote?category=tech</div>
+              </div>
+            </label>
+
+            <label onclick="selectTrigger('s3')" class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 cursor-pointer transition trigger-card hover:border-slate-700" id="trig-s3">
+              <input type="radio" name="trig" class="text-cyan-500 focus:ring-0" />
+              <div>
+                <div class="text-xs font-semibold text-white">S3 ObjectCreated:Put Event</div>
+                <div class="text-[11px] text-slate-400">Asynchronous image upload trigger</div>
+              </div>
+            </label>
+
+            <label onclick="selectTrigger('cron')" class="flex items-center gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 cursor-pointer transition trigger-card hover:border-slate-700" id="trig-cron">
+              <input type="radio" name="trig" class="text-cyan-500 focus:ring-0" />
+              <div>
+                <div class="text-xs font-semibold text-white">CloudWatch Scheduled Cron</div>
+                <div class="text-[11px] text-slate-400">Rate(5 minutes) warm-up ping</div>
+              </div>
+            </label>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800">
+            <button onclick="fireLambdaTrigger()" class="w-full py-3 rounded-xl bg-gradient-to-r from-violet-500 to-indigo-600 text-white font-medium text-sm shadow-lg shadow-violet-500/20 hover:brightness-110 transition flex items-center justify-center gap-2">
+              <span>⚡ Fire Lambda Trigger</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Raw Event Payload -->
+        <div class="glass-card p-6 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-semibold text-white">2. Raw AWS Event Payload</h3>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300">event object</span>
+          </div>
+          <p class="text-xs text-slate-400">This exact JSON structure is generated by AWS and passed as the first argument into `handler(event, context)`.</p>
+
+          <pre id="lambda-event-preview" class="code-box p-3.5 rounded-xl text-xs text-cyan-300 overflow-x-auto h-72 leading-relaxed">
+{
+  "httpMethod": "GET",
+  "path": "/api/quote",
+  "queryStringParameters": {
+    "category": "tech"
+  },
+  "requestContext": {
+    "requestId": "req-9a8b7c6d"
+  }
+}
+          </pre>
+        </div>
+
+        <!-- Telemetry & Response -->
+        <div class="glass-card p-6 space-y-3">
+          <div class="flex justify-between items-center">
+            <h3 class="text-sm font-semibold text-white">3. Execution Telemetry & Response</h3>
+            <span id="lambda-status-badge" class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-400">IDLE</span>
+          </div>
+          
+          <!-- Cold Start Meter -->
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex justify-between text-xs font-mono">
+              <span class="text-slate-400">Container State:</span>
+              <span id="tel-state" class="font-bold text-amber-400">❄️ COLD START (~1000ms)</span>
+            </div>
+            <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+              <div id="tel-bar" class="bg-amber-400 h-full w-full transition-all duration-300"></div>
+            </div>
+            <p id="tel-explanation" class="text-[11px] text-slate-400 leading-tight">
+              First invocation required provisioning a new Linux micro-VM and loading Node.js runtime!
+            </p>
+          </div>
+
+          <pre id="lambda-output-preview" class="code-box p-3.5 rounded-xl text-xs text-emerald-300 overflow-x-auto h-48 leading-relaxed">
+// Click 'Fire Lambda Trigger' to execute...
+          </pre>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 4: Mastery Quiz -->
+    <section id="tab-quiz" class="space-y-6 hidden">
+      <div class="glass-card p-6 md:p-8 space-y-6">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+          <div>
+            <h3 class="text-lg font-semibold text-white">🎓 Lesson 42 Cloud Mastery Quiz</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Test your understanding of AWS S3 buckets, IAM least privilege, Presigned URLs, and Lambda execution.</p>
+          </div>
+          <div class="text-right">
+            <span class="text-xs text-slate-400 font-mono">Your Score:</span>
+            <div id="quiz-score" class="text-xl font-bold text-cyan-400 font-mono">0 / 7</div>
+          </div>
+        </div>
+
+        <div id="quiz-container" class="space-y-6">
+          <!-- Dynamically filled by JS -->
+        </div>
+
+        <div class="pt-4 border-t border-slate-800 flex justify-end">
+          <button onclick="resetQuiz()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-300 transition">
+            🔄 Reset Quiz
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // Tab Switching Logic
+    function switchTab(tabId) {
+      document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(`btn-${tabId}`).classList.add('active');
+
+      document.querySelectorAll('section').forEach(sec => sec.classList.add('hidden'));
+      document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+    }
+
+    // Tab 1: Architecture Scenario Finder
+    const SCENARIOS = {
+      media: {
+        title: "📸 Storing 500,000 User Profile Photos",
+        service: "AWS S3 (Simple Storage Service)",
+        badgeColor: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+        whyTraditionalFails: "Storing binary image blobs inside PostgreSQL columns causes database backups to bloat to hundreds of gigabytes, starves SQL query RAM, and increases database hosting costs exponentially.",
+        recommendedArchitecture: "Store the raw photo files in an <strong>AWS S3 Bucket</strong>. Store only the text URL string (e.g., <code>https://s3.amazonaws.com/bucket/avatar.jpg</code>) in your PostgreSQL database column!"
+      },
+      resize: {
+        title: "🖼️ Asynchronous Image Resizing",
+        service: "AWS Lambda + S3 Event Trigger",
+        badgeColor: "bg-violet-500/20 text-violet-300 border-violet-500/30",
+        whyTraditionalFails: "Processing 10MB high-resolution images synchronously inside your Node.js Express server blocks the main event loop, causing timeouts and high RAM spikes when multiple users upload simultaneously.",
+        recommendedArchitecture: "Configure an S3 <code>ObjectCreated:Put</code> event to trigger an asynchronous <strong>AWS Lambda function</strong>. Lambda spins up in milliseconds, resizes the image in the background, saves the thumbnail, and shuts down!"
+      },
+      api: {
+        title: "🚀 High-Traffic Microservice API (Spikey Traffic)",
+        service: "AWS API Gateway + AWS Lambda",
+        badgeColor: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+        whyTraditionalFails: "If your app gets 0 traffic at night and 10,000 hits at noon, paying for 10 EC2 Linux servers to run 24/7 wastes 80% of your budget on idle hardware.",
+        recommendedArchitecture: "Deploy as serverless functions with <strong>AWS Lambda and API Gateway</strong>. You pay $0.00 during idle night hours, and AWS instantly scales from 0 to 1,000 containers at noon!"
+      },
+      db: {
+        title: "📊 Relational Orders & Complex Joins",
+        service: "AWS RDS / Neon PostgreSQL (Not S3 or Lambda!)",
+        badgeColor: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+        whyTraditionalFails: "Attempting to store relational user orders or financial transactions as JSON files inside an AWS S3 bucket makes ACID transactions, atomic updates, and JOIN queries impossible.",
+        recommendedArchitecture: "Use a dedicated relational database like <strong>Neon PostgreSQL or AWS RDS</strong>. Use S3 for file storage and Lambda for stateless compute; use SQL databases for relational data!"
+      }
+    };
+
+    function selectScenario(key) {
+      document.querySelectorAll('#tab-architect button[id^="scen-"]').forEach(btn => {
+        btn.className = "p-3.5 rounded-xl border border-slate-800 bg-slate-900/50 text-left text-xs font-medium text-slate-400 transition hover:border-slate-700";
+      });
+      const activeBtn = document.getElementById(`scen-${key}`);
+      activeBtn.className = "p-3.5 rounded-xl border border-cyan-500/40 bg-cyan-500/10 text-left text-xs font-medium text-cyan-300 transition hover:bg-cyan-500/20 shadow-lg shadow-cyan-500/10";
+
+      const data = SCENARIOS[key];
+      const output = document.getElementById('scenario-output');
+      output.innerHTML = `
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-slate-800/80 pb-3">
+          <h4 class="text-base font-bold text-white">${data.title}</h4>
+          <span class="px-3 py-1 rounded-full text-xs font-mono font-semibold border ${data.badgeColor}">Recommended: ${data.service}</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
+          <div class="p-3.5 rounded-lg bg-red-500/5 border border-red-500/15 space-y-1">
+            <div class="font-bold text-red-400">❌ Why Traditional Anti-Patterns Fail</div>
+            <p class="text-slate-400 leading-relaxed">${data.whyTraditionalFails}</p>
+          </div>
+          <div class="p-3.5 rounded-lg bg-emerald-500/5 border border-emerald-500/15 space-y-1">
+            <div class="font-bold text-emerald-400">✅ Recommended Cloud Architecture</div>
+            <p class="text-slate-300 leading-relaxed">${data.recommendedArchitecture}</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Initialize default scenario
+    selectScenario('media');
+
+    // Tab 2: S3 Presigned URL Simulator
+    let currentPresignedUrl = null;
+
+    async function generatePresignedUrl() {
+      const filename = document.getElementById('s3-filename').value || "photo.jpg";
+      const fileType = document.getElementById('s3-filetype').value || "image/png";
+
+      try {
+        // Attempt to call local running s3-upload-api server on port 3003
+        const res = await fetch("http://localhost:3003/api/upload-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename, fileType })
+        });
+        const data = await res.json();
+        currentPresignedUrl = data.uploadUrl;
+        document.getElementById('dsp-url-target').textContent = data.uploadUrl;
+      } catch (err) {
+        // Offline JS Fallback if demo API is not running in terminal
+        const mockSig = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+        currentPresignedUrl = `http://localhost:3003/api/mock-s3-bucket/uploads/${Date.now()}-${filename}?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=MOCK%2F2026%2Fus-east-1%2Fs3%2Faws4_request&X-Amz-Expires=900&X-Amz-Signature=${mockSig}`;
+        document.getElementById('dsp-url-target').textContent = currentPresignedUrl;
+      }
+
+      document.getElementById('dsp-signature').textContent = currentPresignedUrl.split('X-Amz-Signature=')[1] || "e9b8a7c6d5e4f3a2b1";
+      document.getElementById('url-inspector').classList.remove('hidden');
+    }
+
+    async function simulateDirectUpload() {
+      const filename = document.getElementById('s3-filename').value || "photo.jpg";
+      const fileType = document.getElementById('s3-filetype').value || "image/png";
+      const btn = document.getElementById('btn-do-upload');
+      
+      btn.innerHTML = `<span>⏳ Simulating Direct Browser PUT Upload to Cloud...</span>`;
+      btn.disabled = true;
+
+      setTimeout(async () => {
+        try {
+          // Attempt real PUT to mock server
+          await fetch(currentPresignedUrl, {
+            method: "PUT",
+            headers: { "Content-Type": fileType },
+            body: "SIMULATED_BINARY_BLOB_DATA"
+          });
+        } catch (e) { /* Ignore offline error */ }
+
+        btn.innerHTML = `<span>✅ Upload Successful (200 OK with ETag)!</span>`;
+        btn.classList.replace('bg-emerald-500/20', 'bg-cyan-500/20');
+        btn.classList.replace('text-emerald-300', 'text-cyan-300');
+        btn.disabled = false;
+
+        // Add row to live table
+        const tbody = document.getElementById('s3-objects-table');
+        if (tbody.querySelector('td[colspan]')) tbody.innerHTML = "";
+        
+        const row = document.createElement('tr');
+        row.className = "border-b border-slate-800/60 hover:bg-slate-900/40 transition";
+        row.innerHTML = `
+          <td class="p-3 text-white font-medium">uploads/${Date.now()}-${filename}</td>
+          <td class="p-3 text-slate-400">240.5 KB</td>
+          <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-cyan-400">${fileType}</span></td>
+          <td class="p-3"><span class="text-emerald-400 text-xs">● STORED (0MB Server RAM)</span></td>
+        `;
+        tbody.prepend(row);
+      }, 800);
+    }
+
+    async function fetchBucketObjects() {
+      try {
+        const res = await fetch("http://localhost:3003/api/files");
+        const data = await res.json();
+        const tbody = document.getElementById('s3-objects-table');
+        if (data.files && data.files.length > 0) {
+          tbody.innerHTML = data.files.map(f => `
+            <tr class="border-b border-slate-800/60">
+              <td class="p-3 text-white font-medium">${f.key}</td>
+              <td class="p-3 text-slate-400">${(f.size/1024).toFixed(2)} KB</td>
+              <td class="p-3"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-cyan-400">${f.contentType}</span></td>
+              <td class="p-3"><span class="text-emerald-400 text-xs">● STORED (${data.mode})</span></td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        alert("Offline mode: simulate uploads using Step 2 above!");
+      }
+    }
+
+    // Tab 3: Lambda Event Workbench
+    let currentTriggerType = 'api';
+    let lambdaInvocationCount = 0;
+
+    function selectTrigger(type) {
+      currentTriggerType = type;
+      document.querySelectorAll('.trigger-card').forEach(card => {
+        card.className = "flex items-center gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/40 cursor-pointer transition trigger-card hover:border-slate-700";
+      });
+      document.getElementById(`trig-${type}`).className = "flex items-center gap-3 p-3.5 rounded-xl border border-cyan-500/50 bg-cyan-500/10 cursor-pointer transition trigger-card shadow-lg shadow-cyan-500/10";
+
+      const preview = document.getElementById('lambda-event-preview');
+      if (type === 'api') {
+        preview.textContent = JSON.stringify({
+          httpMethod: "GET",
+          path: "/api/quote",
+          queryStringParameters: { category: "tech" },
+          requestContext: { requestId: `req-${Math.random().toString(16).slice(2, 8)}` }
+        }, null, 2);
+      } else if (type === 's3') {
+        preview.textContent = JSON.stringify({
+          Records: [{
+            eventVersion: "2.1",
+            eventSource: "aws:s3",
+            eventName: "ObjectCreated:Put",
+            s3: {
+              bucket: { name: "software-dev-2026-assets" },
+              object: { key: "products/new-shirt-4k.webp", size: 245760 }
+            }
+          }]
+        }, null, 2);
+      } else {
+        preview.textContent = JSON.stringify({
+          version: "0",
+          id: "cdc73f9d-aea9-11e3-9d5a-835b769c0d9c",
+          detailType: "Scheduled Event",
+          source: "aws.events",
+          time: new Date().toISOString(),
+          resources: ["arn:aws:events:us-east-1:123456789012:rule/Every5Minutes"]
+        }, null, 2);
+      }
+    }
+
+    async function fireLambdaTrigger() {
+      lambdaInvocationCount++;
+      const isColdStart = (lambdaInvocationCount === 1 || lambdaInvocationCount % 4 === 0);
+      const stateEl = document.getElementById('tel-state');
+      const barEl = document.getElementById('tel-bar');
+      const expEl = document.getElementById('tel-explanation');
+      const badgeEl = document.getElementById('lambda-status-badge');
+      const outEl = document.getElementById('lambda-output-preview');
+
+      badgeEl.textContent = "EXECUTING...";
+      badgeEl.className = "text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 animate-pulse";
+      outEl.textContent = `// AWS Lambda container spinning up... Please wait...`;
+
+      const delayMs = isColdStart ? 1000 : 25;
+
+      if (isColdStart) {
+        stateEl.textContent = "❄️ COLD START (~1000ms latency)";
+        stateEl.className = "font-bold text-amber-400";
+        barEl.className = "bg-amber-400 h-full w-full transition-all duration-300";
+        expEl.textContent = "AWS provisioned a new Linux micro-VM and initialized Node.js runtime!";
+      } else {
+        stateEl.textContent = "🔥 WARM START (~15ms latency)";
+        stateEl.className = "font-bold text-emerald-400";
+        barEl.className = "bg-emerald-400 h-full w-full transition-all duration-300";
+        expEl.textContent = "AWS reused an active container already warm in server memory!";
+      }
+
+      setTimeout(async () => {
+        let result = {};
+        try {
+          if (currentTriggerType === 'api') {
+            const res = await fetch("http://localhost:3004/api/quote?category=tech");
+            result = await res.json();
+          } else if (currentTriggerType === 's3') {
+            const res = await fetch("http://localhost:3004/api/simulate-s3-event", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ bucket: "software-dev-2026-assets", key: "products/new-shirt-4k.webp", size: 245760 })
+            });
+            result = await res.json();
+          } else {
+            result = { status: 200, message: "Warm-up ping successful. Container stays alive for 30s!" };
+          }
+        } catch (e) {
+          // Offline Fallback simulation
+          if (currentTriggerType === 'api') {
+            result = {
+              statusCode: 200,
+              body: { success: true, category: "tech", quote: { text: "Talk is cheap. Show me the code.", author: "Linus Torvalds" }, serverlessMeta: { coldStart: isColdStart, durationMs: delayMs } }
+            };
+          } else {
+            result = {
+              processedAt: new Date().toISOString(),
+              eventTrigger: "ObjectCreated:Put",
+              bucket: "software-dev-2026-assets",
+              fileKey: "products/new-shirt-4k.webp",
+              fileSizeKb: 240,
+              status: "SUCCESS_ASYNCHRONOUS_PROCESSING"
+            };
+          }
+        }
+
+        badgeEl.textContent = "200 OK";
+        badgeEl.className = "text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300";
+        outEl.textContent = JSON.stringify(result, null, 2);
+      }, delayMs);
+    }
+
+    // Tab 4: Quiz
+    const QUIZ_QUESTIONS = [
+      {
+        q: "1. Why is storing user profile image blobs directly inside PostgreSQL database columns considered an anti-pattern?",
+        options: [
+          "It makes SQL queries execute in microseconds.",
+          "It bloats database backup sizes and wastes expensive database RAM on static media serving.",
+          "PostgreSQL cannot store binary strings under any circumstance.",
+          "AWS does not allow connecting databases to frontend browsers."
+        ],
+        correct: 1,
+        exp: "Relational database RAM and storage are expensive. Static media (images/videos) should live in Object Storage (AWS S3), while only the text URL is stored in PostgreSQL!"
+      },
+      {
+        q: "2. What is the primary benefit of generating an AWS S3 Presigned URL for file uploads?",
+        options: [
+          "It allows users to upload files directly to S3 from their browser without passing through or consuming RAM on your backend server.",
+          "It makes your S3 bucket public to the entire internet permanently.",
+          "It removes the need for SSL/TLS certificates.",
+          "It automatically resizes images before uploading."
+        ],
+        correct: 0,
+        exp: "Presigned URLs grant temporary, least-privilege permission for a client to upload directly to cloud storage, bypassing your backend server entirely!"
+      },
+      {
+        q: "3. What does 'The Principle of Least Privilege' mean when creating AWS IAM policies?",
+        options: [
+          "Always use the root AWS account for all API applications.",
+          "Grant applications only the minimum necessary permissions required to perform their exact tasks (e.g., read-only access to a specific S3 folder).",
+          "Ensure all S3 buckets have public read and write access enabled.",
+          "Never use passwords for authentication."
+        ],
+        correct: 1,
+        exp: "Least Privilege ensures that if an API key is compromised, attackers cannot access or delete resources outside that specific key's narrow scope."
+      },
+      {
+        q: "4. What is a 'Cold Start' in AWS Lambda serverless execution?",
+        options: [
+          "When an AWS data center air conditioning system cools down physical servers.",
+          "When a Lambda function runs continuously in an infinite loop for 24 hours.",
+          "The initial 1–2 second boot latency when AWS must provision a new micro-virtual machine and load your runtime because no warm container exists.",
+          "When an API Gateway HTTP request returns a 404 Not Found error."
+        ],
+        correct: 2,
+        exp: "When functions are idle, AWS powers down containers to save money. The first invocation requires spinning up a new container (Cold Start)."
+      },
+      {
+        q: "5. When writing an AWS Lambda handler connected to an API Gateway HTTP trigger, what MUST your handler return?",
+        options: [
+          "An HTML string representation of your website.",
+          "A raw un-stringified JavaScript user object.",
+          "An object containing 'statusCode' (e.g., 200), required CORS 'headers', and a stringified JSON 'body'.",
+          "A database SQL connection pool."
+        ],
+        correct: 2,
+        exp: "API Gateway strictly expects an object with 'statusCode' (not 'status') and a stringified JSON 'body'."
+      },
+      {
+        q: "6. Which cloud service model describes AWS Lambda?",
+        options: [
+          "IaaS (Infrastructure as a Service)",
+          "PaaS (Platform as a Service)",
+          "SaaS (Software as a Service)",
+          "FaaS (Function as a Service / Serverless)"
+        ],
+        correct: 3,
+        exp: "Lambda is FaaS (Function as a Service), where you upload modular event-driven functions and AWS manages all underlying servers and scaling."
+      },
+      {
+        q: "7. How can an AWS S3 Bucket trigger an AWS Lambda function automatically?",
+        options: [
+          "By sending an email to Jeff Bezos.",
+          "By configuring an asynchronous S3 Bucket Event (such as ObjectCreated:Put) that fires a JSON record payload to Lambda whenever a new file arrives.",
+          "By installing a MySQL database trigger inside the S3 bucket.",
+          "S3 buckets cannot communicate with AWS Lambda."
+        ],
+        correct: 1,
+        exp: "S3 Event Triggers allow asynchronous background processing (like thumbnail generation or metadata extraction) immediately upon file upload!"
+      }
+    ];
+
+    let userAnswers = new Array(QUIZ_QUESTIONS.length).fill(null);
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-container');
+      container.innerHTML = QUIZ_QUESTIONS.map((q, qIdx) => `
+        <div class="p-6 rounded-xl bg-slate-950/80 border border-slate-800 space-y-4">
+          <div class="text-sm font-semibold text-white">${q.q}</div>
+          <div class="grid grid-cols-1 gap-2.5">
+            ${q.options.map((opt, oIdx) => `
+              <button onclick="answerQuestion(${qIdx}, ${oIdx})" id="btn-q${qIdx}-o${oIdx}" class="w-full text-left p-3.5 rounded-lg border border-slate-800 bg-slate-900/50 text-xs text-slate-300 hover:border-slate-700 transition flex items-start gap-2.5">
+                <span class="w-5 h-5 rounded-full border border-slate-700 flex items-center justify-center text-[10px] font-mono text-slate-400 flex-shrink-0 mt-0.5">${String.fromCharCode(65 + oIdx)}</span>
+                <span class="flex-1">${opt}</span>
+              </button>
+            `).join('')}
+          </div>
+          <div id="exp-q${qIdx}" class="hidden p-3.5 rounded-lg text-xs leading-relaxed"></div>
+        </div>
+      `).join('');
+    }
+
+    function answerQuestion(qIdx, oIdx) {
+      if (userAnswers[qIdx] !== null) return;
+      userAnswers[qIdx] = oIdx;
+
+      const q = QUIZ_QUESTIONS[qIdx];
+      const btn = document.getElementById(`btn-q${qIdx}-o${oIdx}`);
+      const exp = document.getElementById(`exp-q${qIdx}`);
+
+      if (oIdx === q.correct) {
+        btn.classList.replace('border-slate-800', 'border-emerald-500/80');
+        btn.classList.replace('bg-slate-900/50', 'bg-emerald-500/15');
+        btn.classList.add('text-emerald-300', 'font-medium');
+        exp.className = "p-3.5 rounded-lg text-xs leading-relaxed bg-emerald-500/10 border border-emerald-500/20 text-emerald-300";
+        exp.innerHTML = `<strong>✅ Correct!</strong> ${q.exp}`;
+      } else {
+        btn.classList.replace('border-slate-800', 'border-red-500/80');
+        btn.classList.replace('bg-slate-900/50', 'bg-red-500/15');
+        btn.classList.add('text-red-300');
+        
+        const correctBtn = document.getElementById(`btn-q${qIdx}-${q.correct}`);
+        correctBtn.classList.replace('border-slate-800', 'border-emerald-500/80');
+        correctBtn.classList.replace('bg-slate-900/50', 'bg-emerald-500/15');
+        correctBtn.classList.add('text-emerald-300', 'font-medium');
+
+        exp.className = "p-3.5 rounded-lg text-xs leading-relaxed bg-red-500/10 border border-red-500/20 text-red-300";
+        exp.innerHTML = `<strong>❌ Incorrect.</strong> The correct answer was <strong>${String.fromCharCode(65 + q.correct)}</strong>. <br/>${q.exp}`;
+      }
+      exp.classList.remove('hidden');
+      updateScore();
+    }
+
+    function updateScore() {
+      let score = 0;
+      userAnswers.forEach((ans, idx) => {
+        if (ans === QUIZ_QUESTIONS[idx].correct) score++;
+      });
+      document.getElementById('quiz-score').textContent = `${score} / ${QUIZ_QUESTIONS.length}`;
+    }
+
+    function resetQuiz() {
+      userAnswers = new Array(QUIZ_QUESTIONS.length).fill(null);
+      document.getElementById('quiz-score').textContent = `0 / ${QUIZ_QUESTIONS.length}`;
+      renderQuiz();
+    }
+
+    // Initialize Quiz
+    renderQuiz();
+  </script>
+</body>
+</html>
