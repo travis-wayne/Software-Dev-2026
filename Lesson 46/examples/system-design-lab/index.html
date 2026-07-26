@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Design Interview Lab</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --card-bg: rgba(255, 255, 255, 0.05);
+      --card-border: rgba(255, 255, 255, 0.1);
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #10b981;
+      --secondary: #8b5cf6;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Ambient blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      opacity: 0.5;
+    }
+    .blob-1 {
+      top: -100px;
+      left: -100px;
+      width: 400px;
+      height: 400px;
+      background: var(--primary);
+    }
+    .blob-2 {
+      bottom: -100px;
+      right: -100px;
+      width: 500px;
+      height: 500px;
+      background: var(--secondary);
+    }
+    
+    /* Layout */
+    .header {
+      padding: 2rem;
+      text-align: center;
+      border-bottom: 1px solid var(--card-border);
+      background: rgba(11, 17, 32, 0.8);
+      backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    
+    .title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    
+    .status-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 1rem;
+    }
+    
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      border-bottom: 1px solid var(--card-border);
+    }
+    
+    .tab-btn {
+      background: transparent;
+      color: var(--text-muted);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      font-family: 'Inter', sans-serif;
+    }
+    
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: var(--card-bg);
+    }
+    
+    .tab-btn.active {
+      color: var(--text-main);
+      background: var(--card-bg);
+      border-bottom: 2px solid transparent;
+      border-image: linear-gradient(to right, var(--primary), var(--secondary)) 1;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+    }
+    
+    .content {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+    
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-content.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Common UI Elements */
+    .glass-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+      margin-bottom: 1rem;
+    }
+    
+    .glass-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    }
+    
+    .btn {
+      background: linear-gradient(135deg, var(--primary), #047857);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
+    }
+    
+    .btn-secondary {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+    
+    input, select, textarea {
+      background: rgba(0,0,0,0.2);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-family: inherit;
+      width: 100%;
+      margin-top: 0.25rem;
+    }
+    
+    /* Tab 1: Framework */
+    .progress-bar {
+      height: 4px;
+      background: var(--card-bg);
+      border-radius: 2px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      width: 12.5%;
+      transition: width 0.3s ease;
+    }
+    .step-card { display: none; }
+    .step-card.active { display: block; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
+    }
+    
+    /* Tab 2: Calculator */
+    .calc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .output-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .output-value { font-family: 'JetBrains Mono', monospace; font-weight: bold; }
+    
+    /* Tab 3: Canvas */
+    .canvas-layout {
+      display: flex;
+      gap: 2rem;
+      height: 600px;
+    }
+    .component-lib {
+      width: 250px;
+      overflow-y: auto;
+    }
+    .canvas-area {
+      flex: 1;
+      border: 1px dashed var(--card-border);
+      border-radius: 12px;
+      position: relative;
+      background: rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .component-drag {
+      cursor: grab;
+      padding: 0.75rem;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      margin-bottom: 0.5rem;
+      background: rgba(255,255,255,0.02);
+    }
+    .placed-component {
+      position: absolute;
+      width: 120px;
+      text-align: center;
+      padding: 0.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    /* Tab 4: Mock Interview */
+    .chat-bubble {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-left: 4px solid var(--secondary);
+    }
+    
+    /* Modals */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: var(--bg);
+      border: 1px solid var(--card-border);
+      padding: 2rem;
+      border-radius: 12px;
+      max-width: 600px;
+      width: 90%;
+    }
+    
+    .fab {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--secondary);
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+      z-index: 50;
+      border: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header class="header">
+    <div class="title">System Design Interview Lab</div>
+    <div style="color: var(--text-muted)">Interactive RESHADED Framework Guide</div>
+    <div class="status-bar">
+      <span id="global-timer">Session Time: 00:00</span>
+      <span>|</span>
+      <span id="global-step">Current Module: Framework</span>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('tab-framework')">Framework Guide</button>
+    <button class="tab-btn" onclick="switchTab('tab-estimation')">Estimation Calculator</button>
+    <button class="tab-btn" onclick="switchTab('tab-canvas')">Architecture Canvas</button>
+    <button class="tab-btn" onclick="switchTab('tab-interview')">Mock Interview</button>
+  </div>
+
+  <div class="content">
+    
+    <!-- TAB 1: FRAMEWORK -->
+    <div id="tab-framework" class="tab-content active">
+      <h2>The RESHADED Framework</h2>
+      <p style="margin-bottom: 2rem; color: var(--text-muted)">Master the 8-step process for acing any system design interview.</p>
+      
+      <div style="margin-bottom: 1rem">Step <span id="fw-step-num">1</span> of 8</div>
+      <div class="progress-bar"><div class="progress-fill" id="fw-progress"></div></div>
+      
+      <div class="glass-card step-card active" id="fw-card-1">
+        <div class="badge">R</div>
+        <h3>Requirements Clarification (5-10 mins)</h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Define Functional Requirements (What does it do?)</li>
+          <li>Define Non-Functional Requirements (Scale, Latency, Availability)</li>
+          <li>Determine Read vs Write ratio</li>
+        </ul>
+        <div style="padding: 1rem; background: rgba(139, 92, 246, 0.1); border-left: 4px solid var(--secondary); margin-bottom: 1rem">
+          <strong>Pro Tip:</strong> Never start drawing before asking questions!
+        </div>
+        <button class="btn" onclick="nextFwStep(1)">Mark Complete & Next</button>
+      </div>
+      
+      <div class="glass-card step-card" id="fw-card-2">
+        <div class="badge">E</div>
+        <h3>Estimation (5-10 mins)</h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Calculate QPS (Queries Per Second)</li>
+          <li>Estimate Storage for 5 years</li>
+          <li>Estimate Bandwidth (Network I/O)</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep(2)">Mark Complete & Next</button>
+      </div>
+
+      <!-- Add remaining framework steps here dynamically or via simple hidden divs... -->
+      <div class="glass-card step-card" id="fw-card-8">
+        <div class="badge">D</div>
+        <h3>Deep Dive (10-15 mins)</h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Pick a critical component (e.g., caching, DB scaling)</li>
+          <li>Explain failure scenarios and mitigation</li>
+        </ul>
+        <button class="btn" onclick="resetFw()">Finish Framework Review</button>
+      </div>
+
+    </div>
+
+    <!-- TAB 2: ESTIMATION -->
+    <div id="tab-estimation" class="tab-content">
+      <h2>Back-of-the-Envelope Calculator</h2>
+      <div class="calc-grid" style="margin-top: 1rem">
+        <div class="glass-card">
+          <h3>Inputs</h3>
+          <div style="margin-top: 1rem">
+            <label>Daily Active Users (Millions)</label>
+            <input type="number" id="calc-dau" value="50" onchange="recalc()">
+            <label style="margin-top: 1rem; display: block">Requests/User/Day</label>
+            <input type="number" id="calc-reqs" value="10" onchange="recalc()">
+            <label style="margin-top: 1rem; display: block">Avg Size/Request (KB)</label>
+            <input type="number" id="calc-size" value="0.5" onchange="recalc()">
+            <label style="margin-top: 1rem; display: block">Read/Write Ratio (X:1)</label>
+            <input type="number" id="calc-ratio" value="100" onchange="recalc()">
+          </div>
+        </div>
+        <div class="glass-card">
+          <h3>Outputs</h3>
+          <div class="output-item">
+            <span>Average QPS</span>
+            <span class="output-value" id="out-qps">5,787 req/s</span>
+          </div>
+          <div class="output-item">
+            <span>Peak QPS (2x)</span>
+            <span class="output-value" id="out-peak">11,574 req/s</span>
+          </div>
+          <div class="output-item">
+            <span>Write Bandwidth</span>
+            <span class="output-value" id="out-wbw">28 KB/s</span>
+          </div>
+          <div class="output-item">
+            <span>Read Bandwidth</span>
+            <span class="output-value" id="out-rbw">2.8 MB/s</span>
+          </div>
+          <div class="output-item">
+            <span>Storage (1 Year)</span>
+            <span class="output-value" id="out-storage">884 GB</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: CANVAS -->
+    <div id="tab-canvas" class="tab-content">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+        <h2>Architecture Canvas</h2>
+        <button class="btn btn-secondary" onclick="loadTemplate()">Load URL Shortener</button>
+      </div>
+      <div class="canvas-layout">
+        <div class="component-lib glass-card">
+          <h4>Components</h4>
+          <div class="component-drag">🌐 Client</div>
+          <div class="component-drag">⚖️ Load Balancer</div>
+          <div class="component-drag">🖥️ App Server</div>
+          <div class="component-drag">🔴 Redis Cache</div>
+          <div class="component-drag">🐘 PostgreSQL</div>
+        </div>
+        <div class="canvas-area" id="canvas-area">
+          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.2)">
+            [Interactive Canvas Coming Soon]
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: MOCK INTERVIEW -->
+    <div id="tab-interview" class="tab-content">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+        <h2>Mock Interview: URL Shortener</h2>
+        <div style="font-family: monospace; font-size: 1.2rem; color: var(--warning)" id="int-timer">00:00</div>
+      </div>
+      
+      <div class="glass-card" id="int-step-1">
+        <div class="chat-bubble">
+          <strong>Interviewer:</strong> Let's design a URL Shortener like TinyURL. Where would you like to start?
+        </div>
+        <textarea rows="4" placeholder="Type your response here... (Focus on Requirements)"></textarea>
+        <div style="margin-top: 1rem; display: flex; gap: 1rem">
+          <button class="btn" onclick="document.getElementById('int-hint-1').style.display='block'">Show Hint</button>
+          <button class="btn" style="background: var(--primary)">Submit Answer</button>
+        </div>
+        <div id="int-hint-1" style="display: none; margin-top: 1rem; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 6px;">
+          <em>Hint: Ask about DAU, custom aliases, URL expiry, and Read:Write ratio.</em>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="fab" onclick="document.getElementById('quiz-modal').style.display='flex'">📝</button>
+
+  <!-- Quiz Modal -->
+  <div class="modal-overlay" id="quiz-modal" onclick="if(event.target===this) this.style.display='none'">
+    <div class="modal-content">
+      <h2>Quick Quiz</h2>
+      <div style="margin: 1.5rem 0">
+        <p><strong>Q1: Why does a URL shortener return 302 instead of 301?</strong></p>
+        <div style="margin-top: 0.5rem">
+          <label style="display: block; margin: 0.5rem 0"><input type="radio" name="q1"> A) 302 is faster</label>
+          <label style="display: block; margin: 0.5rem 0"><input type="radio" name="q1"> B) 302 prevents permanent browser caching, preserving analytics</label>
+        </div>
+      </div>
+      <button class="btn" onclick="document.getElementById('quiz-modal').style.display='none'">Close</button>
+    </div>
+  </div>
+
+  <script>
+    // Global Timer
+    let seconds = 0;
+    setInterval(() => {
+      seconds++;
+      const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const secs = (seconds % 60).toString().padStart(2, '0');
+      document.getElementById('global-timer').innerText = `Session Time: ${mins}:${secs}`;
+      document.getElementById('int-timer').innerText = `${mins}:${secs}`;
+    }, 1000);
+
+    // Tabs
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+      
+      const map = {
+        'tab-framework': 'Framework',
+        'tab-estimation': 'Calculator',
+        'tab-canvas': 'Canvas',
+        'tab-interview': 'Mock Interview'
+      };
+      document.getElementById('global-step').innerText = `Current Module: ${map[tabId]}`;
+    }
+
+    // Framework
+    function nextFwStep(current) {
+      document.getElementById(`fw-card-${current}`).classList.remove('active');
+      let next = current === 2 ? 8 : current + 1; // skip for brevity in prototype
+      if (document.getElementById(`fw-card-${next}`)) {
+        document.getElementById(`fw-card-${next}`).classList.add('active');
+        document.getElementById('fw-step-num').innerText = next;
+        document.getElementById('fw-progress').style.width = `${(next/8)*100}%`;
+      }
+    }
+    function resetFw() {
+      document.querySelectorAll('.step-card').forEach(el => el.classList.remove('active'));
+      document.getElementById('fw-card-1').classList.add('active');
+      document.getElementById('fw-step-num').innerText = 1;
+      document.getElementById('fw-progress').style.width = '12.5%';
+    }
+
+    // Calculator
+    function recalc() {
+      const dau = parseFloat(document.getElementById('calc-dau').value) * 1000000;
+      const reqs = parseFloat(document.getElementById('calc-reqs').value);
+      const sizeKB = parseFloat(document.getElementById('calc-size').value);
+      const ratio = parseFloat(document.getElementById('calc-ratio').value);
+      
+      const totalReqsDay = dau * reqs;
+      const qps = totalReqsDay / 86400;
+      
+      const writesPs = qps / (ratio + 1);
+      const readsPs = qps - writesPs;
+      
+      document.getElementById('out-qps').innerText = `${Math.round(qps).toLocaleString()} req/s`;
+      document.getElementById('out-peak').innerText = `${Math.round(qps * 2).toLocaleString()} req/s`;
+      
+      const storageYearGB = (writesPs * sizeKB * 86400 * 365) / 1024 / 1024;
+      document.getElementById('out-storage').innerText = `${Math.round(storageYearGB).toLocaleString()} GB`;
+    }
+
+    function loadTemplate() {
+      const canvas = document.getElementById('canvas-area');
+      canvas.innerHTML = `
+        <div class="placed-component" style="top: 50px; left: 50px">🌐 Client</div>
+        <div class="placed-component" style="top: 50px; left: 250px">⚖️ LB</div>
+        <div class="placed-component" style="top: 50px; left: 450px">🖥️ App 1</div>
+        <div class="placed-component" style="top: 150px; left: 450px">🖥️ App 2</div>
+        <div class="placed-component" style="top: 100px; left: 650px">🔴 Redis</div>
+        <div class="placed-component" style="top: 250px; left: 650px">🐘 PostgreSQL</div>
+      `;
+    }
+  </script>
+</body>
+</html>
