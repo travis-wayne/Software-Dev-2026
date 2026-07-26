@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Next.js Interactive Lab</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b1120;
+      --glass-bg: rgba(15, 23, 42, 0.7);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+      --primary: #3b82f6;
+      --secondary: #10b981;
+      --warning: #f59e0b;
+      --text: #e2e8f0;
+      --text-muted: #94a3b8;
+      --font-sans: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --transition: 0.2s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Ambient blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.4;
+    }
+    .blob-1 { top: -100px; left: -100px; width: 400px; height: 400px; background: rgba(59, 130, 246, 0.4); }
+    .blob-2 { bottom: -100px; right: -100px; width: 500px; height: 500px; background: rgba(16, 185, 129, 0.2); }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(to right, #3b82f6, #60a5fa);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    .tabs {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: var(--glass-border);
+      padding-bottom: 1rem;
+    }
+
+    .tab-btn {
+      background: var(--glass-bg);
+      border: var(--glass-border);
+      color: var(--text-muted);
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      transition: var(--transition);
+      backdrop-filter: blur(12px);
+    }
+
+    .tab-btn:hover {
+      color: var(--text);
+      background: rgba(30, 41, 59, 0.8);
+    }
+
+    .tab-btn.active {
+      color: #fff;
+      background: rgba(59, 130, 246, 0.2);
+      border-bottom: 3px solid var(--primary);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glass Cards */
+    .glass-card {
+      background: var(--glass-bg);
+      border: var(--glass-border);
+      backdrop-filter: blur(12px);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    /* Tab 1: Simulator */
+    .sim-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .sim-card {
+      text-align: center;
+      transition: var(--transition);
+    }
+    
+    .sim-card:hover {
+      transform: translateY(-5px);
+    }
+
+    .sim-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .sim-card h3 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+    
+    .sim-card p {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      min-height: 48px;
+    }
+
+    .btn {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      width: 100%;
+    }
+
+    .btn:hover {
+      background: #2563eb;
+    }
+
+    .browser-mockup {
+      margin-top: 2rem;
+      border-radius: 8px;
+      overflow: hidden;
+      border: var(--glass-border);
+      background: #1e293b;
+    }
+
+    .browser-header {
+      background: #0f172a;
+      padding: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      border-bottom: 1px solid #334155;
+    }
+
+    .browser-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .dot { width: 12px; height: 12px; border-radius: 50%; }
+    .dot.r { background: #ef4444; }
+    .dot.y { background: #eab308; }
+    .dot.g { background: #22c55e; }
+
+    .url-bar {
+      background: #1e293b;
+      padding: 0.4rem 1rem;
+      border-radius: 4px;
+      flex: 1;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .browser-content {
+      height: 300px;
+      background: #ffffff;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      display: none;
+    }
+
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+
+    .content-loaded {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+    .content-loaded h2 { color: #0f172a; margin-bottom: 1rem; }
+    
+    .badge-container {
+      position: absolute;
+      bottom: 20px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .badge {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: none;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+    .badge.red { background: #fee2e2; color: #991b1b; border: 1px solid #f87171; }
+    .badge.green { background: #dcfce7; color: #166534; border: 1px solid #4ade80; }
+
+    /* Tab 2: Router */
+    .router-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .file-tree {
+      font-family: var(--font-mono);
+    }
+    
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem;
+      margin-bottom: 0.25rem;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid transparent;
+      transition: var(--transition);
+    }
+
+    .file-item:hover {
+      border-color: rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .file-icon { margin-right: 10px; }
+    .file-name { flex: 1; }
+    
+    .route-label {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: #1e293b;
+    }
+    .route-label.regular { color: var(--primary); border: 1px solid var(--primary); }
+    .route-label.dynamic { color: var(--warning); border: 1px solid var(--warning); }
+    .route-label.api { color: var(--secondary); border: 1px solid var(--secondary); }
+
+    .add-file-form {
+      margin-top: 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .input-field {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.5rem;
+      border-radius: 4px;
+      font-family: var(--font-mono);
+    }
+    .input-field:focus { outline: none; border-color: var(--primary); }
+
+    .url-preview h3 { margin-bottom: 1rem; color: var(--primary); }
+    .url-preview-box {
+      background: rgba(0,0,0,0.3);
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      margin-bottom: 1.5rem;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Tab 3: Lifecycle */
+    .lifecycle-selectors {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .pill-btn {
+      background: var(--glass-bg);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 0.75rem 2rem;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      transition: var(--transition);
+    }
+    .pill-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      position: relative;
+    }
+    
+    .timeline::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 20px; bottom: 0;
+      width: 2px;
+      background: rgba(255,255,255,0.1);
+    }
+
+    .timeline-step {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      opacity: 0.3;
+      transition: all 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .timeline-step.active { opacity: 1; transform: scale(1.02); }
+    .timeline-step.past { opacity: 0.7; }
+
+    .step-icon {
+      width: 42px;
+      height: 42px;
+      background: #1e293b;
+      border: 2px solid #475569;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+    .timeline-step.active .step-icon { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 0 15px rgba(59,130,246,0.5); }
+    
+    .step-text {
+      background: rgba(255,255,255,0.05);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      flex: 1;
+    }
+
+    .controls { display: flex; justify-content: center; margin-top: 1rem; }
+
+    .callout {
+      margin-top: 2rem;
+      padding: 1rem;
+      background: rgba(16, 185, 129, 0.1);
+      border-left: 4px solid var(--secondary);
+      border-radius: 4px;
+    }
+
+    /* Tab 4: Quiz */
+    .quiz-container { max-width: 800px; margin: 0 auto; }
+    .quiz-item {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .quiz-item:last-child { border-bottom: none; }
+    .question { font-weight: 600; margin-bottom: 0.5rem; font-size: 1.1rem; }
+    .answer-btn {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: var(--text-muted);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: var(--transition);
+    }
+    .answer-btn:hover { background: rgba(255,255,255,0.1); color: white; }
+    .answer-text {
+      display: none;
+      margin-top: 1rem;
+      padding: 1rem;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 6px;
+      color: #e0e7ff;
+    }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="container">
+    <header>
+      <h1>Next.js Interactive Lab</h1>
+      <p>Explore Rendering Strategies, Routing, and Data Fetching</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" onclick="openTab('rendering')">Rendering Simulator</button>
+      <button class="tab-btn" onclick="openTab('routing')">File System Router</button>
+      <button class="tab-btn" onclick="openTab('lifecycle')">Lifecycle Explorer</button>
+      <button class="tab-btn" onclick="openTab('quiz')">Knowledge Check</button>
+    </div>
+
+    <!-- TAB 1: Rendering -->
+    <div id="rendering" class="tab-content active">
+      <h2 style="text-align:center; margin-bottom: 2rem;">Which rendering strategy should you choose?</h2>
+      
+      <div class="sim-grid">
+        <div class="glass-card sim-card">
+          <div class="sim-icon">💻</div>
+          <h3>CSR</h3>
+          <p>Client-Side Rendering. JS builds the page in the browser.</p>
+          <button class="btn" onclick="runSim('csr')">SIMULATE CSR</button>
+        </div>
+        <div class="glass-card sim-card">
+          <div class="sim-icon">⚡</div>
+          <h3>SSG</h3>
+          <p>Static Site Generation. Pre-built HTML served from CDN.</p>
+          <button class="btn" onclick="runSim('ssg')">SIMULATE SSG</button>
+        </div>
+        <div class="glass-card sim-card">
+          <div class="sim-icon">🖥️</div>
+          <h3>SSR</h3>
+          <p>Server-Side Rendering. HTML generated fresh on every request.</p>
+          <button class="btn" onclick="runSim('ssr')">SIMULATE SSR</button>
+        </div>
+      </div>
+
+      <div class="browser-mockup">
+        <div class="browser-header">
+          <div class="browser-dots">
+            <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+          </div>
+          <div class="url-bar">https://my-next-app.com/demo</div>
+        </div>
+        <div class="browser-content" id="browser-viewport">
+          <div class="spinner" id="sim-spinner"></div>
+          <div class="content-loaded" id="sim-content">
+            <h2>🎉 Page Content Loaded!</h2>
+            <p>Welcome to the interactive simulation.</p>
+          </div>
+          <div class="badge-container">
+            <div class="badge red" id="badge-seo-bad">SEO: ❌ Bot sees empty div</div>
+            <div class="badge green" id="badge-seo-good">SEO: ✅ Bot sees full HTML</div>
+            <div class="badge green" id="badge-cdn">⚡ Served from CDN cache</div>
+            <div class="badge green" id="badge-ssr">🔒 Personalized per user</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Routing -->
+    <div id="routing" class="tab-content">
+      <div class="router-grid">
+        <div class="glass-card">
+          <h3 style="margin-bottom:1rem; color:var(--primary);">pages/ Directory</h3>
+          <div class="file-tree" id="file-tree">
+            <!-- Populated by JS -->
+          </div>
+          <div class="add-file-form">
+            <input type="text" id="new-file-input" class="input-field" placeholder="e.g. products/[id].js">
+            <button class="btn" style="width:auto;" onclick="addFile()">Add File</button>
+          </div>
+        </div>
+        <div class="glass-card url-preview">
+          <h3>URL Router Preview</h3>
+          <p style="margin-bottom:1rem; color:var(--text-muted);">Next.js maps files in the <code>pages/</code> directory directly to URLs. Try adding a new file on the left!</p>
+          <div class="url-preview-box">
+            Current URL Mapping:<br><br>
+            <span style="color:var(--secondary);" id="url-output">Select a file or add a new one</span>
+          </div>
+          <p style="font-size:0.9rem; color:var(--text-muted);">
+            <strong>Dynamic Routes:</strong> Files with brackets like <code>[id].js</code> catch any value (e.g., <code>/products/123</code>).<br><br>
+            <strong>API Routes:</strong> Files in <code>pages/api/</code> run on the server and return JSON, not HTML.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Lifecycle -->
+    <div id="lifecycle" class="tab-content">
+      <h2 style="text-align:center; margin-bottom: 2rem;">When does my code run?</h2>
+      <div class="lifecycle-selectors">
+        <button class="pill-btn active" id="btn-ssg" onclick="setLifecycle('ssg')">getStaticProps (SSG)</button>
+        <button class="pill-btn" id="btn-ssr" onclick="setLifecycle('ssr')">getServerSideProps (SSR)</button>
+      </div>
+
+      <div class="glass-card">
+        <div class="timeline" id="timeline">
+          <!-- Populated by JS -->
+        </div>
+        <div class="controls">
+          <button class="btn" style="width:200px;" onclick="nextStep()">Next Step →</button>
+        </div>
+        <div class="callout" id="lifecycle-callout">
+          <strong>getStaticProps:</strong> Runs ONCE at build time. Great for blogs, docs, e-commerce product pages.
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Quiz -->
+    <div id="quiz" class="tab-content">
+      <div class="glass-card quiz-container">
+        <div class="quiz-item">
+          <div class="question">1. What does CSR stand for?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text">Client-Side Rendering</div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">2. Which Next.js file contains global layout and CSS imports for all pages?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text"><code>pages/_app.js</code></div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">3. What is the main SEO advantage of SSR/SSG over CSR?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text">Search engines can read the complete HTML content immediately upon request, rather than seeing an empty div.</div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">4. Which function runs on every request and has access to cookies and sessions?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text"><code>getServerSideProps</code></div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">5. What does <code>fallback: false</code> mean in getStaticPaths?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text">Any path not in the paths array will return a 404 Not Found page.</div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">6. Why should you use <code>&lt;Link&gt;</code> instead of <code>&lt;a&gt;</code> for internal navigation?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text">The Link component prefetches pages in the background, making internal navigation feel instant without a full page reload.</div>
+        </div>
+        <div class="quiz-item">
+          <div class="question">7. What does <code>revalidate: 60</code> do in getStaticProps?</div>
+          <button class="answer-btn" onclick="toggleAnswer(this)">Show Answer</button>
+          <div class="answer-text">It regenerates the static page in the background at most once every 60 seconds (Incremental Static Regeneration or ISR).</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Tab Switching
+    function openTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+    }
+
+    // Simulator Logic
+    function hideAllSimElements() {
+      document.getElementById('sim-spinner').style.display = 'none';
+      document.getElementById('sim-content').style.display = 'none';
+      document.querySelectorAll('.badge').forEach(el => el.style.display = 'none');
+    }
+
+    function runSim(type) {
+      hideAllSimElements();
+      const viewport = document.getElementById('browser-viewport');
+      const spinner = document.getElementById('sim-spinner');
+      const content = document.getElementById('sim-content');
+      
+      if (type === 'csr') {
+        spinner.style.display = 'block';
+        setTimeout(() => {
+          spinner.style.display = 'none';
+          content.style.display = 'block';
+          document.getElementById('badge-seo-bad').style.display = 'block';
+        }, 1500);
+      } 
+      else if (type === 'ssg') {
+        content.style.display = 'block';
+        document.getElementById('badge-seo-good').style.display = 'block';
+        document.getElementById('badge-cdn').style.display = 'block';
+      }
+      else if (type === 'ssr') {
+        // Server thinking...
+        setTimeout(() => {
+          content.style.display = 'block';
+          document.getElementById('badge-seo-good').style.display = 'block';
+          document.getElementById('badge-ssr').style.display = 'block';
+        }, 500);
+      }
+    }
+
+    // Router Logic
+    let files = [
+      { name: 'pages/index.js', route: '/' },
+      { name: 'pages/about.js', route: '/about' },
+      { name: 'pages/blog/index.js', route: '/blog' },
+      { name: 'pages/blog/[slug].js', route: '/blog/:slug' },
+      { name: 'pages/api/contact.js', route: '/api/contact' }
+    ];
+
+    function getRouteType(route) {
+      if (route.includes('/api/')) return 'api';
+      if (route.includes(':') || route.includes('[')) return 'dynamic';
+      return 'regular';
+    }
+
+    function renderTree() {
+      const tree = document.getElementById('file-tree');
+      tree.innerHTML = files.map(file => {
+        const type = getRouteType(file.route);
+        return `
+          <div class="file-item" onclick="showRoute('${file.route}')" style="cursor:pointer;">
+            <span class="file-icon">📄</span>
+            <span class="file-name">${file.name}</span>
+            <span class="route-label ${type}">${file.route}</span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function showRoute(route) {
+      document.getElementById('url-output').innerText = `http://localhost:3000${route}`;
+    }
+
+    function addFile() {
+      const input = document.getElementById('new-file-input');
+      let name = input.value.trim();
+      if (!name) return;
+      if (!name.startsWith('pages/')) name = 'pages/' + name;
+      
+      let route = name.replace('pages', '').replace('.js', '').replace('.tsx', '').replace(/\/index$/, '');
+      if (route === '') route = '/';
+      route = route.replace(/\[([^\]]+)\]/g, ':$1'); // Convert [id] to :id
+
+      files.push({ name, route });
+      renderTree();
+      input.value = '';
+      showRoute(route);
+    }
+
+    renderTree();
+
+    // Lifecycle Logic
+    const stepsSSG = [
+      { icon: '🛠️', text: 'You run npm run build' },
+      { icon: '⚙️', text: 'Next.js calls getStaticProps' },
+      { icon: '📄', text: 'HTML is generated' },
+      { icon: '🚀', text: 'HTML saved to CDN' },
+      { icon: '👤', text: 'User visits page' },
+      { icon: '⚡', text: 'CDN serves pre-built HTML instantly' },
+      { icon: '💧', text: 'React hydrates the page (makes interactive)' }
+    ];
+    
+    const stepsSSR = [
+      { icon: '👤', text: 'User visits page' },
+      { icon: '🖥️', text: 'Server receives request' },
+      { icon: '⚙️', text: 'getServerSideProps runs' },
+      { icon: '🔐', text: 'Can read cookies & session' },
+      { icon: '📄', text: 'HTML generated fresh' },
+      { icon: '📬', text: 'HTML sent to user' }
+    ];
+
+    let currentLifecycle = 'ssg';
+    let currentStep = -1;
+
+    function renderTimeline() {
+      const steps = currentLifecycle === 'ssg' ? stepsSSG : stepsSSR;
+      const html = steps.map((step, idx) => {
+        let cls = 'timeline-step';
+        if (idx < currentStep) cls += ' past';
+        if (idx === currentStep) cls += ' active';
+        
+        return `
+          <div class="${cls}">
+            <div class="step-icon">${step.icon}</div>
+            <div class="step-text">${step.text}</div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('timeline').innerHTML = html;
+    }
+
+    function setLifecycle(type) {
+      currentLifecycle = type;
+      currentStep = 0;
+      document.getElementById('btn-ssg').classList.toggle('active', type === 'ssg');
+      document.getElementById('btn-ssr').classList.toggle('active', type === 'ssr');
+      
+      const callout = document.getElementById('lifecycle-callout');
+      if (type === 'ssg') {
+        callout.innerHTML = '<strong>getStaticProps:</strong> Runs ONCE at build time. Great for blogs, docs, e-commerce product pages.';
+      } else {
+        callout.innerHTML = '<strong>getServerSideProps:</strong> Runs on EVERY request. Great for dashboards, user profiles, checking auth status.';
+      }
+      renderTimeline();
+    }
+
+    function nextStep() {
+      const maxSteps = currentLifecycle === 'ssg' ? stepsSSG.length : stepsSSR.length;
+      if (currentStep < maxSteps - 1) {
+        currentStep++;
+        renderTimeline();
+      } else {
+        currentStep = 0; // Reset
+        renderTimeline();
+      }
+    }
+
+    setLifecycle('ssg'); // Init
+
+    // Quiz Logic
+    function toggleAnswer(btn) {
+      const answer = btn.nextElementSibling;
+      if (answer.style.display === 'block') {
+        answer.style.display = 'none';
+        btn.innerText = 'Show Answer';
+      } else {
+        answer.style.display = 'block';
+        btn.innerText = 'Hide Answer';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>State Management Lab</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0b1120;
+    --primary: #8b5cf6;
+    --secondary: #10b981;
+    --warning: #f59e0b;
+    --glass-bg: rgba(15,23,42,0.7);
+    --glass-border: rgba(255,255,255,0.1);
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg);
+    color: #fff;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .blob {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(100px);
+    z-index: -1;
+    opacity: 0.3;
+  }
+  .blob-1 {
+    top: -100px;
+    left: -100px;
+    width: 400px;
+    height: 400px;
+    background: var(--primary);
+  }
+  .blob-2 {
+    bottom: -100px;
+    right: -100px;
+    width: 400px;
+    height: 400px;
+    background: var(--secondary);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  h1, h2, h3 { font-weight: 700; margin-top: 0; }
+  .text-primary { color: var(--primary); }
+  .text-secondary { color: var(--secondary); }
+  .text-warning { color: var(--warning); }
+
+  .glass {
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 1rem;
+    padding: 1.5rem;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--glass-border);
+    padding-bottom: 0.5rem;
+  }
+
+  .tab-btn {
+    background: transparent;
+    color: #94a3b8;
+    border: none;
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0.5rem 0;
+    transition: all 0.2s ease;
+    border-bottom: 2px solid transparent;
+  }
+
+  .tab-btn:hover { color: #fff; }
+  .tab-btn.active {
+    color: #fff;
+    border-bottom: 2px solid var(--primary);
+  }
+
+  .tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+  .tab-content.active { display: block; }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  code, pre { font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; }
+  pre {
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--glass-border);
+    overflow-x: auto;
+  }
+  .keyword { color: var(--primary); }
+  .string { color: var(--secondary); }
+  .comment { color: #64748b; }
+  .func { color: #38bdf8; }
+
+  /* Tab 1: Concepts */
+  .concept-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+  }
+  .concept-card { display: flex; flex-direction: column; gap: 1rem; }
+  .concept-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+  
+  .code-comparison {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  /* Tab 2: Simulator */
+  .simulator {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+  }
+  .product-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  .product-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--glass-border);
+    padding: 1.2rem;
+    border-radius: 0.75rem;
+    text-align: center;
+    transition: all 0.2s ease;
+  }
+  .product-card:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+  .btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-top: 0.8rem;
+    width: 100%;
+  }
+  .btn:hover { background: #7c3aed; }
+  .btn-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.5); }
+  .btn-danger:hover { background: rgba(239, 68, 68, 0.4); }
+
+  .cart-panel { display: flex; flex-direction: column; gap: 1rem; }
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.8rem;
+    background: rgba(255,255,255,0.02);
+    border-radius: 0.5rem;
+  }
+  .cart-controls { display: flex; align-items: center; gap: 0.5rem; }
+  .cart-controls button {
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: none;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+  }
+  .cart-controls button:hover { background: rgba(255,255,255,0.2); }
+  .cart-total {
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-align: right;
+    margin-top: 1rem;
+  }
+
+  .state-viewer {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: #000;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+    position: relative;
+  }
+  .state-viewer::before {
+    content: "🔴 LIVE STATE VIEWER";
+    position: absolute;
+    top: -12px;
+    left: 1rem;
+    background: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-weight: bold;
+    letter-spacing: 0.05em;
+  }
+
+  .action-log {
+    margin-top: 1rem;
+    height: 120px;
+    overflow-y: auto;
+    background: #0f172a;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    border: 1px solid var(--glass-border);
+  }
+  .log-entry { margin-bottom: 0.4rem; color: #cbd5e1; }
+  .log-time { color: #64748b; }
+  .log-action { color: var(--primary); font-weight: bold; }
+
+  /* Tab 3: DevTools */
+  .devtools-guide { display: flex; flex-direction: column; gap: 1.5rem; }
+  .mock-ui {
+    display: flex;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    height: 350px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  }
+  .mock-panel-left {
+    width: 30%;
+    background: #1e293b;
+    border-right: 1px solid #334155;
+    display: flex;
+    flex-direction: column;
+  }
+  .mock-header {
+    padding: 0.8rem;
+    background: #0f172a;
+    border-bottom: 1px solid #334155;
+    font-weight: bold;
+    font-size: 0.9rem;
+    display: flex;
+    gap: 0.5rem;
+  }
+  .mock-action {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    border-bottom: 1px solid #334155;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+  }
+  .mock-action.selected { background: var(--primary); color: white; }
+  .mock-panel-right {
+    flex: 1;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+  }
+  .mock-tabs {
+    display: flex;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+  }
+  .mock-tab {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    color: #94a3b8;
+  }
+  .mock-tab.active { color: white; border-bottom: 2px solid var(--secondary); }
+  .mock-content {
+    padding: 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.9rem;
+    overflow-y: auto;
+  }
+  
+  /* Tab 4: Quiz */
+  .quiz-q { margin-bottom: 2rem; }
+  .quiz-options label {
+    display: block;
+    margin: 0.5rem 0;
+    padding: 0.8rem 1rem;
+    background: rgba(255,255,255,0.05);
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: 0.2s;
+    border: 1px solid transparent;
+  }
+  .quiz-options label:hover { background: rgba(255,255,255,0.1); }
+  .quiz-options input { margin-right: 0.8rem; }
+  .quiz-feedback { margin-top: 0.8rem; font-size: 0.95rem; font-weight: 500; display: none; }
+  .correct { color: var(--secondary); }
+  .incorrect { color: #ef4444; }
+</style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="container">
+    <header>
+      <h1>State Management <span class="text-primary">Lab</span></h1>
+      <p class="text-secondary">Interactive concepts for React state management</p>
+    </header>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-target="#tab-concepts">Concepts</button>
+      <button class="tab-btn" data-target="#tab-simulator">Live Cart Simulator</button>
+      <button class="tab-btn" data-target="#tab-devtools">Redux DevTools Guide</button>
+      <button class="tab-btn" data-target="#tab-quiz">Quiz</button>
+    </div>
+
+    <!-- TAB 1: CONCEPTS -->
+    <div id="tab-concepts" class="tab-content active">
+      <h2>The State Analogy: A Whiteboard in an Office</h2>
+      
+      <div class="concept-cards">
+        <div class="glass concept-card">
+          <div class="concept-icon">📝</div>
+          <h3>useState</h3>
+          <p class="text-secondary">A Post-it note on your own desk.</p>
+          <p>Only you can see it. If you throw it away, it's gone.</p>
+          <pre><span class="keyword">const</span> [count, setCount] = <span class="func">useState</span>(<span class="keyword">0</span>);</pre>
+        </div>
+        
+        <div class="glass concept-card">
+          <div class="concept-icon">📋</div>
+          <h3>Context API</h3>
+          <p class="text-secondary">The office noticeboard.</p>
+          <p>Everyone can read it, but every time someone writes on it, EVERYONE looks up (re-renders).</p>
+          <pre><span class="keyword">const</span> { user } = <span class="func">useContext</span>(AuthContext);
+<span class="comment">// Re-renders even if only 'theme' changes!</span></pre>
+        </div>
+        
+        <div class="glass concept-card">
+          <div class="concept-icon">📄</div>
+          <h3>Redux / Zustand</h3>
+          <p class="text-secondary">A shared Google Doc.</p>
+          <p>Anyone can open just the section they need. When Section A changes, only Section A readers are notified.</p>
+          <pre><span class="keyword">const</span> items = <span class="func">useSelector</span>(s => s.cart.items);
+<span class="comment">// 100% immune to 'theme' changes</span></pre>
+        </div>
+      </div>
+
+      <h2>Redux Toolkit vs Zustand</h2>
+      <div class="code-comparison">
+        <div class="glass">
+          <h3 class="text-primary">Redux Toolkit</h3>
+          <p>Strict, structured, generates action creators.</p>
+          <pre>
+<span class="keyword">const</span> cartSlice = <span class="func">createSlice</span>({
+  name: <span class="string">'cart'</span>,
+  initialState: { items: [] },
+  reducers: {
+    <span class="func">addItem</span>: (state, action) => {
+      <span class="comment">// Immer allows safe mutations</span>
+      state.items.<span class="func">push</span>(action.payload);
+    }
+  }
+});</pre>
+        </div>
+        <div class="glass">
+          <h3 class="text-secondary">Zustand</h3>
+          <p>Lightweight, hook-based, minimal boilerplate.</p>
+          <pre>
+<span class="keyword">const</span> useCartStore = <span class="func">create</span>((set) => ({
+  items: [],
+  <span class="func">addItem</span>: (product) => <span class="func">set</span>(state => ({
+    <span class="comment">// Return a new immutable state object</span>
+    items: [...state.items, product]
+  }))
+}));</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: LIVE SIMULATOR -->
+    <div id="tab-simulator" class="tab-content">
+      <div class="simulator">
+        <div>
+          <h2>Products</h2>
+          <div class="product-grid" id="product-grid">
+            <!-- Products injected by JS -->
+          </div>
+        </div>
+        
+        <div class="cart-panel">
+          <div class="glass">
+            <h2>Your Cart</h2>
+            <div id="cart-items">
+              <!-- Cart items injected by JS -->
+              <div style="color: #64748b; text-align: center; padding: 1rem;">Cart is empty</div>
+            </div>
+            <div class="cart-total" id="cart-total">Total: ₦0</div>
+            <button class="btn btn-danger" style="margin-top: 1rem;" onclick="dispatch({ type: 'cart/clearCart' })">RESET STORE</button>
+          </div>
+          
+          <pre class="state-viewer" id="state-viewer">{
+  "items": [],
+  "totalQuantity": 0,
+  "totalPrice": 0
+}</pre>
+          
+          <div class="action-log" id="action-log">
+            <div class="log-entry"><span class="log-time">[Init]</span> <span class="log-action">@@INIT</span> Store initialized</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: DEVTOOLS GUIDE -->
+    <div id="tab-devtools" class="tab-content">
+      <div class="devtools-guide">
+        <div class="glass">
+          <h2>Using Redux DevTools</h2>
+          <p>The Redux DevTools extension allows you to inspect every state change, action payload, and even "time-travel" back to previous states.</p>
+          <ol style="line-height: 1.8;">
+            <li>Install the extension from the <a href="#" class="text-primary">Chrome Web Store</a> (it's free).</li>
+            <li>Use <code>configureStore()</code> in your app — it connects automatically.</li>
+            <li>Open your browser Developer Tools (F12) and click the <strong>Redux</strong> tab.</li>
+          </ol>
+        </div>
+
+        <div class="mock-ui">
+          <div class="mock-panel-left">
+            <div class="mock-header">
+              <span style="color:#f43f5e">●</span>
+              <span style="color:#eab308">●</span>
+              <span style="color:#22c55e">●</span>
+              &nbsp;&nbsp;Redux DevTools
+            </div>
+            <div class="mock-action">@@INIT</div>
+            <div class="mock-action">products/fetchProducts/pending</div>
+            <div class="mock-action">products/fetchProducts/fulfilled</div>
+            <div class="mock-action selected">cart/addItem</div>
+            <div class="mock-action">cart/updateQuantity</div>
+          </div>
+          <div class="mock-panel-right">
+            <div class="mock-tabs">
+              <div class="mock-tab">Action</div>
+              <div class="mock-tab">State</div>
+              <div class="mock-tab active">Diff</div>
+              <div class="mock-tab">Trace</div>
+            </div>
+            <div class="mock-content">
+              <div style="color: #64748b;">// What changed in state.cart after cart/addItem</div>
+              <br>
+              <div style="color: #94a3b8;">&nbsp;&nbsp;items: [</div>
+              <div style="color: #22c55e;">+&nbsp;&nbsp;&nbsp;{ id: 1, name: "Ankara Shirt", price: 8500, quantity: 1 }</div>
+              <div style="color: #94a3b8;">&nbsp;&nbsp;],</div>
+              <div style="color: #ef4444;">-&nbsp;totalQuantity: 0,</div>
+              <div style="color: #22c55e;">+&nbsp;totalQuantity: 1,</div>
+              <div style="color: #ef4444;">-&nbsp;totalPrice: 0</div>
+              <div style="color: #22c55e;">+&nbsp;totalPrice: 8500</div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="glass" style="text-align: center; border-color: var(--primary);">
+          <h3 class="text-primary">🕒 Time Travel Debugging</h3>
+          <p>You can click any past action in the left panel to rewind your app's state! The UI will update to match exactly how it looked at that moment in time.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: QUIZ -->
+    <div id="tab-quiz" class="tab-content">
+      <div class="glass">
+        <h2>Knowledge Check</h2>
+        <div id="quiz-container">
+          <!-- Quiz questions injected by JS -->
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // --- TAB LOGIC ---
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelector(btn.dataset.target).classList.add('active');
+      });
+    });
+
+    // --- SIMULATOR LOGIC (Redux Pattern in Vanilla JS) ---
+    const PRODUCTS = [
+      { id: 1, name: "Ankara Shirt", price: 8500 },
+      { id: 2, name: "Agbada Set", price: 45000 },
+      { id: 3, name: "Aso-oke Fabric", price: 12000 },
+      { id: 4, name: "Leather Sandals", price: 6500 },
+      { id: 5, name: "Beaded Necklace", price: 3200 },
+      { id: 6, name: "Kente Scarf", price: 9800 }
+    ];
+
+    // Initial State
+    let state = {
+      items: [],
+      totalQuantity: 0,
+      totalPrice: 0
+    };
+
+    // Reducer
+    function cartReducer(state, action) {
+      switch (action.type) {
+        case 'cart/addItem': {
+          const product = action.payload;
+          const existing = state.items.find(i => i.id === product.id);
+          let newItems;
+          if (existing) {
+            newItems = state.items.map(i => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i);
+          } else {
+            newItems = [...state.items, { ...product, quantity: 1 }];
+          }
+          return {
+            items: newItems,
+            totalQuantity: state.totalQuantity + 1,
+            totalPrice: state.totalPrice + product.price
+          };
+        }
+        case 'cart/removeItem': {
+          const id = action.payload;
+          const item = state.items.find(i => i.id === id);
+          if (!item) return state;
+          return {
+            items: state.items.filter(i => i.id !== id),
+            totalQuantity: state.totalQuantity - item.quantity,
+            totalPrice: state.totalPrice - (item.price * item.quantity)
+          };
+        }
+        case 'cart/updateQuantity': {
+          const { id, delta } = action.payload;
+          const item = state.items.find(i => i.id === id);
+          if (!item) return state;
+          
+          const newQty = item.quantity + delta;
+          if (newQty <= 0) return cartReducer(state, { type: 'cart/removeItem', payload: id });
+          
+          return {
+            items: state.items.map(i => i.id === id ? { ...i, quantity: newQty } : i),
+            totalQuantity: state.totalQuantity + delta,
+            totalPrice: state.totalPrice + (item.price * delta)
+          };
+        }
+        case 'cart/clearCart':
+          return { items: [], totalQuantity: 0, totalPrice: 0 };
+        default:
+          return state;
+      }
+    }
+
+    // Dispatch & Render
+    function dispatch(action) {
+      // 1. Log action
+      const now = new Date();
+      const timeStr = `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+      const logEl = document.getElementById('action-log');
+      logEl.innerHTML += `<div class="log-entry"><span class="log-time">[${timeStr}]</span> <span class="log-action">${action.type}</span> ${action.payload ? JSON.stringify(action.payload) : ''}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+
+      // 2. Update state
+      state = cartReducer(state, action);
+
+      // 3. Re-render UI
+      renderCart();
+    }
+
+    function renderProducts() {
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = PRODUCTS.map(p => `
+        <div class="product-card">
+          <div style="font-weight: 600">${p.name}</div>
+          <div class="text-secondary" style="margin: 0.5rem 0">₦${p.price.toLocaleString()}</div>
+          <button class="btn" onclick='dispatch({ type: "cart/addItem", payload: ${JSON.stringify(p)} })'>Add to Cart</button>
+        </div>
+      `).join('');
+    }
+
+    function renderCart() {
+      // Update State Viewer
+      document.getElementById('state-viewer').textContent = JSON.stringify(state, null, 2);
+      
+      // Update Total
+      document.getElementById('cart-total').textContent = `Total: ₦${state.totalPrice.toLocaleString()}`;
+      
+      // Update Items
+      const container = document.getElementById('cart-items');
+      if (state.items.length === 0) {
+        container.innerHTML = `<div style="color: #64748b; text-align: center; padding: 1rem;">Cart is empty</div>`;
+        return;
+      }
+      
+      container.innerHTML = state.items.map(item => `
+        <div class="cart-item">
+          <div>
+            <div style="font-weight: 500">${item.name}</div>
+            <div style="font-size: 0.85rem; color: #94a3b8;">₦${item.price.toLocaleString()}</div>
+          </div>
+          <div class="cart-controls">
+            <button onclick="dispatch({ type: 'cart/updateQuantity', payload: { id: ${item.id}, delta: -1 } })">-</button>
+            <span style="min-width: 20px; text-align: center;">${item.quantity}</span>
+            <button onclick="dispatch({ type: 'cart/updateQuantity', payload: { id: ${item.id}, delta: 1 } })">+</button>
+            <button style="background: #ef4444; margin-left: 0.5rem;" onclick="dispatch({ type: 'cart/removeItem', payload: ${item.id} })">✕</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Init
+    renderProducts();
+
+    // --- QUIZ LOGIC ---
+    const QUESTIONS = [
+      {
+        q: "1. What happens to ALL Context consumers when a context value changes?",
+        options: ["Only components using the changed property re-render", "They all re-render", "The browser reloads", "Nothing"],
+        a: 1
+      },
+      {
+        q: "2. Which Redux Toolkit function generates action creators AND a reducer in one place?",
+        options: ["configureStore", "createReducer", "createSlice", "createAction"],
+        a: 2
+      },
+      {
+        q: "3. In Zustand, what function do you call to READ the current state inside an action?",
+        options: ["useSelector()", "getState()", "set()", "get()"],
+        a: 3
+      },
+      {
+        q: "4. What Zustand middleware persists state to localStorage across page refreshes?",
+        options: ["persist", "localStorage", "sync", "saveState"],
+        a: 0
+      },
+      {
+        q: "5. What is Immer's role in Redux Toolkit?",
+        options: ["It handles API requests", "It connects React to Redux", "It allows safe mutation of state by producing a new immutable state", "It provides the DevTools UI"],
+        a: 2
+      },
+      {
+        q: "6. Which hook do you use to subscribe a React component to the Redux store?",
+        options: ["useReducer", "useSelector", "useStore", "useDispatch"],
+        a: 1
+      }
+    ];
+
+    const quizContainer = document.getElementById('quiz-container');
+    QUESTIONS.forEach((q, qIndex) => {
+      const qHtml = `
+        <div class="quiz-q" id="q${qIndex}">
+          <h3 style="margin-bottom: 1rem;">${q.q}</h3>
+          <div class="quiz-options">
+            ${q.options.map((opt, i) => `
+              <label>
+                <input type="radio" name="q${qIndex}" value="${i}" onchange="checkAnswer(${qIndex}, ${i})">
+                ${opt}
+              </label>
+            `).join('')}
+          </div>
+          <div class="quiz-feedback" id="feedback${qIndex}"></div>
+        </div>
+      `;
+      quizContainer.innerHTML += qHtml;
+    });
+
+    function checkAnswer(qIndex, selectedIndex) {
+      const q = QUESTIONS[qIndex];
+      const feedback = document.getElementById(`feedback${qIndex}`);
+      if (selectedIndex === q.a) {
+        feedback.innerHTML = "✅ Correct!";
+        feedback.className = "quiz-feedback correct";
+      } else {
+        feedback.innerHTML = "❌ Incorrect. Try again.";
+        feedback.className = "quiz-feedback incorrect";
+      }
+      feedback.style.display = "block";
+    }
+  </script>
+</body>
+</html>
