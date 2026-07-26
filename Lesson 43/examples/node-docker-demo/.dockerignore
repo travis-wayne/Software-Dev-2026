@@ -1,0 +1,25 @@
+# Lesson 43: Defensive .dockerignore file
+# Prevents build bloat, secret leakage, and local OS binary conflicts
+
+node_modules
+.pnp
+.pnp.js
+
+.git
+.gitignore
+
+.env
+.env.local
+.env.*
+!.env.example
+
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+.vscode
+.idea
+README.md
+docs/
+coverage/

@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  # 1. Express API Backend Service (Containerized)
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lesson43_express_api
+    ports:
+      - "8080:3000"  # Map Host Port 8080 to Container Port 3000
+    environment:
+      - PORT=3000
+      - NODE_ENV=development
+      - APP_NAME=Docker Compose Orchestrated Express API
+      - DOCKER_CONTAINER=true
+      - REDIS_HOST=cache-service
+      - REDIS_PORT=6379
+    depends_on:
+      - cache-service
+    restart: always
+
+  # 2. Redis In-Memory Cache Service (Official Alpine Image)
+  cache-service:
+    image: redis:7-alpine
+    container_name: lesson43_redis_cache
+    ports:
+      - "6379:6379"
+    restart: always
+
+# Define shared custom network
+networks:
+  default:
+    name: lesson43_network

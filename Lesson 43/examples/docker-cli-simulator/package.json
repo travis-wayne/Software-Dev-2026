@@ -1,0 +1,19 @@
+{
+  "name": "docker-cli-simulator",
+  "version": "1.0.0",
+  "description": "Standalone offline Docker Engine and CLI runtime simulator for Lesson 43",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node src/server.js",
+    "start": "node src/server.js",
+    "postinstall": "node -e \"import('fs').then(fs => !fs.existsSync('.env') && fs.copyFileSync('.env.example', '.env'));\""
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "author": "Software-Dev-2026",
+  "license": "MIT"
+}
