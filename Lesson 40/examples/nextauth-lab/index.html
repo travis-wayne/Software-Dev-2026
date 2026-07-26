@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 40 — NextAuth.js (Auth.js) Interactive Lab</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+    :root {
+      --bg-color: #0b1120;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-hover: rgba(255, 255, 255, 0.08);
+      --accent-emerald: #10b981;
+      --accent-violet: #8b5cf6;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-blue: #38bdf8;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-color);
+      color: #f8fafc;
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+      padding: 32px;
+    }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+    header {
+      max-width: 1200px;
+      margin: 0 auto 32px;
+      padding: 24px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    h1 { font-size: 1.8rem; font-weight: 800; color: #ffffff; }
+    h1 span { color: var(--accent-emerald); }
+    .subtitle { color: #94a3b8; font-size: 0.95rem; }
+
+    /* Tabs */
+    .tabs-nav {
+      max-width: 1200px;
+      margin: 0 auto 24px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      padding: 12px 24px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 10px;
+      color: #cbd5e1;
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tab-btn:hover { background: var(--glass-hover); color: #ffffff; }
+    .tab-btn.active {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(139, 92, 246, 0.2));
+      border-color: var(--accent-emerald);
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Tab Content */
+    .tab-content { max-width: 1200px; margin: 0 auto; display: none; }
+    .tab-content.active { display: block; }
+
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+      transition: all 0.2s ease;
+    }
+    .glass-card:hover { border-color: rgba(255, 255, 255, 0.18); }
+
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 24px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 10px 18px; border-radius: 8px; font-weight: 600; font-size: 0.9rem;
+      cursor: pointer; transition: all 0.2s ease; border: none;
+    }
+    .btn-emerald { background: linear-gradient(135deg, #10b981, #059669); color: #fff; }
+    .btn-emerald:hover { background: linear-gradient(135deg, #34d399, #10b981); transform: translateY(-1px); }
+    .btn-violet { background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: #fff; }
+    .btn-violet:hover { background: linear-gradient(135deg, #a78bfa, #8b5cf6); transform: translateY(-1px); }
+    .btn-rose { background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; }
+    .btn-rose:hover { background: linear-gradient(135deg, #fb7185, #f43f5e); transform: translateY(-1px); }
+    .btn-ghost { background: transparent; border: 1px solid var(--glass-border); color: #cbd5e1; }
+    .btn-ghost:hover { background: rgba(255,255,255,0.05); color: #fff; }
+
+    .glass-input {
+      background: rgba(11, 17, 32, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      color: #f8fafc;
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      width: 100%;
+      margin-top: 6px;
+      transition: all 0.2s ease;
+    }
+    .glass-input:focus { outline: none; border-color: var(--accent-emerald); }
+
+    .badge {
+      display: inline-block; padding: 4px 12px; border-radius: 9999px; font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-emerald { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-violet { background: rgba(139, 92, 246, 0.15); color: #c4b5fd; border: 1px solid rgba(139, 92, 246, 0.3); }
+    .badge-rose { background: rgba(244, 63, 94, 0.15); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.3); }
+    .badge-blue { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; border: 1px solid rgba(56, 189, 248, 0.3); }
+
+    /* Flow Step Box */
+    .flow-step {
+      background: rgba(0,0,0,0.4);
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: all 0.3s ease;
+    }
+    .flow-step.active {
+      border-color: var(--accent-emerald);
+      background: rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.15);
+    }
+    .step-num {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.1); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.9rem; flex-shrink: 0;
+    }
+    .flow-step.active .step-num { background: var(--accent-emerald); color: #000; }
+
+    /* Quiz Option */
+    .quiz-opt {
+      padding: 14px; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border);
+      border-radius: 8px; cursor: pointer; transition: all 0.2s ease; margin-bottom: 10px;
+    }
+    .quiz-opt:hover { background: rgba(255,255,255,0.05); }
+    .quiz-opt.correct { background: rgba(16, 185, 129, 0.2); border-color: #10b981; color: #34d399; }
+    .quiz-opt.wrong { background: rgba(244, 63, 94, 0.2); border-color: #f43f5e; color: #fda4af; }
+
+    .terminal-box {
+      background: #000000;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: #38bdf8;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div>
+      <h1>⚡ NextAuth.js <span>Interactive Lab</span></h1>
+      <p class="subtitle">Lesson 40 — Explore Serverless Authentication, Catch-All Routing, Session Callbacks, and Route Guards</p>
+    </div>
+    <div style="display: flex; gap: 12px; align-items: center;">
+      <span class="badge badge-emerald">Auth.js Standard</span>
+      <span class="badge badge-violet">Dual-Mode SQL</span>
+    </div>
+  </header>
+
+  <nav class="tabs-nav">
+    <button class="tab-btn active" onclick="switchTab('flow')">⚡ 1. NextAuth Flow Simulator</button>
+    <button class="tab-btn" onclick="switchTab('inspector')">🛡️ 2. JWT & Session Inspector</button>
+    <button class="tab-btn" onclick="switchTab('guards')">📡 3. Route Guard Tester</button>
+    <button class="tab-btn" onclick="switchTab('quiz')">🧠 4. Mastery Quiz</button>
+  </nav>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 1: NEXTAUTH FLOW SIMULATOR -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-flow" class="tab-content active">
+    <div class="grid-2">
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">🔑 Simulate Authentication Provider</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+          NextAuth.js uses optional catch-all routing (<code>/api/auth/[...nextauth].js</code>) to automate multiple authentication workflows. Select a provider below to trace its serverless execution lifecycle!
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px;">
+          <button class="btn btn-emerald" onclick="runFlow('credentials')" style="justify-content: flex-start; padding: 14px;">
+            <span style="font-size: 1.2rem;">📧</span>
+            <div style="text-align: left;">
+              <div style="font-weight: 700;">Credentials Provider</div>
+              <div style="font-size: 0.75rem; opacity: 0.8; font-weight: 400;">Email & Password verification via Bcrypt & SQL</div>
+            </div>
+          </button>
+
+          <button class="btn btn-violet" onclick="runFlow('github')" style="justify-content: flex-start; padding: 14px;">
+            <span style="font-size: 1.2rem;">🐙</span>
+            <div style="text-align: left;">
+              <div style="font-weight: 700;">GitHub OAuth Provider</div>
+              <div style="font-size: 0.75rem; opacity: 0.8; font-weight: 400;">Social login handshake with developer Client Secret</div>
+            </div>
+          </button>
+        </div>
+
+        <div class="glass-card" style="background: rgba(0,0,0,0.3); border-color: rgba(255,255,255,0.05); padding: 16px;">
+          <h4 style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 8px;">Why use [...nextauth].js?</h4>
+          <p style="font-size: 0.85rem; color: #94a3b8;">
+            By placing three dots inside brackets in <code>pages/api/auth/[...nextauth].js</code>, Next.js dynamically catches <strong>any</strong> URL beginning with <code>/api/auth/</code> and passes it to NextAuth without needing dozens of individual route files!
+          </p>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">📡 Live Serverless Lifecycle Trace</h2>
+        
+        <div id="flow-steps-container">
+          <div class="flow-step" id="step-1">
+            <div class="step-num">1</div>
+            <div>
+              <div style="font-weight: 600; color: #fff;">Browser Request Intercepted</div>
+              <div style="font-size: 0.85rem; color: #94a3b8;">Click a provider on the left to start tracing the authentication flow.</div>
+            </div>
+          </div>
+
+          <div class="flow-step" id="step-2">
+            <div class="step-num">2</div>
+            <div>
+              <div style="font-weight: 600; color: #fff;">Provider Verification</div>
+              <div style="font-size: 0.85rem; color: #94a3b8;">Awaiting authentication handshake...</div>
+            </div>
+          </div>
+
+          <div class="flow-step" id="step-3">
+            <div class="step-num">3</div>
+            <div>
+              <div style="font-weight: 600; color: #fff;">JWT & Cookie Serialization</div>
+              <div style="font-size: 0.85rem; color: #94a3b8;">Awaiting token generation...</div>
+            </div>
+          </div>
+
+          <div class="flow-step" id="step-4">
+            <div class="step-num">4</div>
+            <div>
+              <div style="font-weight: 600; color: #fff;">React Frontend Session Update</div>
+              <div style="font-size: 0.85rem; color: #94a3b8;">Awaiting session synchronization...</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 16px;">
+          <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 6px; text-transform: uppercase; font-weight: 700;">Active Session Payload:</div>
+          <pre class="terminal-box" id="flow-output" style="height: 120px; color: #10b981;">// No active session. Please authenticate above.</pre>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 2: JWT & SESSION INSPECTOR -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-inspector" class="tab-content">
+    <div class="glass-card mb-6">
+      <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 8px;">🛡️ Customizing NextAuth Callbacks</h2>
+      <p style="color: #94a3b8; font-size: 0.9rem;">
+        By default, NextAuth only sends public basic information (<code>name</code>, <code>email</code>, <code>image</code>) to the browser for security. To include your database <code>id</code> or administrative <code>role</code>, you must explicitly relay them through the <strong><code>jwt()</code></strong> and <strong><code>session()</code></strong> callbacks!
+      </p>
+    </div>
+
+    <div class="grid-3">
+      <!-- 1. Database User -->
+      <div class="glass-card" style="border-top: 4px solid #38bdf8;">
+        <span class="badge badge-blue" style="margin-bottom: 12px;">1. Database Record</span>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">SQL Authorize Output</h3>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">Modify attributes returned from PostgreSQL/SQLite:</p>
+
+        <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600;">Database ID:</label>
+        <input type="text" id="db-id" value="101" class="glass-input" oninput="updateInspector()">
+
+        <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600; margin-top: 10px; display: block;">User Role:</label>
+        <select id="db-role" class="glass-input" onchange="updateInspector()">
+          <option value="admin">admin</option>
+          <option value="editor">editor</option>
+          <option value="user">user</option>
+        </select>
+
+        <label style="font-size: 0.8rem; color: #cbd5e1; font-weight: 600; margin-top: 10px; display: block;">Email:</label>
+        <input type="text" id="db-email" value="travis@wayne.com" class="glass-input" oninput="updateInspector()">
+      </div>
+
+      <!-- 2. JWT Callback -->
+      <div class="glass-card" style="border-top: 4px solid #8b5cf6;">
+        <span class="badge badge-violet" style="margin-bottom: 12px;">2. jwt() Callback</span>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Encrypted Cookie Token</h3>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">Attaches database fields to server token:</p>
+
+        <pre class="terminal-box" id="jwt-output" style="height: 190px; color: #c4b5fd;">
+{
+  "name": "Travis Wayne",
+  "email": "travis@wayne.com",
+  "id": "101",
+  "role": "admin",
+  "iat": 1722000000,
+  "exp": 1724592000
+}</pre>
+      </div>
+
+      <!-- 3. Session Callback -->
+      <div class="glass-card" style="border-top: 4px solid #10b981;">
+        <span class="badge badge-emerald" style="margin-bottom: 12px;">3. session() Callback</span>
+        <h3 style="font-size: 1.1rem; margin-bottom: 8px;">Browser useSession()</h3>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 12px;">Relays token data to React components:</p>
+
+        <pre class="terminal-box" id="session-output" style="height: 190px; color: #34d399;">
+{
+  "user": {
+    "name": "Travis Wayne",
+    "email": "travis@wayne.com",
+    "id": "101",
+    "role": "admin"
+  },
+  "expires": "2026-08-26T16:20:00.000Z"
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 3: ROUTE GUARD TESTER -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-guards" class="tab-content">
+    <div class="grid-2">
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">📡 Test Route Guards & Security</h2>
+        <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 20px;">
+          Select a simulated user identity below, then attempt to access different parts of the Next.js application to see how client-side hooks differ from backend Node.js server guards!
+        </p>
+
+        <div style="background: rgba(0,0,0,0.3); padding: 16px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 24px;">
+          <label style="font-size: 0.85rem; font-weight: 700; color: #cbd5e1; display: block; margin-bottom: 10px;">Select Active User Identity:</label>
+          <div style="display: flex; gap: 12px;">
+            <button id="id-anon" class="btn btn-rose active" onclick="setIdentity('anon')" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+              🚫 Anonymous (No Cookie)
+            </button>
+            <button id="id-admin" class="btn btn-ghost" onclick="setIdentity('admin')" style="flex: 1; padding: 10px; font-size: 0.85rem;">
+              👑 Travis Wayne (Admin)
+            </button>
+          </div>
+        </div>
+
+        <h4 style="font-size: 0.95rem; font-weight: 700; margin-bottom: 12px; color: #fff;">Select Route to Attempt Access:</h4>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <button class="btn btn-ghost" onclick="testRoute('client')" style="justify-content: flex-start; padding: 12px; text-align: left;">
+            <span style="color: #38bdf8; font-weight: 700; width: 140px;">Client Page</span>
+            <span style="font-size: 0.85rem; opacity: 0.8;">using <code>useSession()</code> UI toggle</span>
+          </button>
+          
+          <button class="btn btn-ghost" onclick="testRoute('server')" style="justify-content: flex-start; padding: 12px; text-align: left;">
+            <span style="color: #8b5cf6; font-weight: 700; width: 140px;">Server Page</span>
+            <span style="font-size: 0.85rem; opacity: 0.8;">using <code>getServerSideProps</code> redirect</span>
+          </button>
+
+          <button class="btn btn-ghost" onclick="testRoute('api')" style="justify-content: flex-start; padding: 12px; text-align: left;">
+            <span style="color: #10b981; font-weight: 700; width: 140px;">Mutation API</span>
+            <span style="font-size: 0.85rem; opacity: 0.8;"><code>DELETE /api/projects/101</code></span>
+          </button>
+        </div>
+      </div>
+
+      <div class="glass-card">
+        <h2 style="font-size: 1.3rem; font-weight: 700; margin-bottom: 16px;">🔍 Security Response Inspector</h2>
+        <div id="guard-status-badge" class="badge badge-rose" style="margin-bottom: 16px;">Status: 401 Unauthorized</div>
+        
+        <div id="guard-explanation" style="font-size: 0.95rem; color: #cbd5e1; margin-bottom: 20px; min-height: 80px; background: rgba(0,0,0,0.3); padding: 16px; border-radius: 8px; border-left: 4px solid #f43f5e;">
+          Click a route on the left to test how NextAuth guards against anonymous or unauthenticated access.
+        </div>
+
+        <h4 style="font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; font-weight: 700; margin-bottom: 8px;">Simulated Server Network Header & Body:</h4>
+        <pre class="terminal-box" id="guard-terminal" style="height: 200px; color: #fda4af;">
+HTTP/1.1 401 Unauthorized
+Content-Type: application/json
+X-Powered-By: Next.js Serverless
+
+{
+  "success": false,
+  "error": "Unauthorized: You must provide a valid session cookie."
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <!-- TAB 4: MASTERY QUIZ -->
+  <!-- ───────────────────────────────────────────────────────────── -->
+  <div id="tab-quiz" class="tab-content">
+    <div class="glass-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 style="font-size: 1.4rem; font-weight: 700;">🧠 NextAuth.js Mastery Quiz</h2>
+          <p style="color: #94a3b8; font-size: 0.9rem;">Test your knowledge of NextAuth architecture, providers, hooks, and route security.</p>
+        </div>
+        <div style="font-size: 1.1rem; font-weight: 700; color: var(--accent-emerald);">
+          Score: <span id="quiz-score">0</span> / 7
+        </div>
+      </div>
+
+      <div id="quiz-questions-container">
+        <!-- Populated by JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Tab Switching
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.currentTarget.classList.add('active');
+      document.getElementById('tab-' + tabId).classList.add('active');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // FLOW SIMULATOR LOGIC
+    // ─────────────────────────────────────────────────────────────
+    function runFlow(type) {
+      const steps = [1, 2, 3, 4];
+      steps.forEach(s => document.getElementById('step-' + s).classList.remove('active'));
+
+      if (type === 'credentials') {
+        animateStep(1, "POST /api/auth/callback/credentials intercepted by [...nextauth].js catch-all router.", 0);
+        animateStep(2, "Executing authorize() — querying users table and verifying password with bcrypt.compare().", 1200);
+        animateStep(3, "Generating encrypted JSON Web Token (JWT) and setting secure httpOnly next-auth.session-token cookie.", 2400);
+        animateStep(4, "React useSession() hook detects token change and re-renders <Navbar /> with user badge!", 3600, {
+          user: { name: "Travis Wayne", email: "travis@wayne.com", id: "101", role: "admin" },
+          expires: "2026-08-26T16:20:00.000Z"
+        });
+      } else {
+        animateStep(1, "GET /api/auth/signin/github intercepted. Redirecting browser to https://github.com/login/oauth/authorize.", 0);
+        animateStep(2, "GitHub returns authorization code. NextAuth exchanges code for access token using GITHUB_CLIENT_SECRET.", 1200);
+        animateStep(3, "Fetching user profile from GitHub API. Serializing user into encrypted JWT cookie.", 2400);
+        animateStep(4, "React frontend session synchronized! Welcome Octocat from GitHub OAuth!", 3600, {
+          user: { name: "GitHub Octocat", email: "octocat@github.com", id: "gh_88219", role: "user" },
+          expires: "2026-08-26T16:20:00.000Z"
+        });
+      }
+    }
+
+    function animateStep(stepNum, text, delay, finalPayload = null) {
+      setTimeout(() => {
+        document.querySelectorAll('.flow-step').forEach(s => s.classList.remove('active'));
+        const stepEl = document.getElementById('step-' + stepNum);
+        stepEl.classList.add('active');
+        stepEl.querySelector('div > div:nth-child(2)').textContent = text;
+
+        if (finalPayload) {
+          document.getElementById('flow-output').textContent = JSON.stringify(finalPayload, null, 2);
+        } else if (stepNum === 1) {
+          document.getElementById('flow-output').textContent = "// Handshake in progress...";
+        }
+      }, delay);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // INSPECTOR LOGIC
+    // ─────────────────────────────────────────────────────────────
+    function updateInspector() {
+      const id = document.getElementById('db-id').value || '101';
+      const role = document.getElementById('db-role').value || 'user';
+      const email = document.getElementById('db-email').value || 'travis@wayne.com';
+      const name = email.split('@')[0].toUpperCase();
+
+      const jwtObj = {
+        name: name,
+        email: email,
+        id: id,
+        role: role,
+        iat: 1722000000,
+        exp: 1724592000
+      };
+
+      const sessionObj = {
+        user: {
+          name: name,
+          email: email,
+          id: id,
+          role: role
+        },
+        expires: "2026-08-26T16:20:00.000Z"
+      };
+
+      document.getElementById('jwt-output').textContent = JSON.stringify(jwtObj, null, 2);
+      document.getElementById('session-output').textContent = JSON.stringify(sessionObj, null, 2);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // ROUTE GUARD LOGIC
+    // ─────────────────────────────────────────────────────────────
+    let currentIdentity = 'anon';
+
+    function setIdentity(id) {
+      currentIdentity = id;
+      document.getElementById('id-anon').className = id === 'anon' ? 'btn btn-rose active' : 'btn btn-ghost';
+      document.getElementById('id-admin').className = id === 'admin' ? 'btn btn-emerald active' : 'btn btn-ghost';
+      testRoute('api'); // run test on toggle
+    }
+
+    function testRoute(routeType) {
+      const badge = document.getElementById('guard-status-badge');
+      const exp = document.getElementById('guard-explanation');
+      const term = document.getElementById('guard-terminal');
+
+      if (currentIdentity === 'anon') {
+        if (routeType === 'client') {
+          badge.className = 'badge badge-amber';
+          badge.textContent = 'Status: UI Restricted (200 OK)';
+          exp.style.borderLeftColor = '#f59e0b';
+          exp.innerHTML = `<strong>Client-Side Hook check (<code>useSession</code>):</strong> The HTML page loads fine with HTTP 200, but <code>status === 'unauthenticated'</code>. The React component hides sensitive data and renders a simple "Please Log In" message. Notice this check is for UX only!`;
+          term.style.color = '#fcd34d';
+          term.textContent = `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<nav><button>Sign In</button></nav>\n<main><p>Please log in to view portfolio stats.</p></main>`;
+        } else if (routeType === 'server') {
+          badge.className = 'badge badge-rose';
+          badge.textContent = 'Status: 307 Temporary Redirect';
+          exp.style.borderLeftColor = '#f43f5e';
+          exp.innerHTML = `<strong>Server-Side Page Guard (<code>getServerSideProps</code>):</strong> The backend called <code>getServerSession()</code> before rendering HTML. Because no session cookie was found, Node.js issued an immediate <code>HTTP 307 Redirect</code> back to <code>/login</code>. Anonymous users never see the page source!`;
+          term.style.color = '#fda4af';
+          term.textContent = `HTTP/1.1 307 Temporary Redirect\nLocation: /login?callbackUrl=/dashboard\nSet-Cookie: next-auth.callback-url=/dashboard; path=/; HttpOnly\n\n// No HTML body shipped to client!`;
+        } else if (routeType === 'api') {
+          badge.className = 'badge badge-rose';
+          badge.textContent = 'Status: 401 Unauthorized';
+          exp.style.borderLeftColor = '#f43f5e';
+          exp.innerHTML = `<strong>Backend API Mutation Guard (<code>DELETE /api/projects/101</code>):</strong> Even if an attacker uses Postman or Terminal to bypass React, the API route handler calls <code>await getServerSession()</code>. Finding no token, it returns 401 and terminates before executing SQL!`;
+          term.style.color = '#fda4af';
+          term.textContent = `HTTP/1.1 401 Unauthorized\nContent-Type: application/json\n\n{\n  "success": false,\n  "error": "Unauthorized: You must be logged in to modify portfolio items."\n}`;
+        }
+      } else {
+        // Admin
+        if (routeType === 'client') {
+          badge.className = 'badge badge-emerald';
+          badge.textContent = 'Status: Authenticated UI (200 OK)';
+          exp.style.borderLeftColor = '#10b981';
+          exp.innerHTML = `<strong>Client-Side Hook check (<code>useSession</code>):</strong> <code>status === 'authenticated'</code>. React instantly renders the user's avatar, role badge, and admin action buttons!`;
+          term.style.color = '#34d399';
+          term.textContent = `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<nav>Welcome, Travis Wayne (admin) | <button>Sign Out</button></nav>\n<main><h1>Portfolio Management Active</h1></main>`;
+        } else if (routeType === 'server') {
+          badge.className = 'badge badge-emerald';
+          badge.textContent = 'Status: Page Rendered (200 OK)';
+          exp.style.borderLeftColor = '#10b981';
+          exp.innerHTML = `<strong>Server-Side Page Guard (<code>getServerSideProps</code>):</strong> Node.js decrypted the cookie, confirmed Travis Wayne is valid, and injected the user object into page props. The HTML is sent securely!`;
+          term.style.color = '#34d399';
+          term.textContent = `HTTP/1.1 200 OK\nContent-Type: text/html\n\n<main>\n  <h1>Admin Dashboard</h1>\n  <p>User ID: 101 | Role: admin</p>\n</main>`;
+        } else if (routeType === 'api') {
+          badge.className = 'badge badge-emerald';
+          badge.textContent = 'Status: 200 OK (SQL Mutation Executed)';
+          exp.style.borderLeftColor = '#10b981';
+          exp.innerHTML = `<strong>Backend API Mutation Guard (<code>DELETE /api/projects/101</code>):</strong> The API route confirmed Travis Wayne's admin credentials via <code>getServerSession()</code>. The SQL query executed cleanly and deleted item #101!`;
+          term.style.color = '#34d399';
+          term.textContent = `HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\n  "success": true,\n  "message": "Project 101 permanently deleted by travis@wayne.com"\n}`;
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // QUIZ LOGIC
+    // ─────────────────────────────────────────────────────────────
+    const quizData = [
+      {
+        q: "1. Why is the NextAuth configuration file in Next.js Pages Router named [...nextauth].js?",
+        options: [
+          "It is a syntax error; files cannot contain square brackets or dots.",
+          "It is an Optional Catch-All Dynamic Route that intercepts all requests starting with /api/auth/.",
+          "It tells Next.js to ignore this file during static site generation.",
+          "It is a required naming convention for Bcrypt password hashing."
+        ],
+        correct: 1
+      },
+      {
+        q: "2. What is the primary difference between useSession() and getServerSession()?",
+        options: [
+          "useSession() is for OAuth logins, while getServerSession() is for Credentials login.",
+          "useSession() is a client-side React hook for UX, while getServerSession() checks encrypted cookies directly on the Node.js backend server.",
+          "useSession() stores data in localStorage, while getServerSession() stores data in sessionStorage.",
+          "There is no difference; they are interchangeable aliases."
+        ],
+        correct: 1
+      },
+      {
+        q: "3. How does NextAuth.js securely store session tokens in the browser by default?",
+        options: [
+          "In plain text inside browser localStorage.",
+          "In session storage using base64 encoding.",
+          "Inside an encrypted, tamper-proof httpOnly browser cookie that malicious XSS JavaScript cannot read.",
+          "It does not store cookies; it requires the user to re-enter their password on every page click."
+        ],
+        correct: 2
+      },
+      {
+        q: "4. Why must you configure both the jwt() and session() callbacks to pass custom database attributes like user.id or role?",
+        options: [
+          "By default, NextAuth only exposes minimal public fields (name, email, image). You must relay custom fields from the user record into the token, and then from the token to the session.",
+          "Because Bcrypt automatically deletes custom fields unless callbacks are defined.",
+          "To prevent SQLite from throwing a foreign key constraint error.",
+          "You only need to configure the jwt() callback; session() happens automatically."
+        ],
+        correct: 0
+      },
+      {
+        q: "5. What happens when an anonymous user attempts to access a page secured with getServerSideProps and getServerSession()?",
+        options: [
+          "The page loads normally, but all text is replaced with asterisks (*).",
+          "The Node.js server issues an HTTP 307 Temporary Redirect back to /login before any HTML page source is sent to the browser.",
+          "The browser crashes with a React hydration error.",
+          "Next.js automatically creates a temporary guest account in PostgreSQL."
+        ],
+        correct: 1
+      },
+      {
+        q: "6. When implementing the CredentialsProvider with custom email and password, what MUST the authorize() function return upon success?",
+        options: [
+          "A boolean true.",
+          "A plain text copy of the user's password.",
+          "An authenticated user object that MUST include an unique id property.",
+          "An HTTP 302 redirect status code."
+        ],
+        correct: 2
+      },
+      {
+        q: "7. Why should you ALWAYS use getServerSession() inside backend API mutation routes (e.g., DELETE /api/projects)?",
+        options: [
+          "Because client-side UI checks (if (!session)) can be easily bypassed by sending HTTP requests directly via Postman or Terminal.",
+          "Because getServerSession() makes the SQL database execute queries 10x faster.",
+          "To prevent Tailwind CSS styles from leaking into the database.",
+          "It is optional; client-side React UI protection is sufficient for production security."
+        ],
+        correct: 0
+      }
+    ];
+
+    let answered = 0;
+    let score = 0;
+
+    function renderQuiz() {
+      const container = document.getElementById('quiz-questions-container');
+      container.innerHTML = '';
+
+      quizData.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = 'glass-card mb-6';
+        div.style.padding = '20px';
+        
+        let html = `<h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 14px; color: #fff;">${item.q}</h3>`;
+        
+        item.options.forEach((opt, optIdx) => {
+          html += `<div class="quiz-opt" id="q-${idx}-opt-${optIdx}" onclick="answerQuiz(${idx}, ${optIdx})">${opt}</div>`;
+        });
+
+        div.innerHTML = html;
+        container.appendChild(div);
+      });
+    }
+
+    function answerQuiz(qIdx, optIdx) {
+      const q = quizData[qIdx];
+      // Check if already answered
+      if (document.querySelector(`#q-${qIdx}-opt-0`).classList.contains('disabled')) return;
+
+      q.options.forEach((_, idx) => {
+        const el = document.getElementById(`#q-${qIdx}-opt-${idx}`) || document.getElementById(`q-${qIdx}-opt-${idx}`);
+        el.classList.add('disabled');
+        el.style.pointerEvents = 'none';
+        if (idx === q.correct) el.classList.add('correct');
+      });
+
+      const selectedEl = document.getElementById(`q-${qIdx}-opt-${optIdx}`);
+      if (optIdx === q.correct) {
+        score++;
+        document.getElementById('quiz-score').textContent = score;
+      } else {
+        selectedEl.classList.add('wrong');
+      }
+    }
+
+    // Initialize on load
+    window.onload = () => {
+      renderQuiz();
+      testRoute('api');
+    };
+  </script>
+</body>
+</html>
