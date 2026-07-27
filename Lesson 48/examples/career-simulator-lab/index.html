@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 48 | Software-Dev-2026 Graduation Lab</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0b1120;
+            --primary: #10b981;
+            --secondary: #8b5cf6;
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Blobs */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: float 10s ease-in-out infinite alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: var(--primary); }
+        .blob-2 { bottom: -10%; right: -10%; width: 600px; height: 600px; background: var(--secondary); animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(50px, 50px) scale(1.1); }
+        }
+
+        /* Layout Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            padding: 2rem 0;
+        }
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+        .status-item span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+
+        /* Tabs Navigation */
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 1px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-family: 'Inter', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            padding: 1rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        .tab-btn:hover {
+            color: var(--text-main);
+        }
+        .tab-btn.active {
+            color: var(--text-main);
+        }
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            border-radius: 3px 3px 0 0;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* Tab Content Panels */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.2s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2), 0 0 15px rgba(16, 185, 129, 0.1);
+        }
+        .glass-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 0.8rem 1rem;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Buttons */
+        .btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            color: #000;
+        }
+        .btn-primary:hover {
+            background: #0ea5e9; /* Slight hover shift */
+            box-shadow: 0 0 15px var(--primary);
+        }
+        .btn-secondary {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: #7c3aed;
+            box-shadow: 0 0 15px var(--secondary);
+        }
+
+        /* Grid Layouts */
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        /* Highlight Boxes */
+        .result-box {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin-top: 1rem;
+            min-height: 80px;
+            position: relative;
+        }
+        
+        .keyword-match {
+            color: var(--primary);
+            font-weight: bold;
+            text-shadow: 0 0 5px var(--primary);
+        }
+        .keyword-miss {
+            color: var(--danger);
+            font-weight: bold;
+        }
+
+        /* Radar Chart Placeholder (CSS based) */
+        .radar-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .radar-circle {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px dashed var(--glass-border);
+        }
+        .rc-1 { width: 250px; height: 250px; }
+        .rc-2 { width: 175px; height: 175px; }
+        .rc-3 { width: 100px; height: 100px; }
+        .radar-label {
+            position: absolute;
+            font-size: 0.8rem;
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .rl-top { top: 0; }
+        .rl-bottom { bottom: 0; }
+        .rl-left { left: 10px; }
+        .rl-right { right: 10px; }
+        .radar-polygon {
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background: rgba(16, 185, 129, 0.2);
+            clip-path: polygon(50% 5%, 95% 45%, 75% 95%, 25% 95%, 5% 45%);
+            border: 2px solid var(--primary);
+            backdrop-filter: blur(2px);
+        }
+
+        /* Diploma Certificate */
+        .diploma {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            border: 4px double var(--primary);
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            display: none;
+            position: relative;
+            overflow: hidden;
+            margin-top: 2rem;
+            box-shadow: 0 0 50px rgba(16, 185, 129, 0.2);
+        }
+        .diploma.visible {
+            display: block;
+            animation: diplomaPop 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        @keyframes diplomaPop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .diploma h3 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-family: 'Times New Roman', serif;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .diploma p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+        }
+        .diploma .student-name {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 1.5rem 0;
+            font-family: 'Inter', sans-serif;
+            text-shadow: 0 0 15px rgba(255,255,255,0.5);
+        }
+        .diploma-seal {
+            position: absolute;
+            bottom: 20px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--warning), #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #fff;
+            box-shadow: 0 0 20px var(--warning);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background-color: #f00;
+            z-index: 9999;
+            animation: fall linear forwards;
+            pointer-events: none;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh) rotate(720deg); }
+        }
+
+        /* Utilities */
+        .mt-2 { margin-top: 1rem; }
+        .mb-2 { margin-bottom: 1rem; }
+        .text-center { text-align: center; }
+        .flex { display: flex; gap: 1rem; }
+        
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <div class="container">
+        <header>
+            <h1>Lesson 48 Career Launchpad</h1>
+            <p class="subtitle">Software-Dev-2026 Graduation Lab</p>
+        </header>
+
+        <div class="status-bar">
+            <div class="status-item">Career Status: <span id="status-career">Ready for Market</span></div>
+            <div class="status-item">ATS Score: <span id="status-ats">Awaiting Scan...</span></div>
+            <div class="status-item">Curriculum: <span>100% (48/48 Mastered!)</span></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="openTab('tab-ats')">📄 ATS Resume & Portfolio Architect</button>
+            <button class="tab-btn" onclick="openTab('tab-case')">💼 Case Study Storyboarder</button>
+            <button class="tab-btn" onclick="openTab('tab-interview')">🎙️ Mock Interview & Negotiation</button>
+            <button class="tab-btn" onclick="openTab('tab-grad')">🎓 Graduation Ceremony</button>
+        </div>
+
+        <!-- TAB 1: ATS Resume -->
+        <div id="tab-ats" class="tab-content active">
+            <div class="grid-2">
+                <div class="glass-card">
+                    <h2>Interactive Resume Bullet Generator</h2>
+                    <p class="mb-2 text-muted">Use the XYZ formula: Accomplished [X], measured by [Y], by doing [Z].</p>
+                    
+                    <div class="form-group">
+                        <label>Action Verb</label>
+                        <select id="rb-verb">
+                            <option value="Architected">Architected</option>
+                            <option value="Engineered">Engineered</option>
+                            <option value="Optimized">Optimized</option>
+                            <option value="Developed">Developed</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Feature Built [X]</label>
+                        <input type="text" id="rb-feature" value="a multi-tenant SaaS issue tracker">
+                    </div>
+                    <div class="form-group">
+                        <label>Technology Used [Z]</label>
+                        <input type="text" id="rb-tech" value="Next.js 16, Prisma, and PostgreSQL">
+                    </div>
+                    <div class="form-group">
+                        <label>Measured Impact [Y]</label>
+                        <input type="text" id="rb-impact" value="reducing database query latency by 85% via Redis caching">
+                    </div>
+                    
+                    <button class="btn btn-primary" onclick="generateBullet()">Generate XYZ Bullet</button>
+                    
+                    <div class="result-box" id="rb-result">
+                        <em>Your optimized bullet point will appear here...</em>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h2>Live ATS Resume Scanner Simulation</h2>
+                    <p class="mb-2 text-muted">Paste a resume bullet to check for high-signal technical keywords.</p>
+                    
+                    <div class="form-group">
+                        <textarea id="ats-input" placeholder="Paste resume bullet here...">Architected a full-stack multi-vendor marketplace using Next.js 16 App Router and Prisma, handling 10,000 simulated daily transactions and reducing database query latency by 85% via Redis caching.</textarea>
+                    </div>
+                    
+                    <button class="btn btn-secondary" onclick="scanATS()">Scan ATS Keywords</button>
+                    
+                    <div class="result-box" id="ats-result">
+                        <em>Scan results will appear here...</em>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Case Study -->
+        <div id="tab-case" class="tab-content">
+            <div class="glass-card">
+                <h2>Project Case Study Builder</h2>
+                <p class="mb-2 text-muted">Structure your Capstone project for recruiters and engineering managers.</p>
+                
+                <div class="grid-2">
+                    <div>
+                        <div class="form-group">
+                            <label>🎣 The 30-Second Hook</label>
+                            <textarea id="cs-hook">A collaborative SaaS issue tracker with optimistic UI updates and real-time WebSockets.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>🏗️ The Architecture Blueprint</label>
+                            <textarea id="cs-arch">Frontend: Next.js 16, TailwindCSS. Backend: Node.js, Prisma. Database: PostgreSQL. Cloud: AWS S3, Docker.</textarea>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="form-group">
+                            <label>🐛 The Hardest Technical Bug Solved</label>
+                            <textarea id="cs-bug">Faced the N+1 query problem when fetching nested ticket comments. Solved it by implementing Prisma dataloader patterns and batching requests.</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>📊 The Business Impact & Metrics</label>
+                            <textarea id="cs-metrics">Achieved 99.9% uptime and handled 10,000 concurrent simulated requests. Improved load times by 40%.</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary mt-2" onclick="exportCaseStudy()">Export Case Study as Markdown</button>
+                
+                <div class="result-box" id="cs-result" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Interview & Negotiation -->
+        <div id="tab-interview" class="tab-content">
+            <div class="grid-2">
+                <div class="glass-card">
+                    <h2>Mock Interview Gauntlet</h2>
+                    
+                    <div class="form-group">
+                        <label>Select Category</label>
+                        <select id="mi-category" onchange="loadQuestion()">
+                            <option value="tech">💻 Technical & Architecture</option>
+                            <option value="sys">🧠 System Design</option>
+                            <option value="star">🤝 Behavioral (STAR Method)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="result-box mb-2">
+                        <strong style="color: var(--info);">Question:</strong>
+                        <p id="mi-question" class="mt-2" style="font-size: 1.1rem;">Why did you choose PostgreSQL over MongoDB for your capstone project?</p>
+                    </div>
+                    
+                    <button class="btn" onclick="toggleBlueprint()">Show Strong Hire Answer Blueprint</button>
+                    
+                    <div class="result-box mt-2" id="mi-blueprint" style="display: none; border-color: var(--primary);">
+                        <strong style="color: var(--primary);">Blueprint:</strong>
+                        <p id="mi-answer" class="mt-2 text-muted">Focus on relational data integrity, ACID compliance, and the need for complex JOINs across users, tickets, and organizations which NoSQL handles poorly.</p>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <h2>Salary Negotiation Roleplay Arena</h2>
+                    
+                    <div class="result-box mb-2" style="background: rgba(139, 92, 246, 0.1); border-color: var(--secondary);">
+                        <strong style="color: var(--secondary);">Recruiter says:</strong>
+                        <p class="mt-2">"We were so impressed with your system design interview! We'd like to extend an offer of $85,000 base salary."</p>
+                    </div>
+                    
+                    <div class="form-group mt-2">
+                        <label>Choose your response:</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.5rem;">
+                            <button class="btn" style="justify-content: flex-start;" onclick="negotiate('A')">A: "That's great! I accept immediately."</button>
+                            <button class="btn" style="justify-content: flex-start;" onclick="negotiate('B')">B: "That's too low. I want $100k or I walk."</button>
+                            <button class="btn" style="justify-content: flex-start;" onclick="negotiate('C')">C: "Thank you! Based on market data and my full-stack skills, is there flexibility to bring the base to $95k with a signing bonus?"</button>
+                        </div>
+                    </div>
+                    
+                    <div class="result-box mt-2" id="neg-result" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: Graduation -->
+        <div id="tab-grad" class="tab-content">
+            <div class="grid-2">
+                <div class="glass-card text-center">
+                    <h2>Full-Stack Competency Radar</h2>
+                    <div class="radar-container mt-2">
+                        <div class="radar-circle rc-1"></div>
+                        <div class="radar-circle rc-2"></div>
+                        <div class="radar-circle rc-3"></div>
+                        <div class="radar-polygon"></div>
+                        <div class="radar-label rl-top">Frontend (React/Next)</div>
+                        <div class="radar-label rl-bottom">Cloud/DevOps</div>
+                        <div class="radar-label rl-left">Backend (Node)</div>
+                        <div class="radar-label rl-right">Database (SQL)</div>
+                    </div>
+                    <p class="mt-2 text-primary" style="font-weight: bold; color: var(--primary);">Curriculum Complete: 100% Mastery</p>
+                </div>
+
+                <div class="glass-card">
+                    <h2>The Official Graduation Diploma</h2>
+                    <p class="mb-2 text-muted">You've completed the 4-month journey. Claim your credential.</p>
+                    
+                    <div class="form-group">
+                        <label>Enter Your Full Name</label>
+                        <input type="text" id="grad-name" placeholder="e.g. Jane Doe">
+                    </div>
+                    
+                    <button class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 1.1rem; padding: 1rem;" onclick="generateDiploma()">🎓 Claim Your Software-Dev-2026 Diploma!</button>
+                </div>
+            </div>
+
+            <!-- Diploma Render Area -->
+            <div class="diploma" id="diploma-render">
+                <h3>Certificate of Completion</h3>
+                <p>This certifies that</p>
+                <div class="student-name" id="diploma-name-display">Student Name</div>
+                <p>has successfully mastered the full-stack engineering curriculum of <strong>Software-Dev-2026</strong>, demonstrating elite competence in modern web architecture, distributed database systems, cloud DevOps orchestration, and enterprise software design.</p>
+                <p style="color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Awarded on July 2026</p>
+                <div class="diploma-seal">SD-2026</div>
+                <button class="btn btn-secondary mt-2" onclick="window.print()">Print / Download Diploma</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab Navigation
+        function openTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Tab 1: Resume Builder
+        function generateBullet() {
+            const verb = document.getElementById('rb-verb').value;
+            const feature = document.getElementById('rb-feature').value;
+            const tech = document.getElementById('rb-tech').value;
+            const impact = document.getElementById('rb-impact').value;
+            
+            const bullet = `${verb} ${feature} using ${tech}, ${impact}.`;
+            const resultBox = document.getElementById('rb-result');
+            resultBox.innerHTML = `<strong>★</strong> ${bullet}`;
+            resultBox.style.borderColor = 'var(--primary)';
+            resultBox.style.boxShadow = '0 0 15px rgba(16, 185, 129, 0.2)';
+        }
+
+        // Tab 1: ATS Scanner
+        function scanATS() {
+            const text = document.getElementById('ats-input').value;
+            const keywords = ['Next.js', 'Prisma', 'PostgreSQL', 'React', 'Node.js', 'Redis', 'Docker', 'Kubernetes', 'TypeScript', 'CI/CD', 'Microservices'];
+            let score = 0;
+            let highlightedText = text;
+            
+            keywords.forEach(kw => {
+                const regex = new RegExp(`(${kw})`, 'gi');
+                if (regex.test(text)) {
+                    score += 10;
+                    highlightedText = highlightedText.replace(regex, '<span class="keyword-match">$1</span>');
+                }
+            });
+            
+            // Penalty for passive words
+            const passiveWords = ['worked on', 'helped', 'tried to', 'was responsible for'];
+            passiveWords.forEach(pw => {
+                const regex = new RegExp(`(${pw})`, 'gi');
+                if (regex.test(text)) {
+                    score -= 10;
+                    highlightedText = highlightedText.replace(regex, '<span class="keyword-miss">$1</span>');
+                }
+            });
+            
+            // Cap score
+            let finalScore = Math.min(Math.max(score + 40, 0), 100); // Base 40 + matches
+            
+            document.getElementById('status-ats').innerText = `${finalScore}% Optimized`;
+            document.getElementById('status-ats').style.color = finalScore >= 80 ? 'var(--primary)' : 'var(--warning)';
+            
+            const res = document.getElementById('ats-result');
+            res.innerHTML = `
+                <div style="margin-bottom: 1rem; display:flex; justify-content:space-between;">
+                    <span>ATS Optimization Score:</span>
+                    <strong style="color: ${finalScore >= 80 ? 'var(--primary)' : 'var(--warning)'}">${finalScore}%</strong>
+                </div>
+                <div>${highlightedText}</div>
+            `;
+        }
+
+        // Tab 2: Case Study
+        function exportCaseStudy() {
+            const hook = document.getElementById('cs-hook').value;
+            const arch = document.getElementById('cs-arch').value;
+            const bug = document.getElementById('cs-bug').value;
+            const metrics = document.getElementById('cs-metrics').value;
+            
+            const md = `
+### The 30-Second Hook
+${hook}
+
+### The Architecture Blueprint
+${arch}
+
+### The Technical Challenge
+${bug}
+
+### Business Impact & Metrics
+${metrics}
+            `;
+            
+            const res = document.getElementById('cs-result');
+            res.style.display = 'block';
+            res.innerHTML = `<pre style="white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem; color: var(--primary);">${md.trim()}</pre>`;
+        }
+
+        // Tab 3: Mock Interview
+        const questions = {
+            tech: { q: "Why did you choose PostgreSQL over MongoDB for your capstone project?", a: "Focus on relational data integrity, ACID compliance, and the need for complex JOINs across users, tickets, and organizations which NoSQL handles poorly." },
+            sys: { q: "How would you design a URL shortener like Bitly?", a: "Discuss base62 encoding for the short hash, a highly available relational DB or Key-Value store, and an aggressive Redis caching layer for read operations." },
+            star: { q: "Tell me about a time you had a technical disagreement with a teammate.", a: "STAR format. Situation: Disagreed on tech stack. Task: Needed to align the team. Action: Built a small proof-of-concept to demonstrate metrics. Result: Team adopted the approach smoothly." }
+        };
+
+        function loadQuestion() {
+            const cat = document.getElementById('mi-category').value;
+            document.getElementById('mi-question').innerText = questions[cat].q;
+            document.getElementById('mi-answer').innerText = questions[cat].a;
+            document.getElementById('mi-blueprint').style.display = 'none';
+        }
+
+        function toggleBlueprint() {
+            const el = document.getElementById('mi-blueprint');
+            el.style.display = el.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function negotiate(option) {
+            const res = document.getElementById('neg-result');
+            res.style.display = 'block';
+            if(option === 'A') {
+                res.innerHTML = `<strong class="keyword-miss">Result:</strong> You got the job, but left at least $10,000 on the table. Always try to negotiate respectfully.`;
+                res.style.borderColor = 'var(--danger)';
+                res.style.background = 'rgba(244, 63, 94, 0.1)';
+            } else if (option === 'B') {
+                res.innerHTML = `<strong class="keyword-miss">Result:</strong> The recruiter withdraws the offer due to unprofessional communication. Don't issue ultimatums.`;
+                res.style.borderColor = 'var(--danger)';
+                res.style.background = 'rgba(244, 63, 94, 0.1)';
+            } else if (option === 'C') {
+                res.innerHTML = `<strong style="color: var(--primary);">Recruiter says:</strong> "We conferred with the VP of Engineering, and because of your strong architectural mastery, we can increase the base to $95,000 + a $10,000 signing bonus!" 🚀🎉`;
+                res.style.borderColor = 'var(--primary)';
+                res.style.background = 'rgba(16, 185, 129, 0.1)';
+                fireConfetti();
+            }
+        }
+
+        // Tab 4: Graduation
+        function generateDiploma() {
+            const name = document.getElementById('grad-name').value || 'Software Engineer';
+            document.getElementById('diploma-name-display').innerText = name;
+            
+            const diploma = document.getElementById('diploma-render');
+            diploma.classList.add('visible');
+            
+            document.getElementById('status-career').innerText = "HIRED! 🎉";
+            document.getElementById('status-career').style.color = "var(--primary)";
+            
+            fireConfetti();
+        }
+
+        function fireConfetti() {
+            const colors = ['#10b981', '#8b5cf6', '#0ea5e9', '#f59e0b', '#f43f5e'];
+            for(let i=0; i<100; i++) {
+                const conf = document.createElement('div');
+                conf.classList.add('confetti');
+                conf.style.left = Math.random() * 100 + 'vw';
+                conf.style.top = -10 + 'px';
+                conf.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                conf.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                conf.style.animationDelay = (Math.random() * 2) + 's';
+                document.body.appendChild(conf);
+                
+                // Cleanup
+                setTimeout(() => conf.remove(), 5000);
+            }
+        }
+    </script>
+</body>
+</html>
