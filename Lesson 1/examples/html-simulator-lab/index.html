@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive HTML & CLI Lab</title>
+    <style>
+        /* Base Glassmorphism & Design System */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap');
+        
+        :root {
+            --bg: #0b1120;
+            --primary: #10b981;
+            --secondary: #8b5cf6;
+            --danger: #f43f5e;
+            --warning: #f59e0b;
+            --info: #06b6d4;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Blobs */
+        .ambient-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(100px);
+            z-index: -1;
+            opacity: 0.4;
+            animation: pulse 8s infinite alternate;
+        }
+        .blob-1 { top: -10%; left: -10%; width: 400px; height: 400px; background: var(--primary); }
+        .blob-2 { bottom: -10%; right: -10%; width: 500px; height: 500px; background: var(--secondary); }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.3; }
+            100% { transform: scale(1.2); opacity: 0.5; }
+        }
+
+        /* Header */
+        header {
+            padding: 1.5rem;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(11, 17, 32, 0.5);
+            backdrop-filter: blur(12px);
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 2rem;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem;
+            background: var(--glass-bg);
+            border-bottom: 1px solid var(--glass-border);
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            padding: 1rem;
+        }
+        .tab-btn {
+            background: transparent;
+            color: #94a3b8;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s ease;
+            font-weight: 600;
+        }
+        .tab-btn:hover { color: #fff; }
+        .tab-btn.active {
+            color: #fff;
+            border-bottom: 2px solid;
+            border-image: linear-gradient(90deg, var(--primary), var(--secondary)) 1;
+            text-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+
+        /* Content Area */
+        .tab-content {
+            display: none;
+            flex-grow: 1;
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+            animation: fadeIn 0.3s ease;
+        }
+        .tab-content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Glass Panel */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        /* --- Tab 1: Terminal Simulator --- */
+        .terminal-container {
+            display: flex;
+            gap: 2rem;
+            height: 60vh;
+        }
+        .terminal-window {
+            flex: 2;
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-y: auto;
+            border: 1px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+        }
+        .terminal-output { flex-grow: 1; color: #a3be8c; overflow-y: auto; margin-bottom: 1rem; white-space: pre-wrap;}
+        .terminal-input-line { display: flex; align-items: center; }
+        .prompt { color: var(--primary); margin-right: 0.5rem; }
+        .terminal-input {
+            background: transparent; border: none; color: #fff; font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem; width: 100%; outline: none;
+        }
+        .file-tree {
+            flex: 1;
+            background: var(--glass-bg);
+            border-radius: 8px;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* --- Tab 2: HTML Sandbox --- */
+        .sandbox-container {
+            display: flex;
+            gap: 1rem;
+            height: 65vh;
+        }
+        .editor-pane, .preview-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .editor-textarea {
+            flex-grow: 1;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 1rem;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            resize: none;
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .preview-frame {
+            flex-grow: 1;
+            background: #fff;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            padding: 1rem;
+            color: #000;
+            overflow-y: auto;
+        }
+        .controls { margin-top: 1rem; display: flex; gap: 0.5rem; }
+        .btn {
+            background: var(--glass-bg); border: 1px solid var(--glass-border);
+            color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+
+        /* Semantic Wireframe Mode Styles injected into preview */
+        .wireframe-mode header { border: 2px dashed #10b981 !important; position: relative; padding: 10px; margin: 5px; }
+        .wireframe-mode header::before { content: '<header>'; position: absolute; top:-12px; left:5px; background: #10b981; color: #fff; font-size:10px; padding:2px 4px; border-radius:3px; }
+        .wireframe-mode main { border: 2px dashed #8b5cf6 !important; position: relative; padding: 10px; margin: 5px; }
+        .wireframe-mode main::before { content: '<main>'; position: absolute; top:-12px; left:5px; background: #8b5cf6; color: #fff; font-size:10px; padding:2px 4px; border-radius:3px; }
+        .wireframe-mode article { border: 2px dashed #f59e0b !important; position: relative; padding: 10px; margin: 5px; }
+        .wireframe-mode article::before { content: '<article>'; position: absolute; top:-12px; left:5px; background: #f59e0b; color: #fff; font-size:10px; padding:2px 4px; border-radius:3px; }
+        .wireframe-mode footer { border: 2px dashed #06b6d4 !important; position: relative; padding: 10px; margin: 5px; }
+        .wireframe-mode footer::before { content: '<footer>'; position: absolute; top:-12px; left:5px; background: #06b6d4; color: #fff; font-size:10px; padding:2px 4px; border-radius:3px; }
+
+        /* --- Tab 3: Debugging Lab --- */
+        .scenario-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;
+            padding: 1.5rem; margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        .scenario-card:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(255,255,255,0.05); }
+        .buggy-code { background: rgba(244,63,94,0.1); border-left: 4px solid var(--danger); padding: 1rem; font-family: 'JetBrains Mono'; margin: 1rem 0; }
+        
+        /* --- Tab 4: Quiz --- */
+        .quiz-question { margin-bottom: 2rem; display:none; }
+        .quiz-question.active { display: block; animation: fadeIn 0.3s; }
+        .quiz-option {
+            display: block; padding: 1rem; margin-bottom: 0.5rem; background: var(--glass-bg);
+            border: 1px solid var(--glass-border); border-radius: 6px; cursor: pointer;
+            transition: all 0.2s;
+        }
+        .quiz-option:hover { background: rgba(255,255,255,0.1); }
+        .quiz-option.correct { background: rgba(16,185,129,0.2); border-color: var(--primary); }
+        .quiz-option.incorrect { background: rgba(244,63,94,0.2); border-color: var(--danger); }
+        .quiz-feedback { margin-top: 1rem; font-size: 0.9rem; color: #a3be8c; display:none; }
+        #quiz-result { text-align: center; display:none; }
+        .badge { display: inline-block; padding: 1rem 2rem; background: linear-gradient(45deg, var(--primary), var(--secondary)); border-radius: 30px; font-weight: bold; font-size: 1.2rem; margin-top: 1rem; box-shadow: 0 0 20px rgba(16,185,129,0.5); }
+    </style>
+</head>
+<body>
+
+    <div class="ambient-blob blob-1"></div>
+    <div class="ambient-blob blob-2"></div>
+
+    <header>
+        <h1>Lesson 1 — Development Environment & HTML5 Lab</h1>
+    </header>
+    
+    <div class="status-bar">
+        <span>Environment: VS Code & Terminal Ready</span>
+        <span>HTML5 Semantics: Active</span>
+        <span>Curriculum Progress: Session 1 of 48</span>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('terminal')">🖥️ Terminal Sandbox</button>
+        <button class="tab-btn" onclick="switchTab('html')">🌐 Live HTML Lab</button>
+        <button class="tab-btn" onclick="switchTab('debug')">🛠️ Debugging Lab</button>
+        <button class="tab-btn" onclick="switchTab('quiz')">🧠 Mastery Quiz</button>
+    </div>
+
+    <!-- TAB 1: TERMINAL -->
+    <div id="terminal" class="tab-content active">
+        <div class="glass-panel">
+            <h2>Interactive CLI Simulator</h2>
+            <p>Practice navigating folders and making files! Try: <code>help</code>, <code>ls</code>, <code>mkdir projects</code>, <code>cd projects</code>, <code>touch index.html</code>, <code>code .</code></p>
+            <div class="terminal-container">
+                <div class="terminal-window" onclick="document.getElementById('term-input').focus()">
+                    <div class="terminal-output" id="term-output">Welcome to the Software-Dev-2026 Terminal! Type 'help' to begin.</div>
+                    <div class="terminal-input-line">
+                        <span class="prompt" id="term-prompt">student@dev-2026:~$</span>
+                        <input type="text" class="terminal-input" id="term-input" autocomplete="off" onkeypress="handleTerminal(event)">
+                    </div>
+                </div>
+                <div class="file-tree" id="file-tree-view">
+                    <!-- populated by js -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 2: HTML SANDBOX -->
+    <div id="html" class="tab-content">
+        <div class="glass-panel">
+            <h2>Live HTML Sandbox</h2>
+            <div class="sandbox-container">
+                <div class="editor-pane">
+                    <textarea class="editor-textarea" id="html-input" oninput="updatePreview()">
+<header>
+    <h1>My Website</h1>
+</header>
+<main>
+    <article>
+        <h2>Welcome</h2>
+        <p>This is my first live HTML page!</p>
+        <ul>
+            <li>HTML is fun</li>
+            <li>CSS makes it pretty</li>
+        </ul>
+    </article>
+</main>
+<footer>
+    <p>Copyright 2026</p>
+</footer>
+                    </textarea>
+                    <div class="controls">
+                        <button class="btn" onclick="insertTag('<h1>New Heading</h1>')">Insert H1</button>
+                        <button class="btn" onclick="insertTag('<p>New paragraph text.</p>')">Insert P</button>
+                        <button class="btn" onclick="insertTag('<img src=\'\' alt=\'\' />')">Insert Img</button>
+                    </div>
+                </div>
+                <div class="preview-pane">
+                    <div class="controls" style="margin-top:0; margin-bottom: 0.5rem; justify-content: flex-end;">
+                        <button class="btn" id="wireframe-btn" onclick="toggleWireframe()">Toggle Semantic Wireframe</button>
+                    </div>
+                    <div class="preview-frame" id="html-preview"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 3: DEBUGGING LAB -->
+    <div id="debug" class="tab-content">
+        <div class="glass-panel">
+            <h2>Debugging War Stories Lab</h2>
+            
+            <div class="scenario-card" id="scen1">
+                <h3>🐛 Scenario A: The Missing Closing Tag Collapse</h3>
+                <p>An unclosed tag is ruining the layout!</p>
+                <div class="buggy-code">
+                    &lt;h1&gt;Welcome to my site<br>
+                    &lt;p&gt;This paragraph is huge!&lt;/p&gt;
+                </div>
+                <button class="btn" onclick="fixScenario(1, this)">Fix: Close the H1 tag</button>
+            </div>
+
+            <div class="scenario-card" id="scen2">
+                <h3>🐛 Scenario B: The Accessibility Audit Failure</h3>
+                <p>The image is failing screen readers!</p>
+                <div class="buggy-code">
+                    &lt;img src="hero.jpg"&gt;
+                </div>
+                <button class="btn" onclick="fixScenario(2, this)">Fix: Add alt="Hero Image" attribute</button>
+            </div>
+
+            <div class="scenario-card" id="scen3">
+                <h3>🐛 Scenario C: The "Div Soup" SEO Disaster</h3>
+                <p>Google can't read the article structure!</p>
+                <div class="buggy-code">
+                    &lt;div class="main-content"&gt;<br>
+                    &nbsp;&nbsp;&lt;div class="story"&gt;My Story&lt;/div&gt;<br>
+                    &lt;/div&gt;
+                </div>
+                <button class="btn" onclick="fixScenario(3, this)">Fix: Replace with &lt;main&gt; and &lt;article&gt;</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB 4: QUIZ -->
+    <div id="quiz" class="tab-content">
+        <div class="glass-panel" style="max-width: 800px; margin: 0 auto;">
+            <h2>Session 1 Mastery Quiz</h2>
+            
+            <div id="quiz-container">
+                <!-- Q1 -->
+                <div class="quiz-question active" id="q1">
+                    <h3>1. What is the primary function of the &lt;!DOCTYPE html&gt; declaration?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'It links a stylesheet.')">It links a stylesheet to the HTML document.</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! It forces modern standards rendering.')">It tells the browser to use the HTML5 standard to render the page.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'It creates a visible title.')">It creates the visible title of the page.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(1)">Next Question</button>
+                </div>
+                <!-- Q2 -->
+                <div class="quiz-question" id="q2">
+                    <h3>2. Which terminal command creates a new directory?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! mkdir stands for make directory.')">mkdir</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'cd changes directories.')">cd</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'ls lists files.')">ls</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(2)">Next Question</button>
+                </div>
+                <!-- Q3 -->
+                <div class="quiz-question" id="q3">
+                    <h3>3. Why use semantic HTML tags (like &lt;article&gt;) instead of just &lt;div&gt;?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'They load faster? No.')">They make the page load significantly faster.</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! Semantic tags help SEO and screen readers understand content meaning.')">They provide meaning for accessibility (screen readers) and search engine optimization (SEO).</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'CSS can style divs easily too.')">They are the only way to apply CSS styles.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="showQuizResult()">Finish Quiz!</button>
+                </div>
+            </div>
+
+            <div id="quiz-result">
+                <h3>Congratulations!</h3>
+                <p>You have mastered the foundations of Software Engineering, CLI, and HTML!</p>
+                <div class="badge">🎉 Session 1 Completed!</div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- JavaScript Logic -->
+    <script>
+        // Tab Switching
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
+            if(tabId === 'html') updatePreview();
+        }
+
+        // --- Terminal Logic ---
+        let fileSystem = {
+            '~': ['README.md']
+        };
+        let currentDir = '~';
+        let termOut = document.getElementById('term-output');
+        let termPrompt = document.getElementById('term-prompt');
+        let treeView = document.getElementById('file-tree-view');
+
+        function renderTree() {
+            let html = '📂 /home/student<br>';
+            html += '&nbsp;&nbsp;📂 ~<br>';
+            fileSystem['~'].forEach(f => {
+                if(fileSystem[f]) html += `&nbsp;&nbsp;&nbsp;&nbsp;📂 ${f}<br>`;
+                else html += `&nbsp;&nbsp;&nbsp;&nbsp;📄 ${f}<br>`;
+            });
+            // basic rendering for nested
+            Object.keys(fileSystem).forEach(k => {
+                if(k !== '~' && fileSystem['~'].includes(k)) {
+                    fileSystem[k].forEach(f => {
+                         html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📄 ${f}<br>`;
+                    });
+                }
+            });
+            treeView.innerHTML = html;
+        }
+        renderTree();
+
+        function printLine(text, isCmd=false) {
+            termOut.innerHTML += `\n${isCmd ? termPrompt.innerText+' ' : ''}${text}`;
+            termOut.scrollTop = termOut.scrollHeight;
+        }
+
+        function handleTerminal(e) {
+            if (e.key === 'Enter') {
+                const input = e.target.value.trim();
+                e.target.value = '';
+                printLine(input, true);
+                if(!input) return;
+
+                const args = input.split(' ');
+                const cmd = args[0].toLowerCase();
+
+                switch(cmd) {
+                    case 'help': printLine('Available commands: help, pwd, ls, dir, cd, mkdir, touch, code, clear'); break;
+                    case 'pwd': printLine(`/home/student/software-dev-2026/${currentDir === '~' ? '' : currentDir}`); break;
+                    case 'ls': 
+                    case 'dir':
+                        printLine(fileSystem[currentDir] ? fileSystem[currentDir].join('  ') : ''); break;
+                    case 'mkdir':
+                        if(args[1]) {
+                            if(!fileSystem[currentDir].includes(args[1])) {
+                                fileSystem[currentDir].push(args[1]);
+                                fileSystem[args[1]] = [];
+                                renderTree();
+                            }
+                        } else printLine('mkdir: missing operand');
+                        break;
+                    case 'touch':
+                        if(args[1]) {
+                            if(!fileSystem[currentDir].includes(args[1])) {
+                                fileSystem[currentDir].push(args[1]);
+                                renderTree();
+                            }
+                        } else printLine('touch: missing operand');
+                        break;
+                    case 'cd':
+                        if(!args[1] || args[1]==='~') { currentDir = '~'; termPrompt.innerText = 'student@dev-2026:~$'; }
+                        else if(args[1]==='..') { currentDir = '~'; termPrompt.innerText = 'student@dev-2026:~$'; }
+                        else if(fileSystem[currentDir].includes(args[1]) && fileSystem[args[1]]) {
+                            currentDir = args[1];
+                            termPrompt.innerText = `student@dev-2026:~/${currentDir}$`;
+                        } else printLine(`bash: cd: ${args[1]}: No such file or directory`);
+                        break;
+                    case 'code':
+                        printLine('🚀 Launching VS Code Editor...');
+                        termOut.innerHTML += `<div style="color:var(--secondary); background:var(--glass-bg); padding:10px; border:1px solid var(--secondary); margin-top:5px; border-radius:5px;">✨ VS Code successfully opened ${args[1] || '.'}</div>`;
+                        break;
+                    case 'clear': termOut.innerHTML = ''; break;
+                    default: printLine(`bash: ${cmd}: command not found`);
+                }
+            }
+        }
+
+        // --- HTML Sandbox Logic ---
+        let isWireframe = false;
+        function updatePreview() {
+            const html = document.getElementById('html-input').value;
+            const preview = document.getElementById('html-preview');
+            preview.innerHTML = html;
+            if(isWireframe) preview.classList.add('wireframe-mode');
+            else preview.classList.remove('wireframe-mode');
+        }
+        function toggleWireframe() {
+            isWireframe = !isWireframe;
+            const btn = document.getElementById('wireframe-btn');
+            btn.innerText = isWireframe ? 'Disable Semantic Wireframe' : 'Toggle Semantic Wireframe';
+            btn.style.background = isWireframe ? 'var(--secondary)' : '';
+            updatePreview();
+        }
+        function insertTag(tag) {
+            const ta = document.getElementById('html-input');
+            ta.value += '\n' + tag;
+            updatePreview();
+        }
+
+        // --- Debugging Logic ---
+        function fixScenario(id, btn) {
+            btn.innerText = "✅ Fixed!";
+            btn.style.background = "var(--primary)";
+            btn.style.color = "#000";
+            const card = document.getElementById('scen'+id);
+            card.style.borderColor = "var(--primary)";
+            card.querySelector('.buggy-code').style.background = "rgba(16,185,129,0.1)";
+            card.querySelector('.buggy-code').style.borderColor = "var(--primary)";
+            if(id===1) card.querySelector('.buggy-code').innerHTML = '&lt;h1&gt;Welcome to my site&lt;/h1&gt;<br>&lt;p&gt;This paragraph is normal.&lt;/p&gt;';
+            if(id===2) card.querySelector('.buggy-code').innerHTML = '&lt;img src="hero.jpg" alt="Hero Image"&gt;';
+            if(id===3) card.querySelector('.buggy-code').innerHTML = '&lt;main&gt;<br>&nbsp;&nbsp;&lt;article&gt;My Story&lt;/article&gt;<br>&lt;/main&gt;';
+        }
+
+        // --- Quiz Logic ---
+        function selectOption(el, isCorrect, feedback) {
+            const parent = el.parentElement;
+            if(parent.querySelector('.correct') || parent.querySelector('.incorrect')) return; // already answered
+            
+            if(isCorrect) {
+                el.classList.add('correct');
+            } else {
+                el.classList.add('incorrect');
+                // find correct and highlight it faintly
+            }
+            const fb = parent.querySelector('.quiz-feedback');
+            fb.innerText = feedback;
+            fb.style.display = 'block';
+            parent.querySelector('.btn').style.display = 'inline-block';
+        }
+        function nextQuestion(current) {
+            document.getElementById('q'+current).classList.remove('active');
+            document.getElementById('q'+(current+1)).classList.add('active');
+        }
+        function showQuizResult() {
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('quiz-result').style.display = 'block';
+        }
+
+    </script>
+</body>
+</html>

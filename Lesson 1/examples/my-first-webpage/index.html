@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My First Webpage - Lesson 1</title>
+    <style>
+        /* A simple dark-mode design system for a beautiful first impression */
+        :root {
+            --bg-color: #0b1120;
+            --text-color: #e2e8f0;
+            --primary: #10b981;
+            --secondary: #8b5cf6;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: rgba(11, 17, 32, 0.8);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin-left: 1.5rem;
+            transition: color 0.2s ease;
+        }
+
+        nav a:hover {
+            color: var(--secondary);
+        }
+
+        main {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 2rem;
+        }
+
+        section, article {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 { color: var(--primary); }
+        h3 { color: var(--secondary); }
+
+        ul, ol { padding-left: 1.5rem; }
+        
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            margin-top: 3rem;
+            color: #94a3b8;
+        }
+
+        footer a { color: var(--primary); }
+    </style>
+</head>
+<body>
+
+    <!-- Semantic Header -->
+    <header>
+        <h1>Software-Dev-2026</h1>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="about.html">About</a>
+            <a href="#contact">Contact</a>
+        </nav>
+    </header>
+
+    <!-- Semantic Main Content -->
+    <main>
+        
+        <!-- Hero Section -->
+        <section id="welcome">
+            <h2>Welcome to Software Engineering!</h2>
+            <p>This is my very first webpage built during <strong>Session 1</strong> of the Software-Dev-2026 curriculum.</p>
+        </section>
+
+        <!-- Informational Article -->
+        <article>
+            <h3>What is Software Engineering?</h3>
+            <p>Software engineering is more than just writing code. It's about designing, building, and maintaining reliable, efficient, and scalable software systems. A coder memorizes syntax; an <em>engineer</em> solves systemic problems.</p>
+            
+            <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80" 
+                 alt="Laptop on a desk showing code, representing software development" />
+        </article>
+
+        <!-- Roadmap Section with Lists -->
+        <section>
+            <h3>My Learning Roadmap</h3>
+            
+            <p>Here are the core domains I will conquer:</p>
+            <ul>
+                <li><strong>Frontend:</strong> React, Next.js, UI/UX</li>
+                <li><strong>Backend:</strong> Node.js, PostgreSQL, APIs</li>
+                <li><strong>DevOps:</strong> Docker, AWS, CI/CD</li>
+            </ul>
+
+            <p>My top 3 goals:</p>
+            <ol>
+                <li>Master full-stack architecture</li>
+                <li>Build production-grade web applications</li>
+                <li>Write clean, accessible, and semantic code</li>
+            </ol>
+        </section>
+
+    </main>
+
+    <!-- Semantic Footer -->
+    <footer id="contact">
+        <p>&copy; 2026 Software-Dev-2026 Curriculum.</p>
+        <p>Get in touch via <a href="mailto:student@example.com">Email</a> or visit my <a href="https://github.com" target="_blank" rel="noopener noreferrer">GitHub</a>.</p>
+    </footer>
+
+</body>
+</html>
