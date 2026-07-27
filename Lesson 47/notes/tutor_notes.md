@@ -92,3 +92,47 @@ Test your students' knowledge during their final presentations with these probes
 
 **Q5: "How are you ensuring that User A cannot delete User B's workspace?"**
 *Answer*: It is not enough to hide the "Delete" button in the UI. The API route (`DELETE /api/workspaces/:id`) must verify the session token, lookup the workspace, and confirm the `userId` attached to the JWT matches the `ownerId` of the workspace.
+
+---
+
+**New Section: Conducting PR Code Reviews During Capstone Sprints**
+
+As tutor, you are the "Tech Lead" conducting pull request reviews. How to give effective feedback:
+
+1. **The 3-Layer Review Framework:**
+   - Layer 1 (Required): Correctness, security vulnerabilities, data loss risks
+   - Layer 2 (Suggested): Performance improvements, naming conventions, code clarity
+   - Layer 3 (Optional/Nit): Style preferences that don't affect functionality
+
+2. **Common Capstone PR Issues to Watch For:**
+   - `NEXT_PUBLIC_` prefix on private keys (security critical — Layer 1!)
+   - Missing `@@index` on foreign key columns (performance — Layer 2)
+   - Direct string interpolation in SQL (SQL injection risk — Layer 1!)
+   - Missing error boundaries around async data fetching (UX — Layer 2)
+   - Console.log statements left in production code (hygiene — Layer 3)
+
+3. **Sample PR Comment Templates:**
+```
+🚨 [Security] This API key has NEXT_PUBLIC_ prefix which exposes it to the browser bundle.
+Move to a server-only variable name (no NEXT_PUBLIC_ prefix) and access only in API routes.
+
+⚡ [Performance] This query fetches all 50k records with no pagination limit.
+Add: take: 20, cursor: { id: lastSeenId } for production-safe pagination.
+
+✅ [Great!] Excellent use of Prisma $transaction here — this ensures the payment record
+and subscription status update are atomic. Well done!
+```
+
+**New Section: Resolving Prisma Migration Conflicts**
+
+Common error and fix:
+```
+Error: P3009 migrate found failed migration 'xxx' and could not recover.
+Run npx prisma migrate resolve --applied xxx
+```
+
+Step-by-step resolution guide for students:
+1. `npx prisma migrate status` — see which migrations failed
+2. `npx prisma migrate resolve --applied <migration-name>` — mark as applied
+3. If schema changes conflict: `npx prisma migrate reset --force` (dev only! wipes DB!)
+4. Always use `DIRECT_URL` (non-pooled) for migrations — never pooled `DATABASE_URL`

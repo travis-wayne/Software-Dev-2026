@@ -82,3 +82,42 @@ Use these questions during the mock interview gauntlet:
    *Target Answer:* Never say "no." Good questions: "What is the biggest technical challenge your team is facing right now?" or "How does code go from a developer's laptop to production here?"
 
 Make this session memorable. You are launching their careers!
+
+---
+
+**New Section: Coaching Interview Anxiety & Imposter Syndrome**
+
+Many students (especially self-taught or bootcamp graduates) freeze in technical interviews despite being highly capable. Techniques for tutors:
+
+**Physical Techniques:**
+- Teach students the "Power Pose" technique (Amy Cuddy's research) — 2 minutes before an interview, stand with hands on hips, chest out. Studies show this reduces cortisol and increases confidence.
+- Controlled breathing: Box breathing (4 counts in, 4 hold, 4 out, 4 hold). Teach this before mock interviews.
+- Reframe nervousness as excitement: The physical symptoms are identical. Saying "I'm excited" instead of "I'm nervous" measurably improves performance.
+
+**Cognitive Techniques:**
+- Teach students that interviewers are NOT trying to catch them out — they WANT the candidate to succeed (hiring is expensive!)
+- Normalize thinking out loud: "The interviewer already knows the answer. They want to see your PROCESS, not just the result."
+- Prepare 3 "anchor stories" using STAR format that can be adapted to multiple behavioral questions
+
+**During Mock Interview — Tutor Tactics:**
+- If student freezes: "Take 30 seconds. What is the SIMPLEST possible solution first?"
+- If student gives vague answer: "Can you be specific? Give me exact numbers or a code example."
+- If student is too self-critical: "That was actually a strong answer. Here's what was excellent about it: [specific praise]"
+- After every mock interview: Give the "feedback sandwich" — Strong positive → Area for growth → Strong positive
+
+**New Exemplar Answer Key for Exercise 1 (XYZ Resume Rewrite):**
+
+Bullet 1 — Original: "Built a website with React"
+Model XYZ rewrite: "Architected a multi-tenant React 19 SaaS frontend with Server Components, reducing initial page load time by 68% and achieving a 97 Lighthouse performance score on the capstone issue tracker project."
+
+Bullet 2 — Original: "Worked on database stuff"
+Model XYZ rewrite: "Optimized Neon PostgreSQL query performance by identifying and resolving a critical N+1 query pattern via Prisma eager loading and composite indexing, reducing average API response time from 3,400ms to 45ms under simulated production load."
+
+Bullet 3 — Original: "Did some Docker things"
+Model XYZ rewrite: "Containerized a 4-service Node.js microservices application using Docker and Docker Compose, enabling consistent environment parity across 3 developer machines and reducing 'works on my machine' debugging incidents by 100%."
+
+Bullet 4 — Original: "Made a CI/CD pipeline"
+Model XYZ rewrite: "Engineered a GitHub Actions CI/CD pipeline with automated test execution (Vitest + Playwright), Docker image build-and-push to GitHub Container Registry, and zero-downtime Kubernetes rolling deployments, reducing mean time to deploy from 45 minutes to 8 minutes."
+
+Bullet 5 — Original: "Helped with authentication"
+Model XYZ rewrite: "Implemented NextAuth.js v5 Role-Based Access Control (RBAC) system with 4 permission tiers (Owner, Admin, Member, Guest) across a multi-tenant SaaS platform, securing 12 API endpoints and eliminating unauthorized data access vulnerabilities."

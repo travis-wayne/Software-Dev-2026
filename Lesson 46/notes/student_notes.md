@@ -249,6 +249,92 @@ Pick the most interesting one (Cache):
 - Catch yourself: "Actually, I realize I should have asked about — what's the expected read:write ratio?"
 - Handle uncertainty well: "I haven't used Kafka directly, but I know it's a distributed log system designed for..."
 
+**New Section: Cache-Aside Pattern — ASCII Sequence Diagram**
+```
+┌─────────────────────────────────────────────────────┐
+│              Cache-Aside Read Flow                   │
+└─────────────────────────────────────────────────────┘
+
+App Server          Redis Cache         PostgreSQL DB
+    │                    │                    │
+    │──── GET /url/abc ──▶│                    │
+    │   Check cache key   │                    │
+    │◀── CACHE MISS ─────│                    │
+    │                    │                    │
+    │─────────── SELECT * FROM urls WHERE slug='abc' ──▶│
+    │◀──────────── { id: 1, long_url: 'https://...' } ──│
+    │                    │                    │
+    │── SET url:abc 300s ▶│                    │
+    │   (TTL 5 minutes)   │                    │
+    │◀── OK ─────────────│                    │
+    │                    │                    │
+    │  Return long_url   │                    │
+
+Next Request (within 5 min TTL):
+App Server          Redis Cache
+    │──── GET /url/abc ──▶│
+    │◀── CACHE HIT! ─────│  ← No DB query needed! 50x faster!
+```
+
+Write-Through vs Write-Behind patterns explained with pros/cons.
+
+Cache Stampede problem and solution:
+```
+Problem: 50,000 keys expire simultaneously at 9:00 AM → all 50k requests hit PostgreSQL at once → DB overload
+
+Solution 1 — TTL Jitter:
+  // Instead of fixed TTL:
+  redis.setex(key, 300, value);  // All expire at exactly same time!
+  
+  // Add random jitter:
+  const jitter = Math.floor(Math.random() * 60);  // 0-60 extra seconds
+  redis.setex(key, 300 + jitter, value);  // Spreads expiry over 5 minutes!
+
+Solution 2 — SETNX Distributed Lock:
+  const lockAcquired = await redis.set('lock:url:abc', '1', 'NX', 'EX', 10);
+  if (lockAcquired) {
+    // Only ONE process queries DB; others wait and then get cache
+  }
+```
+
+**New Section: Consistent Hashing — Distributing Load Evenly**
+Explain the problem: When adding/removing cache nodes, simple `hash(key) % N` causes N/total_keys to be remapped. Consistent Hashing minimizes remapping.
+
+Visual ring diagram (ASCII art):
+```
+        Node A (0°)
+      ╱           ╲
+   Keys          Keys
+  hash to         hash to
+  Node D         Node A
+      ╲           ╱  
+       Node D   Node B (120°)  
+      ╱           ╲
+   Keys          Keys
+  hash to        hash to
+  Node C         Node B
+      ╲           ╱
+        Node C (240°)
+
+When Node B is added: Only ~1/N of keys remapped (not all!)
+```
+Used in: Redis Cluster, DynamoDB, Cassandra, Varnish CDN.
+
+**New Section: Twitter Snowflake ID — Bit Layout**
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    64-bit Snowflake ID                          │
+├───────────┬───────────────────────────┬────────────┬────────────┤
+│  1 bit    │        41 bits             │  10 bits   │  12 bits  │
+│  Sign=0   │   Timestamp (ms since     │ Machine ID │  Sequence  │
+│           │    epoch: Nov 4, 2010)     │ (0-1023)   │ (0-4095)  │
+└───────────┴───────────────────────────┴────────────┴────────────┘
+
+Capacity: 4,096 IDs per millisecond per machine × 1,024 machines
+         = ~4 million IDs per millisecond globally!
+Timestamp: supports unique IDs until year 2079
+```
+
 ## 6. Common Interview Mistakes
 | Mistake | Why It Hurts | What to Do Instead |
 |---------|-------------|--------------------|

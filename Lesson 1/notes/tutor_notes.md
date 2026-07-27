@@ -58,3 +58,31 @@ A digital media company rebuilt their news publication using ONLY `<div class="t
    **A:** `cd ..`
 8. **Q:** What is the difference between a coder and an engineer?
    **A:** A coder translates instructions into syntax. An engineer solves problems, considers edge cases, accessibility, and architectural maintainability.
+
+## Windows vs. macOS CLI Command Reference Table
+| Action | macOS/Linux | Windows PowerShell | Windows CMD |
+|--------|-------------|-------------------|-------------|
+| List files | ls | Get-ChildItem / ls | dir |
+| Create file | touch index.html | New-Item index.html | echo.> index.html |
+| Remove file | rm filename | Remove-Item filename | del filename |
+| Clear terminal | clear | Clear-Host / cls | cls |
+| Open in VS Code | code . | code . | code . |
+| Current directory | pwd | Get-Location / pwd | cd |
+
+Note for tutors: If a Windows student cannot run `touch`, use `New-Item -ItemType File -Name index.html`. If they hit PowerShell execution policy errors, run `Set-ExecutionPolicy RemoteSigned -Scope CurrentUser`.
+
+## Live-Coding Demo Script (20-minute HTML Session)
+Provide a step-by-step what-to-type guide for tutors:
+1. Open VS Code, open terminal with Ctrl+` (explain what just happened)
+2. `mkdir my-first-site && cd my-first-site` (explain && chaining)
+3. `code .` (open folder in VS Code — point out Explorer panel)
+4. Create `index.html` via VS Code new file button
+5. Type `!` + Tab — let Emmet generate the full HTML boilerplate (explain Emmet shortcut)
+6. Modify title, add h1, p, ul, a, img step by step
+7. Install Live Server extension → Right-click → Open with Live Server (show auto-reload!)
+8. Break something intentionally (missing closing tag) — ask student to spot the visual bug
+
+## Pacing Buffer Tips
+- If a student is stuck on terminal path issues: skip to VS Code file creation using the GUI, then circle back to CLI at the end
+- If a student cannot install Node.js/Git yet: that is fine for Lesson 1 (those are needed from Lesson 10+)
+- If the student is flying ahead: challenge them to add CSS inside a `<style>` tag and change the background color — a preview of what Month 2 covers!

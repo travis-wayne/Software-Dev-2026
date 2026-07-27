@@ -107,6 +107,7 @@ Before any technical interview, ensure you can check off every item on this list
 - [ ] I have a STAR story prepared for a time I disagreed with a teammate.
 - [ ] I have a STAR story prepared for a time I learned a new technology rapidly.
 - [ ] I have a STAR story prepared for a time I failed or missed a deadline.
+- [ ] Prepared 3 STAR anchor stories adaptable to multiple question types
 
 ### Technical & Logistics Setup
 - [ ] I have practiced explaining my Capstone architecture out loud.
@@ -114,7 +115,34 @@ Before any technical interview, ensure you can check off every item on this list
 - [ ] I know how to explain what happens when you type "google.com" into a browser.
 - [ ] My webcam, microphone, and internet connection are tested and reliable.
 - [ ] I have a clean, distraction-free background for video calls.
-- [ ] I have 3 intelligent questions prepared to ask the interviewer at the end.
+- [ ] Practiced the "System Design in 5 Steps" framework with a URL shortener example
+- [ ] Researched the target company's tech stack (read their engineering blog)
+- [ ] Prepared 3 thoughtful questions to ask the interviewer (shows genuine interest!)
 
 ### Post-Interview
-- [ ] I have a template ready to send a "Thank You" email within 24 hours of the interview.
+- [ ] Sent a thank-you email within 24 hours of the interview (only ~10% of candidates do this — it stands out!)
+
+---
+
+## 📋 Exercise 2 Reference Answer — ProStack SaaS Issue Tracker Case Study
+
+### 🎣 The 30-Second Hook
+I built ProStack — a multi-tenant SaaS issue tracker inspired by Linear. It handles real-time issue management with role-based access control, direct-to-S3 file attachments, and cursor-based infinite scroll optimized for 100,000+ issues.
+
+### 🏗️ The Architecture Blueprint
+- **Frontend:** Next.js 16 App Router with Server Components for SEO + React Client Components for interactive Kanban board
+- **Backend:** Node.js/Express API with JWT RBAC middleware (Owner/Admin/Member/Guest)
+- **Database:** Neon PostgreSQL via Prisma ORM with composite indexing on all FK columns
+- **File Storage:** AWS S3 pre-signed URLs (browser uploads directly to S3, bypassing server memory limits)
+- **State Management:** Zustand for UI state, TanStack Query for server state with optimistic updates
+
+### 🐛 The Hardest Technical Bug I Solved
+On simulated load testing day, I discovered that the issues list endpoint was making 51 separate database queries for a page of 50 issues (the N+1 query problem). The response time was 3,400ms — completely unacceptable for a production SaaS.
+
+I fixed it by adding `include: { author: true, labels: true }` to the Prisma query and adding `@@index([workspaceId])` to the Issue model schema. Response time dropped to 45ms — a 98.7% improvement — in a single 3-line change.
+
+### 📊 The Business Impact & Metrics
+- API response time: 3,400ms → 45ms (98.7% improvement)
+- Lighthouse Performance Score: 97/100
+- Supported simulated 10,000 daily requests on free-tier Neon DB
+- Zero unauthorized data access across 4 tenant workspaces (RBAC validated)

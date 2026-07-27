@@ -55,6 +55,7 @@
             border-bottom: 1px solid var(--glass-border);
             background: rgba(11, 17, 32, 0.5);
             backdrop-filter: blur(12px);
+            position: relative;
         }
         
         header h1 {
@@ -64,6 +65,20 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+        
+        .reset-btn {
+            position: absolute;
+            right: 2rem;
+            top: 2rem;
+            background: transparent;
+            color: var(--warning);
+            border: 1px solid var(--warning);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .reset-btn:hover { background: rgba(245, 158, 11, 0.1); }
 
         /* Status Bar */
         .status-bar {
@@ -126,6 +141,14 @@
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
         }
 
+        /* Toast */
+        .toast {
+            position: fixed; bottom: 2rem; right: 2rem; background: var(--primary); color: #000;
+            padding: 1rem 1.5rem; border-radius: 8px; font-weight: bold; font-size: 0.9rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); opacity: 0; transform: translateY(20px); transition: all 0.3s ease; pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateY(0); }
+
         /* --- Tab 1: Terminal Simulator --- */
         .terminal-container {
             display: flex;
@@ -157,6 +180,8 @@
             padding: 1rem;
             border: 1px solid var(--glass-border);
             font-family: 'JetBrains Mono', monospace;
+            white-space: pre;
+            overflow-y: auto;
         }
 
         /* --- Tab 2: HTML Sandbox --- */
@@ -195,9 +220,9 @@
         .btn {
             background: var(--glass-bg); border: 1px solid var(--glass-border);
             color: #fff; padding: 0.5rem 1rem; border-radius: 6px; cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.2s; font-family: 'Inter'; font-weight: 600;
         }
-        .btn:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 10px rgba(16,185,129,0.3); }
+        .btn:hover { background: var(--primary); border-color: var(--primary); box-shadow: 0 0 10px rgba(16,185,129,0.3); color: #000; }
 
         /* Semantic Wireframe Mode Styles injected into preview */
         .wireframe-mode header { border: 2px dashed #10b981 !important; position: relative; padding: 10px; margin: 5px; }
@@ -213,11 +238,28 @@
         .scenario-card {
             background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 8px;
             padding: 1.5rem; margin-bottom: 1.5rem;
-            transition: transform 0.2s;
+            transition: all 0.3s ease;
         }
-        .scenario-card:hover { transform: translateY(-2px); box-shadow: 0 0 15px rgba(255,255,255,0.05); }
-        .buggy-code { background: rgba(244,63,94,0.1); border-left: 4px solid var(--danger); padding: 1rem; font-family: 'JetBrains Mono'; margin: 1rem 0; }
+        .scenario-card.error { border-color: var(--danger); box-shadow: 0 0 15px rgba(244,63,94,0.3); }
+        .scenario-card.success { border-color: var(--primary); box-shadow: 0 0 15px rgba(16,185,129,0.3); }
         
+        .code-edit-area {
+            width: 100%; height: 100px; background: #1e1e1e; color: #d4d4d4;
+            font-family: 'JetBrains Mono', monospace; padding: 1rem; margin: 1rem 0;
+            border: 1px solid var(--glass-border); border-radius: 8px; box-sizing: border-box;
+            resize: vertical; font-size: 1rem;
+        }
+        .success-banner {
+            display: none; background: rgba(16,185,129,0.1); border: 1px solid var(--primary);
+            padding: 1rem; border-radius: 8px; margin-top: 1rem; color: #a3be8c;
+        }
+        .diff-panel {
+            display: flex; gap: 1rem; margin-top: 1rem;
+        }
+        .diff-side { flex: 1; padding: 1rem; background: #1e1e1e; border-radius: 6px; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;}
+        .diff-old { border-left: 4px solid var(--danger); color: #f87171; text-decoration: line-through; }
+        .diff-new { border-left: 4px solid var(--primary); color: #4ade80; }
+
         /* --- Tab 4: Quiz --- */
         .quiz-question { margin-bottom: 2rem; display:none; }
         .quiz-question.active { display: block; animation: fadeIn 0.3s; }
@@ -241,12 +283,13 @@
 
     <header>
         <h1>Lesson 1 — Development Environment & HTML5 Lab</h1>
+        <button class="reset-btn" onclick="resetProgress()">🔄 Reset Progress</button>
     </header>
     
     <div class="status-bar">
         <span>Environment: VS Code & Terminal Ready</span>
         <span>HTML5 Semantics: Active</span>
-        <span>Curriculum Progress: Session 1 of 48</span>
+        <span id="progress-badge">Session Progress: 0/4 Tabs Explored (0%)</span>
     </div>
 
     <div class="tabs">
@@ -260,12 +303,12 @@
     <div id="terminal" class="tab-content active">
         <div class="glass-panel">
             <h2>Interactive CLI Simulator</h2>
-            <p>Practice navigating folders and making files! Try: <code>help</code>, <code>ls</code>, <code>mkdir projects</code>, <code>cd projects</code>, <code>touch index.html</code>, <code>code .</code></p>
+            <p>Practice navigating folders and making files! Try: <code>help</code>, <code>pwd</code>, <code>ls</code>, <code>mkdir projects</code>, <code>cd projects</code>, <code>touch index.html</code>, <code>code .</code>, <code>rm</code>, <code>mv</code></p>
             <div class="terminal-container">
                 <div class="terminal-window" onclick="document.getElementById('term-input').focus()">
                     <div class="terminal-output" id="term-output">Welcome to the Software-Dev-2026 Terminal! Type 'help' to begin.</div>
                     <div class="terminal-input-line">
-                        <span class="prompt" id="term-prompt">student@dev-2026:~$</span>
+                        <span class="prompt" id="term-prompt">~ $</span>
                         <input type="text" class="terminal-input" id="term-input" autocomplete="off" onkeypress="handleTerminal(event)">
                     </div>
                 </div>
@@ -320,36 +363,79 @@
     <div id="debug" class="tab-content">
         <div class="glass-panel">
             <h2>Debugging War Stories Lab</h2>
+            <p>Don't rely on auto-fix buttons! You are the engineer now. Edit the buggy code and verify your fix.</p>
             
-            <div class="scenario-card" id="scen1">
+            <div class="scenario-card" id="scenA">
                 <h3>🐛 Scenario A: The Missing Closing Tag Collapse</h3>
-                <p>An unclosed tag is ruining the layout!</p>
-                <div class="buggy-code">
-                    &lt;h1&gt;Welcome to my site<br>
-                    &lt;p&gt;This paragraph is huge!&lt;/p&gt;
+                <p>An unclosed tag is ruining the layout, making everything below it a giant heading!</p>
+                <textarea class="code-edit-area" id="codeA">
+<h1>Welcome to my site
+<p>This paragraph is huge!</p>
+                </textarea>
+                <button class="btn" onclick="verifyScenario('A')">✅ Verify My Fix</button>
+                <div class="success-banner" id="bannerA">
+                    <strong>Excellent!</strong> You closed the <code>&lt;h1&gt;</code> tag. Leaving tags open causes the browser to incorrectly guess where elements end.
+                    <div class="diff-panel">
+                        <div class="diff-side diff-old">&lt;h1&gt;Welcome to my site</div>
+                        <div class="diff-side diff-new">&lt;h1&gt;Welcome to my site&lt;/h1&gt;</div>
+                    </div>
                 </div>
-                <button class="btn" onclick="fixScenario(1, this)">Fix: Close the H1 tag</button>
             </div>
 
-            <div class="scenario-card" id="scen2">
+            <div class="scenario-card" id="scenB">
                 <h3>🐛 Scenario B: The Accessibility Audit Failure</h3>
-                <p>The image is failing screen readers!</p>
-                <div class="buggy-code">
-                    &lt;img src="hero.jpg"&gt;
+                <p>The image is failing screen readers. A visually impaired user will only hear the filename.</p>
+                <textarea class="code-edit-area" id="codeB">
+<img src="hero.jpg">
+                </textarea>
+                <button class="btn" onclick="verifyScenario('B')">✅ Verify My Fix</button>
+                <div class="success-banner" id="bannerB">
+                    <strong>Perfect!</strong> You added an <code>alt</code> attribute. Accessibility is non-negotiable in modern web development!
+                    <div class="diff-panel">
+                        <div class="diff-side diff-old">&lt;img src="hero.jpg"&gt;</div>
+                        <div class="diff-side diff-new">&lt;img src="hero.jpg" alt="Hero Image"&gt;</div>
+                    </div>
                 </div>
-                <button class="btn" onclick="fixScenario(2, this)">Fix: Add alt="Hero Image" attribute</button>
             </div>
 
-            <div class="scenario-card" id="scen3">
+            <div class="scenario-card" id="scenC">
                 <h3>🐛 Scenario C: The "Div Soup" SEO Disaster</h3>
-                <p>Google can't read the article structure!</p>
-                <div class="buggy-code">
-                    &lt;div class="main-content"&gt;<br>
-                    &nbsp;&nbsp;&lt;div class="story"&gt;My Story&lt;/div&gt;<br>
-                    &lt;/div&gt;
+                <p>Google can't read the article structure because the developer only used generic <code>&lt;div&gt;</code> tags.</p>
+                <textarea class="code-edit-area" id="codeC">
+<div class="main-content">
+  <div class="story">My Story</div>
+</div>
+                </textarea>
+                <button class="btn" onclick="verifyScenario('C')">✅ Verify My Fix</button>
+                <div class="success-banner" id="bannerC">
+                    <strong>Great refactor!</strong> Using semantic tags like <code>&lt;main&gt;</code> or <code>&lt;article&gt;</code> helps Search Engine bots and screen readers navigate your content easily.
+                    <div class="diff-panel">
+                        <div class="diff-side diff-old">&lt;div class="story"&gt;...&lt;/div&gt;</div>
+                        <div class="diff-side diff-new">&lt;article&gt;...&lt;/article&gt;</div>
+                    </div>
                 </div>
-                <button class="btn" onclick="fixScenario(3, this)">Fix: Replace with &lt;main&gt; and &lt;article&gt;</button>
             </div>
+
+            <div class="scenario-card" id="scenD">
+                <h3>🐛 Scenario D: The Language Barrier</h3>
+                <p>The root tag is missing something important. Screen readers don't know what language this page is written in!</p>
+                <textarea class="code-edit-area" id="codeD">
+<html>
+  <head>
+    <title>My Page</title>
+  </head>
+</html>
+                </textarea>
+                <button class="btn" onclick="verifyScenario('D')">✅ Verify My Fix</button>
+                <div class="success-banner" id="bannerD">
+                    <strong>Nailed it!</strong> Adding <code>lang="en"</code> to the <code>&lt;html&gt;</code> tag ensures translation tools and screen readers process the text correctly.
+                    <div class="diff-panel">
+                        <div class="diff-side diff-old">&lt;html&gt;</div>
+                        <div class="diff-side diff-new">&lt;html lang="en"&gt;</div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -384,6 +470,69 @@
                     <div class="quiz-option" onclick="selectOption(this, true, 'Correct! Semantic tags help SEO and screen readers understand content meaning.')">They provide meaning for accessibility (screen readers) and search engine optimization (SEO).</div>
                     <div class="quiz-option" onclick="selectOption(this, false, 'CSS can style divs easily too.')">They are the only way to apply CSS styles.</div>
                     <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(3)">Next Question</button>
+                </div>
+                <!-- Q4 -->
+                <div class="quiz-question" id="q4">
+                    <h3>4. What does the "cd .." command do in the terminal?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! It goes up to the parent directory.')">Moves up one folder level.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Use clear or cls for that.')">Clears the terminal screen.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'That would be cd ~')">Teleports you to the home directory.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(4)">Next Question</button>
+                </div>
+                <!-- Q5 -->
+                <div class="quiz-question" id="q5">
+                    <h3>5. What is the difference between &lt;strong&gt; and &lt;b&gt; in HTML?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Incorrect.')">There is no difference, both are identical.</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! &lt;strong&gt; has semantic weight for screen readers.')">&lt;strong&gt; has semantic meaning for accessibility, while &lt;b&gt; is purely visual.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Incorrect.')">&lt;b&gt; is for bold, &lt;strong&gt; is for italic.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(5)">Next Question</button>
+                </div>
+                <!-- Q6 -->
+                <div class="quiz-question" id="q6">
+                    <h3>6. Which type of element always starts on a new line and takes up the full available width?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Inline elements flow within text.')">Inline elements (e.g., &lt;span&gt;, &lt;a&gt;)</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! Block elements stretch out completely.')">Block elements (e.g., &lt;div&gt;, &lt;p&gt;)</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Void elements just have no closing tag.')">Void elements (e.g., &lt;img&gt;)</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(6)">Next Question</button>
+                </div>
+                <!-- Q7 -->
+                <div class="quiz-question" id="q7">
+                    <h3>7. What does the "action" attribute on a &lt;form&gt; element specify?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'That is the method attribute.')">Whether to use GET or POST.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'That would be CSS.')">The animation that plays when submitted.</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! It specifies the URL where data is sent.')">The URL where the form data is sent upon submission.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(7)">Next Question</button>
+                </div>
+                <!-- Q8 -->
+                <div class="quiz-question" id="q8">
+                    <h3>8. In VS Code, which keyboard shortcut toggles a comment on the current line?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct!')">Ctrl + / (or Cmd + /)</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'That highlights matching words.')">Ctrl + D</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'That opens the terminal.')">Ctrl + `</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(8)">Next Question</button>
+                </div>
+                <!-- Q9 -->
+                <div class="quiz-question" id="q9">
+                    <h3>9. What is the purpose of the lang="en" attribute on the &lt;html&gt; tag?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'CSS is responsible for fonts.')">It forces the browser to use English fonts.</div>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! Accessibility and translation rely on this.')">It helps screen readers pronounce words correctly and assists translation tools.</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'No.')">It is required for the site to be hosted in English-speaking countries.</div>
+                    <div class="quiz-feedback"></div>
+                    <button class="btn" style="margin-top:1rem; display:none;" onclick="nextQuestion(9)">Next Question</button>
+                </div>
+                <!-- Q10 -->
+                <div class="quiz-question" id="q10">
+                    <h3>10. Which semantic HTML element should wrap the primary, unique content of a webpage?</h3>
+                    <div class="quiz-option" onclick="selectOption(this, true, 'Correct! Only one main per page!')">&lt;main&gt;</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Section groups content, but main is the primary wrapper.')">&lt;section&gt;</div>
+                    <div class="quiz-option" onclick="selectOption(this, false, 'Header is for top intro content.')">&lt;header&gt;</div>
+                    <div class="quiz-feedback"></div>
                     <button class="btn" style="margin-top:1rem; display:none;" onclick="showQuizResult()">Finish Quiz!</button>
                 </div>
             </div>
@@ -393,45 +542,108 @@
                 <p>You have mastered the foundations of Software Engineering, CLI, and HTML!</p>
                 <div class="badge">🎉 Session 1 Completed!</div>
             </div>
-
         </div>
     </div>
 
+    <!-- Toast Notification -->
+    <div class="toast" id="toast">✅ Progress saved to your browser</div>
+
     <!-- JavaScript Logic -->
     <script>
-        // Tab Switching
+        // --- Progress System (LocalStorage) ---
+        let progress = JSON.parse(localStorage.getItem('l01-progress') || '{"tabs":[],"quizScore":0,"debugsCompleted":0}');
+
+        function saveTabVisit(tabId) {
+            if (!progress.tabs.includes(tabId)) {
+                progress.tabs.push(tabId);
+                saveProgress();
+            }
+        }
+        
+        function saveProgress() {
+            localStorage.setItem('l01-progress', JSON.stringify(progress));
+            updateProgressBadge();
+            showToast();
+        }
+
+        function updateProgressBadge() {
+            const pct = Math.round((progress.tabs.length / 4) * 100);
+            document.getElementById('progress-badge').textContent = `Session Progress: ${progress.tabs.length}/4 Tabs Explored (${pct}%)`;
+        }
+
+        function resetProgress() {
+            localStorage.removeItem('l01-progress');
+            progress = {tabs:['terminal'], quizScore:0, debugsCompleted:0};
+            saveProgress();
+            location.reload();
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Initialize progress
+        updateProgressBadge();
+        saveTabVisit('terminal');
+
+        // --- Tab Switching ---
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
             event.target.classList.add('active');
             if(tabId === 'html') updatePreview();
+            saveTabVisit(tabId);
         }
 
         // --- Terminal Logic ---
         let fileSystem = {
-            '~': ['README.md']
+            'home': {
+                'student': {
+                    'software-dev-2026': {
+                        'projects': {},
+                        'notes': {},
+                        'README.md': null
+                    }
+                }
+            }
         };
-        let currentDir = '~';
+        let currentPath = ['home', 'student', 'software-dev-2026'];
         let termOut = document.getElementById('term-output');
         let termPrompt = document.getElementById('term-prompt');
         let treeView = document.getElementById('file-tree-view');
 
+        function getCurrentNode() {
+            let node = fileSystem;
+            for(let p of currentPath) node = node[p];
+            return node;
+        }
+
+        function getPromptPath() {
+            if (currentPath.join('/') === 'home/student/software-dev-2026') return '~';
+            let path = currentPath.join('/');
+            return '/' + path;
+        }
+
         function renderTree() {
-            let html = '📂 /home/student<br>';
-            html += '&nbsp;&nbsp;📂 ~<br>';
-            fileSystem['~'].forEach(f => {
-                if(fileSystem[f]) html += `&nbsp;&nbsp;&nbsp;&nbsp;📂 ${f}<br>`;
-                else html += `&nbsp;&nbsp;&nbsp;&nbsp;📄 ${f}<br>`;
-            });
-            // basic rendering for nested
-            Object.keys(fileSystem).forEach(k => {
-                if(k !== '~' && fileSystem['~'].includes(k)) {
-                    fileSystem[k].forEach(f => {
-                         html += `&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;📄 ${f}<br>`;
-                    });
-                }
-            });
+            let html = '';
+            function traverse(node, depth, isLastFolder) {
+                let keys = Object.keys(node);
+                keys.forEach((key, index) => {
+                    let isLast = index === keys.length - 1;
+                    let indent = '│   '.repeat(Math.max(0, depth - 1)) + (depth > 0 ? (isLast ? '└── ' : '├── ') : '');
+                    if(node[key] !== null) {
+                        html += `<span style="color:var(--info)">${indent}📁 ${key}</span>\n`;
+                        traverse(node[key], depth + 1, isLast);
+                    } else {
+                        html += `${indent}📄 ${key}\n`;
+                    }
+                });
+            }
+            html += `<span style="color:var(--info)">📁 root</span>\n`;
+            traverse(fileSystem, 1, true);
             treeView.innerHTML = html;
         }
         renderTree();
@@ -450,37 +662,46 @@
 
                 const args = input.split(' ');
                 const cmd = args[0].toLowerCase();
+                let node = getCurrentNode();
 
                 switch(cmd) {
-                    case 'help': printLine('Available commands: help, pwd, ls, dir, cd, mkdir, touch, code, clear'); break;
-                    case 'pwd': printLine(`/home/student/software-dev-2026/${currentDir === '~' ? '' : currentDir}`); break;
+                    case 'help': printLine('Commands: pwd, ls, cd, mkdir, touch, rm, mv, code, clear'); break;
+                    case 'pwd': printLine('/' + currentPath.join('/')); break;
                     case 'ls': 
                     case 'dir':
-                        printLine(fileSystem[currentDir] ? fileSystem[currentDir].join('  ') : ''); break;
+                        printLine(Object.keys(node).map(k => node[k] !== null ? `<span style="color:var(--info)">${k}/</span>` : k).join('  ')); break;
                     case 'mkdir':
                         if(args[1]) {
-                            if(!fileSystem[currentDir].includes(args[1])) {
-                                fileSystem[currentDir].push(args[1]);
-                                fileSystem[args[1]] = [];
-                                renderTree();
-                            }
+                            if(node[args[1]] === undefined) { node[args[1]] = {}; renderTree(); }
+                            else printLine(`mkdir: cannot create directory '${args[1]}': File exists`);
                         } else printLine('mkdir: missing operand');
                         break;
                     case 'touch':
                         if(args[1]) {
-                            if(!fileSystem[currentDir].includes(args[1])) {
-                                fileSystem[currentDir].push(args[1]);
-                                renderTree();
-                            }
+                            if(node[args[1]] === undefined) { node[args[1]] = null; renderTree(); }
                         } else printLine('touch: missing operand');
                         break;
+                    case 'rm':
+                        if(args[1]) {
+                            if(node[args[1]] !== undefined) { delete node[args[1]]; renderTree(); }
+                            else printLine(`rm: cannot remove '${args[1]}': No such file or directory`);
+                        } else printLine('rm: missing operand');
+                        break;
+                    case 'mv':
+                        if(args[1] && args[2]) {
+                            if(node[args[1]] !== undefined) {
+                                node[args[2]] = node[args[1]];
+                                delete node[args[1]];
+                                renderTree();
+                            } else printLine(`mv: cannot stat '${args[1]}': No such file or directory`);
+                        } else printLine('mv: missing operand');
+                        break;
                     case 'cd':
-                        if(!args[1] || args[1]==='~') { currentDir = '~'; termPrompt.innerText = 'student@dev-2026:~$'; }
-                        else if(args[1]==='..') { currentDir = '~'; termPrompt.innerText = 'student@dev-2026:~$'; }
-                        else if(fileSystem[currentDir].includes(args[1]) && fileSystem[args[1]]) {
-                            currentDir = args[1];
-                            termPrompt.innerText = `student@dev-2026:~/${currentDir}$`;
-                        } else printLine(`bash: cd: ${args[1]}: No such file or directory`);
+                        if(!args[1] || args[1]==='~') { currentPath = ['home', 'student', 'software-dev-2026']; }
+                        else if(args[1]==='..') { if(currentPath.length > 0) currentPath.pop(); }
+                        else if(node[args[1]] !== undefined && node[args[1]] !== null) { currentPath.push(args[1]); }
+                        else printLine(`bash: cd: ${args[1]}: No such file or directory`);
+                        termPrompt.innerText = `${getPromptPath()} $`;
                         break;
                     case 'code':
                         printLine('🚀 Launching VS Code Editor...');
@@ -505,7 +726,8 @@
             isWireframe = !isWireframe;
             const btn = document.getElementById('wireframe-btn');
             btn.innerText = isWireframe ? 'Disable Semantic Wireframe' : 'Toggle Semantic Wireframe';
-            btn.style.background = isWireframe ? 'var(--secondary)' : '';
+            btn.style.background = isWireframe ? 'var(--secondary)' : 'var(--glass-bg)';
+            btn.style.color = isWireframe ? '#000' : '#fff';
             updatePreview();
         }
         function insertTag(tag) {
@@ -515,29 +737,43 @@
         }
 
         // --- Debugging Logic ---
-        function fixScenario(id, btn) {
-            btn.innerText = "✅ Fixed!";
-            btn.style.background = "var(--primary)";
-            btn.style.color = "#000";
-            const card = document.getElementById('scen'+id);
-            card.style.borderColor = "var(--primary)";
-            card.querySelector('.buggy-code').style.background = "rgba(16,185,129,0.1)";
-            card.querySelector('.buggy-code').style.borderColor = "var(--primary)";
-            if(id===1) card.querySelector('.buggy-code').innerHTML = '&lt;h1&gt;Welcome to my site&lt;/h1&gt;<br>&lt;p&gt;This paragraph is normal.&lt;/p&gt;';
-            if(id===2) card.querySelector('.buggy-code').innerHTML = '&lt;img src="hero.jpg" alt="Hero Image"&gt;';
-            if(id===3) card.querySelector('.buggy-code').innerHTML = '&lt;main&gt;<br>&nbsp;&nbsp;&lt;article&gt;My Story&lt;/article&gt;<br>&lt;/main&gt;';
+        function verifyScenario(id) {
+            const code = document.getElementById('code' + id).value;
+            const card = document.getElementById('scen' + id);
+            let isCorrect = false;
+
+            if (id === 'A') {
+                isCorrect = code.includes('</h1>') && !code.match(/<h1[^>]*>[^<]*$/);
+            } else if (id === 'B') {
+                isCorrect = code.includes('alt="') || code.includes("alt='");
+            } else if (id === 'C') {
+                isCorrect = code.includes('<article>') || code.includes('<section>') || code.includes('<main>') || code.includes('<h1>');
+            } else if (id === 'D') {
+                isCorrect = code.includes('<html lang=') || code.includes('<html lang=');
+            }
+
+            if (isCorrect) {
+                card.classList.remove('error');
+                card.classList.add('success');
+                document.getElementById('banner' + id).style.display = 'block';
+                progress.debugsCompleted++;
+                saveProgress();
+            } else {
+                card.classList.remove('success');
+                card.classList.add('error');
+                setTimeout(() => card.classList.remove('error'), 1000); // flash red
+            }
         }
 
         // --- Quiz Logic ---
         function selectOption(el, isCorrect, feedback) {
             const parent = el.parentElement;
-            if(parent.querySelector('.correct') || parent.querySelector('.incorrect')) return; // already answered
+            if(parent.querySelector('.correct') || parent.querySelector('.incorrect')) return; 
             
             if(isCorrect) {
                 el.classList.add('correct');
             } else {
                 el.classList.add('incorrect');
-                // find correct and highlight it faintly
             }
             const fb = parent.querySelector('.quiz-feedback');
             fb.innerText = feedback;
@@ -551,6 +787,8 @@
         function showQuizResult() {
             document.getElementById('quiz-container').style.display = 'none';
             document.getElementById('quiz-result').style.display = 'block';
+            progress.quizScore = 100;
+            saveProgress();
         }
 
     </script>

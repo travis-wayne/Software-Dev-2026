@@ -74,6 +74,30 @@ For the classroom:
 2. **Service returns data but slowly** — Missing connection pooling to the database (every request opens a new DB connection).
 3. **Circular service calls** — A calls B calls A — stack overflow or infinite timeout loop.
 4. **Auth working in gateway but failing in service** — The gateway forgot to forward the `Authorization` header to the downstream service.
+```javascript
+// BUG: Gateway strips Authorization header from downstream requests
+app.use('/users', createProxyMiddleware({
+  target: 'http://localhost:3001',
+  changeOrigin: true
+  // Missing: no header forwarding!
+}));
+
+// FIX: Explicitly forward Authorization and X-Request-ID headers
+app.use('/users', createProxyMiddleware({
+  target: 'http://localhost:3001',
+  changeOrigin: true,
+  on: {
+    proxyReq: (proxyReq, req) => {
+      if (req.headers.authorization) {
+        proxyReq.setHeader('Authorization', req.headers.authorization);
+      }
+      if (req.headers['x-request-id']) {
+        proxyReq.setHeader('X-Request-ID', req.headers['x-request-id']);
+      }
+    }
+  }
+}));
+```
 5. **docker-compose services can't find each other** — Wrong hostname. Trying to use `localhost` instead of the service name (e.g., `user-service`).
 
 ### 7. Common Student Gotchas

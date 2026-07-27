@@ -167,6 +167,141 @@ Before merging code to `main`, a GitHub Actions pipeline should verify your code
 
 ---
 
+**New Section: Cursor-Based Pagination vs Offset Pagination**
+
+Explain the problem with offset pagination at scale:
+```javascript
+// ❌ OFFSET PAGINATION — breaks at scale!
+// Problem: DB must scan and skip ALL previous rows
+const issues = await prisma.issue.findMany({
+  skip: 9990,   // DB reads 9,990 rows just to throw them away!
+  take: 10,
+  orderBy: { createdAt: 'desc' }
+});
+// At 1M rows, page 1000 means scanning 9,990 rows = SLOW!
+// Also: if a new row is inserted between page loads, users see duplicate or skipped items!
+
+// ✅ CURSOR-BASED PAGINATION — production-grade!
+// Cursor points to the last item seen; DB uses index efficiently
+const page1 = await prisma.issue.findMany({
+  take: 10,
+  orderBy: { createdAt: 'desc' }  // Most recent first
+});
+const lastItemCursor = page1[page1.length - 1].id;  // Remember the last ID
+
+// Next page — start AFTER the last seen cursor:
+const page2 = await prisma.issue.findMany({
+  take: 10,
+  cursor: { id: lastItemCursor },
+  skip: 1,  // Skip the cursor item itself
+  orderBy: { createdAt: 'desc' }
+});
+// ✅ DB uses B-tree index to jump directly to cursor position — O(log n) not O(n)!
+```
+
+When to use each:
+| | Offset | Cursor |
+|---|---|---|
+| Page navigation | ✅ ("Go to page 47") | ❌ (no random page access) |
+| Infinite scroll | ❌ (duplicates on insert) | ✅ (stable, no duplicates) |
+| Performance at scale | ❌ (degrades linearly) | ✅ (O(log n) consistently) |
+| Implementation complexity | Simple | Moderate |
+
+**New Section: NextAuth v5 (Auth.js) — Updated Syntax**
+
+Note: If you are on NextAuth v5+ (check `package.json` for `next-auth@5`), the API has changed:
+
+```typescript
+// auth.ts (v5 style)
+import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { prisma } from './lib/prisma';
+
+export const { handlers, signIn, signOut, auth } = NextAuth({
+  adapter: PrismaAdapter(prisma),
+  providers: [Google],
+  callbacks: {
+    async session({ session, user }) {
+      // Enrich session with role from DB
+      const dbUser = await prisma.user.findUnique({
+        where: { id: user.id },
+        select: { role: true, workspaceId: true }
+      });
+      session.user.role = dbUser?.role ?? 'MEMBER';
+      session.user.workspaceId = dbUser?.workspaceId;
+      return session;
+    }
+  }
+});
+
+// In API Route Handler (v5):
+import { auth } from '@/auth';
+export const GET = auth(async (req) => {
+  const session = req.auth;  // Session is on req.auth (not getServerSession!)
+  if (!session) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+  return Response.json({ user: session.user });
+});
+
+// In Server Component (v5):
+import { auth } from '@/auth';
+export default async function Dashboard() {
+  const session = await auth();  // No authOptions parameter needed!
+  if (!session) redirect('/login');
+  return <div>Welcome {session.user.name}!</div>;
+}
+```
+
+**New Section: Webhook Security & Idempotency**
+
+Webhooks are HTTP POST requests from external services (Stripe/Paystack) to your server when events happen (payment succeeded, subscription cancelled). Two critical problems:
+
+**Problem 1: Anyone can send fake webhooks to your endpoint!**
+```javascript
+// ✅ Verify Paystack webhook signature
+const crypto = require('crypto');
+
+app.post('/webhooks/paystack', express.raw({ type: 'application/json' }), (req, res) => {
+  const signature = req.headers['x-paystack-signature'];
+  const hash = crypto
+    .createHmac('sha512', process.env.PAYSTACK_SECRET_KEY)
+    .update(req.body)  // Raw body buffer — NOT parsed JSON!
+    .digest('hex');
+
+  if (hash !== signature) {
+    return res.status(400).json({ error: 'Invalid signature — possible attack!' });
+  }
+
+  const event = JSON.parse(req.body);
+  // Now safe to process...
+});
+```
+
+**Problem 2: Webhook delivered twice (network retry) = user charged twice!**
+```javascript
+// ✅ Idempotency key prevents duplicate processing
+async function handlePaymentSuccess(event) {
+  const idempotencyKey = event.data.reference;  // Paystack uses reference as unique ID
+
+  // Check if already processed
+  const existing = await prisma.webhookEvent.findUnique({
+    where: { idempotencyKey }
+  });
+  if (existing) {
+    console.log('Duplicate webhook — already processed, skipping');
+    return;  // Safe to ignore!
+  }
+
+  // Process payment and record idempotency key atomically
+  await prisma.$transaction([
+    prisma.subscription.update({ where: { userId }, data: { status: 'ACTIVE' } }),
+    prisma.webhookEvent.create({ data: { idempotencyKey, processedAt: new Date() } })
+  ]);
+}
+```
+
+---
+
 ## Section 8: Common Capstone Pitfalls & How to Avoid Them
 
 | Pitfall | Description | Solution |

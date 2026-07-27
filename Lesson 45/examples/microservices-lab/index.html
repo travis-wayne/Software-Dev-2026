@@ -183,6 +183,51 @@
       box-shadow: none;
     }
 
+    /* Toggle Switch */
+    .backend-toggle {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      background: rgba(255,255,255,0.05);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      border: 1px solid var(--glass-border);
+    }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: var(--glass-bg);
+      transition: .4s;
+      border-radius: 24px;
+      border: 1px solid var(--glass-border);
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 16px; width: 16px;
+      left: 3px; bottom: 3px;
+      background-color: var(--text);
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--primary); border-color: var(--primary); }
+    input:checked + .slider:before { transform: translateX(26px); }
+
+    .backend-hint {
+      color: var(--warning);
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
     /* Tab 1: Architecture Explorer */
     .arch-toggle {
       display: flex;
@@ -214,6 +259,7 @@
       flex-direction: column;
       align-items: center;
       gap: 2rem;
+      position: relative;
     }
 
     .monolith-box {
@@ -250,6 +296,7 @@
       text-align: center;
       cursor: pointer;
       border: 1px solid var(--primary);
+      z-index: 2;
     }
     .svc-card.gateway { border-color: var(--secondary); }
     .svc-card.db { border-color: var(--warning); border-radius: 30px; }
@@ -302,6 +349,7 @@
       color: var(--primary);
       margin-top: 2rem;
       overflow-x: auto;
+      white-space: pre-wrap;
     }
 
     /* Tab 3: Chaos Lab */
@@ -376,7 +424,24 @@
     }
     .quiz-option.correct { background: rgba(16, 185, 129, 0.2); border-color: var(--primary); }
     .quiz-option.wrong { background: rgba(244, 63, 94, 0.2); border-color: var(--danger); }
-
+    
+    /* SVG Connectors */
+    path.connector {
+      stroke: var(--glass-border);
+      stroke-width: 2;
+      fill: none;
+    }
+    path.connector.active {
+      stroke: var(--primary);
+      stroke-width: 3;
+      stroke-dasharray: 8, 8;
+      animation: dash 1s linear infinite;
+    }
+    @keyframes dash {
+      to {
+        stroke-dashoffset: -16;
+      }
+    }
   </style>
 </head>
 <body>
@@ -428,21 +493,19 @@
     </div>
 
     <div id="arch-micro" class="arch-container" style="display: none;">
+      <svg id="service-connectors" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible;z-index:1;"></svg>
       <div class="micro-row">
-        <div class="glass svc-card" style="border-color: #fff">📱 Client Apps</div>
+        <div class="glass svc-card client" id="card-client" style="border-color: #fff">📱 Client Apps</div>
       </div>
-      <div>↓</div>
-      <div class="micro-row">
-        <div class="glass svc-card gateway">🔀 API Gateway :3009</div>
+      <div class="micro-row" style="margin-top: 3rem;">
+        <div class="glass svc-card gateway" id="card-gateway">🔀 API Gateway :3009</div>
       </div>
-      <div>↙ &nbsp; ↓ &nbsp; ↘</div>
-      <div class="micro-row">
-        <div class="glass svc-card">👤 User Service :3010</div>
-        <div class="glass svc-card">📦 Product Service :3011</div>
-        <div class="glass svc-card">🛒 Order Service :3012</div>
+      <div class="micro-row" style="margin-top: 3rem;">
+        <div class="glass svc-card" id="card-user">👤 User Service :3010</div>
+        <div class="glass svc-card" id="card-product">📦 Product Service :3011</div>
+        <div class="glass svc-card" id="card-order">🛒 Order Service :3012</div>
       </div>
-      <div>↓ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ↓ &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ↓</div>
-      <div class="micro-row">
+      <div class="micro-row" style="margin-top: 3rem;">
         <div class="glass svc-card db">🐘 Neon PostgreSQL</div>
         <div class="glass svc-card db">🍃 MongoDB Atlas</div>
         <div class="glass svc-card db">🐘 PostgreSQL</div>
@@ -466,6 +529,18 @@
 
   <!-- Tab 2 -->
   <div id="tab2" class="tab-content">
+    <div class="backend-toggle">
+      <span class="badge" id="backend-status-badge">🔴 Simulation Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="live-backend-toggle" onchange="toggleBackend()">
+        <span class="slider"></span>
+      </label>
+      <span>Enable Live Backend</span>
+    </div>
+    <p class="backend-hint" id="backend-hint">
+      💡 Run <code>pnpm dev</code> in <code>examples/microservices-gateway-demo/</code> then toggle ON to send real requests to localhost:3009!
+    </p>
+
     <div class="simulator-layout">
       <div class="control-panel glass" style="padding: 1.5rem">
         <h3>1. Select Operation</h3>
@@ -569,11 +644,76 @@ failures >= 3                       │
           <div class="quiz-option" onclick="checkAns(this, false)">C) Because Kubernetes requires it</div>
         </div>
       </div>
+      
+      <div class="quiz-question">
+        <h3>4. What is the main advantage of the Choreography Saga pattern over Orchestration?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, false)">A) It provides a central place to monitor the workflow</div>
+          <div class="quiz-option" onclick="checkAns(this, true)">B) Services are highly decoupled and don't depend on a central controller</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) It prevents the need for compensating transactions</div>
+        </div>
+      </div>
+      
+      <div class="quiz-question">
+        <h3>5. In the Circuit Breaker pattern, what happens in the HALF-OPEN state?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, false)">A) All requests are allowed through to see if they fail</div>
+          <div class="quiz-option" onclick="checkAns(this, true)">B) A limited number of test requests are allowed to check if the service has recovered</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) The service is partially functional but missing features</div>
+        </div>
+      </div>
+      
+      <div class="quiz-question">
+        <h3>6. What OpenTelemetry header propagates trace context between microservices?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, false)">A) X-Trace-Context</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">B) Authorization</div>
+          <div class="quiz-option" onclick="checkAns(this, true)">C) traceparent</div>
+        </div>
+      </div>
+      
+      <div class="quiz-question">
+        <h3>7. What is "Polyglot Persistence" and why is it a core microservices principle?</h3>
+        <div class="quiz-options">
+          <div class="quiz-option" onclick="checkAns(this, true)">A) Using different types of databases (SQL, NoSQL, etc.) based on the specific needs of each service</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">B) Writing services in different programming languages</div>
+          <div class="quiz-option" onclick="checkAns(this, false)">C) Translating database queries into multiple languages</div>
+        </div>
+      </div>
 
     </div>
   </div>
 
   <script>
+    let useLiveBackend = false;
+    const GATEWAY_URL = 'http://localhost:3009';
+
+    function toggleBackend() {
+      useLiveBackend = document.getElementById('live-backend-toggle').checked;
+      const badge = document.getElementById('backend-status-badge');
+      const hint = document.getElementById('backend-hint');
+      if (useLiveBackend) {
+        badge.textContent = '🟢 Live Backend';
+        badge.style.background = 'rgba(16,185,129,0.2)';
+        hint.innerHTML = '✅ Connected to <code>http://localhost:3009</code> — requests are REAL!';
+      } else {
+        badge.textContent = '🔴 Simulation Mode';
+        badge.style.background = 'rgba(244,63,94,0.2)';
+        hint.innerHTML = '💡 Run <code>pnpm dev</code> in <code>examples/microservices-gateway-demo/</code> then toggle ON!';
+      }
+    }
+
+    async function sendRealRequest(endpoint, method = 'GET', body = null) {
+      try {
+        const opts = { method, headers: { 'Content-Type': 'application/json' } };
+        if (body) opts.body = JSON.stringify(body);
+        const res = await fetch(GATEWAY_URL + endpoint, opts);
+        return await res.json();
+      } catch (e) {
+        return { error: 'Could not reach live backend. Is pnpm dev running?', details: e.message };
+      }
+    }
+
     // Tab switching
     function switchTab(num) {
       document.querySelectorAll('.tab-btn').forEach((btn, i) => {
@@ -582,6 +722,9 @@ failures >= 3                       │
       document.querySelectorAll('.tab-content').forEach((content, i) => {
         content.classList.toggle('active', i === num - 1);
       });
+      if (num === 1) {
+        setTimeout(drawConnectors, 100);
+      }
     }
 
     // Tab 1 Architecture
@@ -590,6 +733,59 @@ failures >= 3                       │
       document.getElementById('btn-micro').classList.toggle('active', mode === 'micro');
       document.getElementById('arch-mono').style.display = mode === 'mono' ? 'flex' : 'none';
       document.getElementById('arch-micro').style.display = mode === 'micro' ? 'flex' : 'none';
+      if (mode === 'micro') {
+        setTimeout(drawConnectors, 100);
+      }
+    }
+
+    function drawConnectors() {
+      const svg = document.getElementById('service-connectors');
+      const container = document.getElementById('arch-micro');
+      if (!svg || container.style.display === 'none') return;
+      
+      svg.innerHTML = '';
+      const rectContainer = container.getBoundingClientRect();
+      
+      const drawPath = (fromEl, toEl, id) => {
+        if (!fromEl || !toEl) return;
+        const rectFrom = fromEl.getBoundingClientRect();
+        const rectTo = toEl.getBoundingClientRect();
+        
+        const x1 = rectFrom.left + rectFrom.width / 2 - rectContainer.left;
+        const y1 = rectFrom.bottom - rectContainer.top;
+        const x2 = rectTo.left + rectTo.width / 2 - rectContainer.left;
+        const y2 = rectTo.top - rectContainer.top;
+        
+        // Bezier curve
+        const d = \`M \${x1} \${y1} C \${x1} \${y1 + 40}, \${x2} \${y2 - 40}, \${x2} \${y2}\`;
+        
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        path.setAttribute('d', d);
+        path.setAttribute('class', 'connector');
+        path.setAttribute('id', id);
+        svg.appendChild(path);
+      };
+      
+      const client = document.getElementById('card-client');
+      const gateway = document.getElementById('card-gateway');
+      const user = document.getElementById('card-user');
+      const product = document.getElementById('card-product');
+      const order = document.getElementById('card-order');
+      
+      drawPath(client, gateway, 'path-client-gateway');
+      drawPath(gateway, user, 'path-gateway-user');
+      drawPath(gateway, product, 'path-gateway-product');
+      drawPath(gateway, order, 'path-gateway-order');
+    }
+
+    window.addEventListener('resize', drawConnectors);
+
+    function triggerPathAnimation(id) {
+      const path = document.getElementById(id);
+      if (path) {
+        path.classList.add('active');
+        setTimeout(() => path.classList.remove('active'), 1000);
+      }
     }
 
     // Tab 2 Simulator
@@ -613,7 +809,7 @@ failures >= 3                       │
           setTimeout(() => {
             const div = document.createElement('div');
             div.className = 'step';
-            div.innerHTML = `<span style="color: ${color}">●</span> <span>${text}</span>`;
+            div.innerHTML = \`<span style="color: \${color}">●</span> <span>\${text}</span>\`;
             tl.appendChild(div);
             resolve();
           }, delay);
@@ -621,7 +817,27 @@ failures >= 3                       │
       };
 
       await addStep('📱 [Client] Request initiated...', 'var(--info)', 100);
+      triggerPathAnimation('path-client-gateway');
 
+      if (useLiveBackend) {
+        await addStep('🔀 [Gateway] Forwarding to live backend...', 'var(--secondary)', 200);
+        
+        let endpoint = '/api/users';
+        if (selectedOp === 'products') endpoint = '/api/products';
+        if (selectedOp === 'order-post') endpoint = '/api/orders';
+        if (selectedOp === 'rate') endpoint = '/api/users';
+        
+        // In a real app we'd attach the auth token, here we just show what happens
+        const res = await sendRealRequest(endpoint, selectedOp === 'order-post' ? 'POST' : 'GET', selectedOp === 'order-post' ? {} : null);
+        
+        resBlock.style.display = 'block';
+        resBlock.style.color = res.error ? 'var(--danger)' : 'var(--primary)';
+        resBlock.innerHTML = JSON.stringify(res, null, 2);
+        await addStep(\`📱 [Client] Received response from live backend\`, 'var(--info)', 300);
+        return;
+      }
+
+      // Simulation mode
       if (!authOk) {
         await addStep('🔀 [Gateway] JWT Verification: FAILED ❌', 'var(--danger)', 400);
         await addStep('📱 [Client] Received: 401 Unauthorized', 'var(--info)', 300);
@@ -635,6 +851,7 @@ failures >= 3                       │
       await addStep('🔀 [Gateway] JWT Verification: OK ✅', 'var(--secondary)', 300);
 
       if (selectedOp === 'users') {
+        triggerPathAnimation('path-gateway-user');
         await addStep('🔀 [Gateway] Routing to user-service:3010...', 'var(--secondary)', 300);
         await addStep('👤 [User Service] Executing SELECT * FROM ms_users', 'var(--primary)', 400);
         await addStep('👤 [User Service] 3 records found', 'var(--primary)', 300);
@@ -643,7 +860,16 @@ failures >= 3                       │
         resBlock.style.display = 'block';
         resBlock.style.color = 'var(--primary)';
         resBlock.innerHTML = '[\n  { "id": 1, "name": "Alice" },\n  { "id": 2, "name": "Bob" }\n]';
+      } else if (selectedOp === 'products') {
+        triggerPathAnimation('path-gateway-product');
+        await addStep('🔀 [Gateway] Routing to product-service:3011...', 'var(--secondary)', 300);
+        await addStep('📦 [Product Service] Fetching products...', 'var(--primary)', 400);
+        await addStep('📱 [Client] Received 200 OK', 'var(--info)', 300);
+        resBlock.style.display = 'block';
+        resBlock.style.color = 'var(--primary)';
+        resBlock.innerHTML = '[\n  { "id": 101, "name": "Laptop" }\n]';
       } else if (selectedOp === 'order-post') {
+        triggerPathAnimation('path-gateway-order');
         await addStep('🔀 [Gateway] Routing to order-service:3012...', 'var(--secondary)', 300);
         await addStep('🛒 [Order Service] Validating payload...', 'var(--primary)', 300);
         await addStep('🛒 [Order Service] → Calling User Service internally', 'var(--warning)', 300);
@@ -655,6 +881,12 @@ failures >= 3                       │
         resBlock.style.display = 'block';
         resBlock.style.color = 'var(--primary)';
         resBlock.innerHTML = '{\n  "orderId": 99,\n  "status": "pending"\n}';
+      } else if (selectedOp === 'rate') {
+        await addStep('🔀 [Gateway] Rate limit: 61/60 - EXCEEDED ❌', 'var(--danger)', 200);
+        await addStep('📱 [Client] Received: 429 Too Many Requests', 'var(--info)', 200);
+        resBlock.style.display = 'block';
+        resBlock.style.color = 'var(--danger)';
+        resBlock.innerHTML = '{\n  "error": "Too Many Requests"\n}';
       }
     }
 
@@ -664,20 +896,20 @@ failures >= 3                       │
     
     function toggleService(svc) {
       servicesStatus[svc] = !servicesStatus[svc];
-      const tog = document.getElementById(`tog-${svc}`);
+      const tog = document.getElementById(\`tog-\${svc}\`);
       if (servicesStatus[svc]) {
         tog.classList.remove('off');
-        log(`[Ops] ${svc} Service restarted manually.`);
+        log(\`[Ops] \${svc} Service restarted manually.\`);
       } else {
         tog.classList.add('off');
-        log(`[Ops] ${svc} Service taken OFFLINE.`);
+        log(\`[Ops] \${svc} Service taken OFFLINE.\`);
       }
     }
 
     function log(msg) {
       const con = document.getElementById('chaos-log');
       const time = new Date().toISOString().split('T')[1].slice(0, 8);
-      con.innerHTML += `<div>[${time}] ${msg}</div>`;
+      con.innerHTML += \`<div>[\${time}] \${msg}</div>\`;
       con.scrollTop = con.scrollHeight;
     }
 
@@ -688,28 +920,28 @@ failures >= 3                       │
       updateDiagram('CLOSED');
 
       for (let i = 1; i <= 10; i++) {
-        log(`Request #${i} initiated...`);
+        log(\`Request #\${i} initiated...\`);
         
         if (cbState === 'OPEN') {
-          log(`   ❌ Request #${i} FAST-FAILED by Gateway (Circuit OPEN). Wait time: 0ms.`);
+          log(\`   ❌ Request #\${i} FAST-FAILED by Gateway (Circuit OPEN). Wait time: 0ms.\`);
           continue;
         }
 
         if (servicesStatus.user) {
-          log(`   ✅ Request #${i} Success (35ms)`);
+          log(\`   ✅ Request #\${i} Success (35ms)\`);
         } else {
-          log(`   ⚠️ Request #${i} Timeout! (3000ms)`);
+          log(\`   ⚠️ Request #\${i} Timeout! (3000ms)\`);
           failures++;
           if (failures >= 3 && cbState === 'CLOSED') {
             cbState = 'OPEN';
-            log(`   ⚡ CIRCUIT BREAKER TRIPPED! State changed to OPEN.`);
+            log(\`   ⚡ CIRCUIT BREAKER TRIPPED! State changed to OPEN.\`);
             updateDiagram('OPEN');
             
             // Auto half-open after 5 seconds
             setTimeout(() => {
               if (cbState === 'OPEN') {
                 cbState = 'HALF_OPEN';
-                log(`   🔄 Timeout elapsed. Circuit changed to HALF-OPEN. Testing next request...`);
+                log(\`   🔄 Timeout elapsed. Circuit changed to HALF-OPEN. Testing next request...\`);
                 updateDiagram('HALF_OPEN');
               }
             }, 5000);
@@ -723,7 +955,7 @@ failures >= 3                       │
 
     function updateDiagram(state) {
       const diag = document.getElementById('cb-diagram');
-      let text = `
+      let text = \`
 [CLOSED] ←── success ────────────┐
      │                           │
 failures >= 3                    │
@@ -734,7 +966,7 @@ failures >= 3                    │
                                  │
                                  ↓
                             back to OPEN
-      `;
+      \`;
       if (state === 'CLOSED') text = text.replace('[CLOSED]', '[CLOSED ✅]');
       if (state === 'OPEN') text = text.replace('[OPEN]', '[OPEN ❌]');
       if (state === 'HALF_OPEN') text = text.replace('[HALF-OPEN]', '[HALF-OPEN 🔄]');
@@ -751,7 +983,15 @@ failures >= 3                    │
         el.classList.add('wrong');
         // highlight correct one
         Array.from(parent.children).forEach(c => {
-          if (c.textContent.includes('unit;') || c.textContent.includes('entry point') || c.textContent.includes('hidden coupling')) {
+          if (
+            c.textContent.includes('unit;') || 
+            c.textContent.includes('entry point') || 
+            c.textContent.includes('hidden coupling') ||
+            c.textContent.includes('highly decoupled') ||
+            c.textContent.includes('limited number of test requests') ||
+            c.textContent.includes('traceparent') ||
+            c.textContent.includes('Using different types of databases')
+          ) {
             c.classList.add('correct');
           }
         });

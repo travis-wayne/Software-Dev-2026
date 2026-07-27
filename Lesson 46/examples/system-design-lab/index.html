@@ -113,6 +113,8 @@
     .tab-btn:hover {
       color: var(--text-main);
       background: var(--card-bg);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
     }
     
     .tab-btn.active {
@@ -190,6 +192,13 @@
       font-family: inherit;
       width: 100%;
       margin-top: 0.25rem;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
     }
     
     /* Tab 1: Framework */
@@ -206,8 +215,8 @@
       width: 12.5%;
       transition: width 0.3s ease;
     }
-    .step-card { display: none; }
-    .step-card.active { display: block; }
+    .fw-step { display: none; }
+    .fw-step.active { display: block; }
     .badge {
       display: inline-flex;
       align-items: center;
@@ -235,42 +244,68 @@
     }
     .output-value { font-family: 'JetBrains Mono', monospace; font-weight: bold; }
     
+    .supabase-panel {
+      background: rgba(139, 92, 246, 0.1);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .badge-status {
+      font-size: 0.8rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.5);
+    }
+    .db-input {
+      margin-bottom: 0.5rem;
+    }
+    
     /* Tab 3: Canvas */
     .canvas-layout {
       display: flex;
       gap: 2rem;
       height: 600px;
     }
-    .component-lib {
+    .component-palette {
       width: 250px;
       overflow-y: auto;
-    }
-    .canvas-area {
-      flex: 1;
-      border: 1px dashed var(--card-border);
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
-      position: relative;
-      background: rgba(0,0,0,0.2);
-      overflow: hidden;
+      padding: 1rem;
     }
-    .component-drag {
+    .palette-item {
       cursor: grab;
       padding: 0.75rem;
       border: 1px solid var(--card-border);
       border-radius: 6px;
       margin-bottom: 0.5rem;
       background: rgba(255,255,255,0.02);
-    }
-    .placed-component {
-      position: absolute;
-      width: 120px;
-      text-align: center;
-      padding: 0.5rem;
-      background: var(--card-bg);
-      border: 1px solid var(--primary);
-      border-radius: 8px;
-      cursor: pointer;
+      transition: all 0.2s ease;
       user-select: none;
+    }
+    .palette-item:active {
+      cursor: grabbing;
+    }
+    .palette-item:hover {
+      background: rgba(255,255,255,0.05);
+      border-color: var(--primary);
+    }
+    .canvas-component {
+      transition: transform 0.1s;
+    }
+    .canvas-component:hover {
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      transform: translateY(-2px);
     }
     
     /* Tab 4: Mock Interview */
@@ -291,6 +326,7 @@
       justify-content: center;
       align-items: center;
       z-index: 100;
+      backdrop-filter: blur(4px);
     }
     .modal-content {
       background: var(--bg);
@@ -299,6 +335,7 @@
       border-radius: 12px;
       max-width: 600px;
       width: 90%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
     
     .fab {
@@ -308,7 +345,7 @@
       width: 60px;
       height: 60px;
       border-radius: 50%;
-      background: var(--secondary);
+      background: linear-gradient(135deg, var(--secondary), #6d28d9);
       color: white;
       display: flex;
       justify-content: center;
@@ -318,6 +355,11 @@
       box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
       z-index: 50;
       border: none;
+      transition: all 0.2s ease;
+    }
+    .fab:hover {
+      transform: translateY(-2px) scale(1.05);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.6);
     }
   </style>
 </head>
@@ -353,40 +395,90 @@
       <div style="margin-bottom: 1rem">Step <span id="fw-step-num">1</span> of 8</div>
       <div class="progress-bar"><div class="progress-fill" id="fw-progress"></div></div>
       
-      <div class="glass-card step-card active" id="fw-card-1">
+      <div class="glass-card fw-step active" data-step="1">
         <div class="badge">R</div>
-        <h3>Requirements Clarification (5-10 mins)</h3>
+        <h3 style="display:inline-block; margin-left:10px">Requirements Clarification <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~2-5 min)</span></h3>
         <ul style="margin: 1rem 0; padding-left: 1.5rem">
-          <li>Define Functional Requirements (What does it do?)</li>
-          <li>Define Non-Functional Requirements (Scale, Latency, Availability)</li>
-          <li>Determine Read vs Write ratio</li>
+          <li>Functional vs Non-functional requirements.</li>
+          <li>Ask: scale, latency, availability, consistency needs.</li>
+          <li>Template questions list.</li>
         </ul>
         <div style="padding: 1rem; background: rgba(139, 92, 246, 0.1); border-left: 4px solid var(--secondary); margin-bottom: 1rem">
           <strong>Pro Tip:</strong> Never start drawing before asking questions!
         </div>
-        <button class="btn" onclick="nextFwStep(1)">Mark Complete & Next</button>
-      </div>
-      
-      <div class="glass-card step-card" id="fw-card-2">
-        <div class="badge">E</div>
-        <h3>Estimation (5-10 mins)</h3>
-        <ul style="margin: 1rem 0; padding-left: 1.5rem">
-          <li>Calculate QPS (Queries Per Second)</li>
-          <li>Estimate Storage for 5 years</li>
-          <li>Estimate Bandwidth (Network I/O)</li>
-        </ul>
-        <button class="btn" onclick="nextFwStep(2)">Mark Complete & Next</button>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
       </div>
 
-      <!-- Add remaining framework steps here dynamically or via simple hidden divs... -->
-      <div class="glass-card step-card" id="fw-card-8">
-        <div class="badge">D</div>
-        <h3>Deep Dive (10-15 mins)</h3>
+      <div class="glass-card fw-step" data-step="2">
+        <div class="badge">E</div>
+        <h3 style="display:inline-block; margin-left:10px">Estimation (Back-of-the-Envelope) <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~5-10 min)</span></h3>
         <ul style="margin: 1rem 0; padding-left: 1.5rem">
-          <li>Pick a critical component (e.g., caching, DB scaling)</li>
-          <li>Explain failure scenarios and mitigation</li>
+          <li>DAU, QPS, storage, bandwidth.</li>
+          <li>Show formula: <code>QPS = DAU × actions_per_day ÷ 86,400</code></li>
         </ul>
-        <button class="btn" onclick="resetFw()">Finish Framework Review</button>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="3">
+        <div class="badge">S</div>
+        <h3 style="display:inline-block; margin-left:10px">Storage Schema Design <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~5 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>SQL vs NoSQL choice.</li>
+          <li>Key entities, primary keys, indexes.</li>
+          <li>Show URL shortener schema snippet.</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="4">
+        <div class="badge">H</div>
+        <h3 style="display:inline-block; margin-left:10px">High-Level Architecture <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~10 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>ASCII block diagram of components.</li>
+          <li>Client → Load Balancer → App Servers → Cache → DB → CDN.</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="5">
+        <div class="badge">A</div>
+        <h3 style="display:inline-block; margin-left:10px">API Design <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~5 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Core REST endpoints.</li>
+          <li><code>POST /shorten</code>, <code>GET /{slug}</code>, <code>DELETE /{slug}</code>.</li>
+          <li>Request/response JSON examples.</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="6">
+        <div class="badge">D</div>
+        <h3 style="display:inline-block; margin-left:10px">Detailed Design <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~15 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Deep-dive on the hardest component (ID generation algorithms, cache eviction policy, DB sharding strategy).</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="7">
+        <div class="badge">E</div>
+        <h3 style="display:inline-block; margin-left:10px">Evaluate Bottlenecks <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~5 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Where does the system fail at 10x load?</li>
+          <li>Which component scales first?</li>
+          <li>Single points of failure.</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Mark Complete & Next</button>
+      </div>
+
+      <div class="glass-card fw-step" data-step="8">
+        <div class="badge">D</div>
+        <h3 style="display:inline-block; margin-left:10px">Deep Dive (Interviewer-Chosen) <span style="font-size:0.9rem; color:var(--text-muted); font-weight:normal;">(~10 min)</span></h3>
+        <ul style="margin: 1rem 0; padding-left: 1.5rem">
+          <li>Interviewer picks one area to explore further.</li>
+          <li>e.g., "How would you handle 1 billion users?", "What happens when the cache server goes down?"</li>
+        </ul>
+        <button class="btn" onclick="nextFwStep()">Finish Framework Review / Restart</button>
       </div>
 
     </div>
@@ -394,18 +486,35 @@
     <!-- TAB 2: ESTIMATION -->
     <div id="tab-estimation" class="tab-content">
       <h2>Back-of-the-Envelope Calculator</h2>
-      <div class="calc-grid" style="margin-top: 1rem">
+      
+      <div class="supabase-panel">
+        <div class="panel-header">
+          <span>🗄️ Estimation History</span>
+          <span class="badge-status" id="db-status">💾 Local Storage</span>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Create a free Supabase project at supabase.com, create a table called <code>estimations</code>, and paste your Project URL + anon key above to persist your calculation history!</p>
+        <input id="supabase-url" type="text" placeholder="Paste your Supabase project URL (optional)" class="db-input" />
+        <input id="supabase-key" type="text" placeholder="Paste your Supabase anon key (optional)" class="db-input" />
+        <div style="margin-top:0.5rem; display:flex; gap:0.5rem">
+            <button class="btn" onclick="connectSupabase()">Connect Supabase</button>
+            <button class="btn btn-secondary" onclick="loadHistory()">📋 Load My Past Estimations</button>
+        </div>
+        <div id="estimation-history" style="display:none; margin-top: 1rem; border-top: 1px solid var(--card-border); padding-top:1rem; max-height:200px; overflow-y:auto; font-size:0.9rem;"></div>
+      </div>
+      
+      <div class="calc-grid">
         <div class="glass-card">
           <h3>Inputs</h3>
           <div style="margin-top: 1rem">
             <label>Daily Active Users (Millions)</label>
-            <input type="number" id="calc-dau" value="50" onchange="recalc()">
+            <input type="number" id="calc-dau" value="50">
             <label style="margin-top: 1rem; display: block">Requests/User/Day</label>
-            <input type="number" id="calc-reqs" value="10" onchange="recalc()">
+            <input type="number" id="calc-reqs" value="10">
             <label style="margin-top: 1rem; display: block">Avg Size/Request (KB)</label>
-            <input type="number" id="calc-size" value="0.5" onchange="recalc()">
+            <input type="number" id="calc-size" value="0.5">
             <label style="margin-top: 1rem; display: block">Read/Write Ratio (X:1)</label>
-            <input type="number" id="calc-ratio" value="100" onchange="recalc()">
+            <input type="number" id="calc-ratio" value="100">
+            <button class="btn" style="margin-top: 1.5rem; width: 100%" onclick="recalc()">Calculate & Save</button>
           </div>
         </div>
         <div class="glass-card">
@@ -438,21 +547,30 @@
     <div id="tab-canvas" class="tab-content">
       <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
         <h2>Architecture Canvas</h2>
-        <button class="btn btn-secondary" onclick="loadTemplate()">Load URL Shortener</button>
+        <div style="display: flex; gap: 0.5rem">
+            <button class="btn btn-secondary" onclick="exportCanvas()">Export as Text</button>
+            <button class="btn btn-secondary" style="color:var(--danger)" onclick="clearCanvas()">Clear Canvas</button>
+            <button class="btn" onclick="loadURLShortenerTemplate()">Load URL Shortener</button>
+        </div>
       </div>
       <div class="canvas-layout">
-        <div class="component-lib glass-card">
+        <!-- Component palette (left sidebar) -->
+        <div class="component-palette">
           <h4>Components</h4>
-          <div class="component-drag">🌐 Client</div>
-          <div class="component-drag">⚖️ Load Balancer</div>
-          <div class="component-drag">🖥️ App Server</div>
-          <div class="component-drag">🔴 Redis Cache</div>
-          <div class="component-drag">🐘 PostgreSQL</div>
+          <div style="margin-top:1rem;"></div>
+          <div class="palette-item" draggable="true" data-type="client" data-label="👤 Client">👤 Client</div>
+          <div class="palette-item" draggable="true" data-type="lb" data-label="⚖️ Load Balancer">⚖️ Load Balancer</div>
+          <div class="palette-item" draggable="true" data-type="server" data-label="🖥️ App Server">🖥️ App Server</div>
+          <div class="palette-item" draggable="true" data-type="cache" data-label="⚡ Redis Cache">⚡ Redis Cache</div>
+          <div class="palette-item" draggable="true" data-type="db" data-label="🐘 PostgreSQL">🐘 PostgreSQL</div>
+          <div class="palette-item" draggable="true" data-type="cdn" data-label="🌐 CDN">🌐 CDN</div>
+          <div class="palette-item" draggable="true" data-type="queue" data-label="📨 Message Queue">📨 Message Queue</div>
         </div>
-        <div class="canvas-area" id="canvas-area">
-          <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: rgba(255,255,255,0.2)">
-            [Interactive Canvas Coming Soon]
-          </div>
+
+        <!-- Drop canvas (right area) -->
+        <div id="arch-canvas" style="flex:1;position:relative;min-height:400px;background:rgba(0,0,0,0.2);border:2px dashed rgba(255,255,255,0.2);border-radius:12px">
+          <p id="canvas-placeholder" style="opacity:0.4;text-align:center;padding-top:180px">← Drag components here to build your architecture</p>
+          <svg id="connection-svg" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1"></svg>
         </div>
       </div>
     </div>
@@ -526,23 +644,98 @@
     }
 
     // Framework
-    function nextFwStep(current) {
-      document.getElementById(`fw-card-${current}`).classList.remove('active');
-      let next = current === 2 ? 8 : current + 1; // skip for brevity in prototype
-      if (document.getElementById(`fw-card-${next}`)) {
-        document.getElementById(`fw-card-${next}`).classList.add('active');
-        document.getElementById('fw-step-num').innerText = next;
-        document.getElementById('fw-progress').style.width = `${(next/8)*100}%`;
+    function nextFwStep() {
+      const current = parseInt(document.querySelector('.fw-step.active')?.dataset.step || '1');
+      const next = current >= 8 ? 1 : current + 1;
+      document.querySelectorAll('.fw-step').forEach(s => s.classList.remove('active'));
+      const nextEl = document.querySelector(`.fw-step[data-step="${next}"]`);
+      if (nextEl) {
+          nextEl.classList.add('active');
+          document.getElementById('fw-step-num').innerText = next;
+          document.getElementById('fw-progress').style.width = \`\${(next/8)*100}%\`;
       }
     }
-    function resetFw() {
-      document.querySelectorAll('.step-card').forEach(el => el.classList.remove('active'));
-      document.getElementById('fw-card-1').classList.add('active');
-      document.getElementById('fw-step-num').innerText = 1;
-      document.getElementById('fw-progress').style.width = '12.5%';
+
+    // Calculator & Supabase
+    let supabaseUrl = localStorage.getItem('l46-sb-url') || '';
+    let supabaseKey = localStorage.getItem('l46-sb-key') || '';
+    
+    if(supabaseUrl && supabaseKey) {
+        document.getElementById('supabase-url').value = supabaseUrl;
+        document.getElementById('supabase-key').value = supabaseKey;
+        document.getElementById('db-status').textContent = '🟢 Supabase Connected';
     }
 
-    // Calculator
+    function connectSupabase() {
+      supabaseUrl = document.getElementById('supabase-url').value.trim();
+      supabaseKey = document.getElementById('supabase-key').value.trim();
+      document.getElementById('db-status').textContent = supabaseUrl ? '🟢 Supabase Connected' : '💾 Local Storage';
+      localStorage.setItem('l46-sb-url', supabaseUrl);
+      localStorage.setItem('l46-sb-key', supabaseKey);
+    }
+
+    async function saveEstimation(data) {
+      if (supabaseUrl && supabaseKey) {
+        try {
+            await fetch(\`\${supabaseUrl}/rest/v1/estimations\`, {
+            method: 'POST',
+            headers: {
+                'apikey': supabaseKey,
+                'Authorization': 'Bearer ' + supabaseKey,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ ...data, created_at: new Date().toISOString() })
+            });
+        } catch(e) { console.error("Supabase error, saving locally", e); saveLocal(data); }
+      } else {
+        saveLocal(data);
+      }
+    }
+    
+    function saveLocal(data) {
+        const history = JSON.parse(localStorage.getItem('l46-estimations') || '[]');
+        history.unshift({ ...data, created_at: new Date().toISOString() });
+        localStorage.setItem('l46-estimations', JSON.stringify(history.slice(0, 10)));
+    }
+    
+    async function loadHistory() {
+        const histDiv = document.getElementById('estimation-history');
+        histDiv.style.display = 'block';
+        histDiv.innerHTML = 'Loading...';
+        
+        let history = [];
+        if(supabaseUrl && supabaseKey) {
+            try {
+                const res = await fetch(\`\${supabaseUrl}/rest/v1/estimations?order=created_at.desc&limit=10\`, {
+                    headers: {
+                        'apikey': supabaseKey,
+                        'Authorization': 'Bearer ' + supabaseKey
+                    }
+                });
+                if(res.ok) {
+                    history = await res.json();
+                } else { throw new Error('fetch failed'); }
+            } catch(e) {
+                history = JSON.parse(localStorage.getItem('l46-estimations') || '[]');
+            }
+        } else {
+            history = JSON.parse(localStorage.getItem('l46-estimations') || '[]');
+        }
+        
+        if(history.length === 0) {
+            histDiv.innerHTML = 'No history found.';
+            return;
+        }
+        
+        histDiv.innerHTML = history.map(h => \`
+            <div style="margin-bottom:0.5rem; padding-bottom:0.5rem; border-bottom:1px solid rgba(255,255,255,0.1)">
+                <div><strong>\${new Date(h.created_at).toLocaleString()}</strong></div>
+                <div>DAU: \${h.dau}, QPS: \${h.qps}, Storage: \${h.storage}GB</div>
+            </div>
+        \`).join('');
+    }
+
     function recalc() {
       const dau = parseFloat(document.getElementById('calc-dau').value) * 1000000;
       const reqs = parseFloat(document.getElementById('calc-reqs').value);
@@ -555,24 +748,183 @@
       const writesPs = qps / (ratio + 1);
       const readsPs = qps - writesPs;
       
-      document.getElementById('out-qps').innerText = `${Math.round(qps).toLocaleString()} req/s`;
-      document.getElementById('out-peak').innerText = `${Math.round(qps * 2).toLocaleString()} req/s`;
+      document.getElementById('out-qps').innerText = \`\${Math.round(qps).toLocaleString()} req/s\`;
+      document.getElementById('out-peak').innerText = \`\${Math.round(qps * 2).toLocaleString()} req/s\`;
+      
+      const wb = writesPs * sizeKB;
+      const rb = readsPs * sizeKB;
+      
+      document.getElementById('out-wbw').innerText = \`\${Math.round(wb).toLocaleString()} KB/s\`;
+      document.getElementById('out-rbw').innerText = \`\${(rb/1024).toFixed(1)} MB/s\`;
       
       const storageYearGB = (writesPs * sizeKB * 86400 * 365) / 1024 / 1024;
-      document.getElementById('out-storage').innerText = `${Math.round(storageYearGB).toLocaleString()} GB`;
+      document.getElementById('out-storage').innerText = \`\${Math.round(storageYearGB).toLocaleString()} GB\`;
+      
+      saveEstimation({
+          dau: dau / 1000000,
+          reqs: reqs,
+          size_kb: sizeKB,
+          ratio: ratio,
+          qps: Math.round(qps),
+          storage: Math.round(storageYearGB)
+      });
     }
 
-    function loadTemplate() {
-      const canvas = document.getElementById('canvas-area');
-      canvas.innerHTML = `
-        <div class="placed-component" style="top: 50px; left: 50px">🌐 Client</div>
-        <div class="placed-component" style="top: 50px; left: 250px">⚖️ LB</div>
-        <div class="placed-component" style="top: 50px; left: 450px">🖥️ App 1</div>
-        <div class="placed-component" style="top: 150px; left: 450px">🖥️ App 2</div>
-        <div class="placed-component" style="top: 100px; left: 650px">🔴 Redis</div>
-        <div class="placed-component" style="top: 250px; left: 650px">🐘 PostgreSQL</div>
-      `;
+    // Architecture Canvas Drag & Drop
+    let placedComponents = [];
+    let connections = [];
+
+    document.querySelectorAll('.palette-item').forEach(item => {
+      item.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('type', item.dataset.type);
+        e.dataTransfer.setData('label', item.dataset.label);
+      });
+    });
+
+    const canvas = document.getElementById('arch-canvas');
+    canvas.addEventListener('dragover', e => e.preventDefault());
+    canvas.addEventListener('drop', e => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const type = e.dataTransfer.getData('type');
+      const label = e.dataTransfer.getData('label');
+      if(type && label) {
+          const x = e.clientX - rect.left - 60;
+          const y = e.clientY - rect.top - 20;
+          addComponent(type, label, x, y);
+      }
+    });
+
+    function addComponent(type, label, x, y, id=null) {
+      const el = document.createElement('div');
+      el.className = 'canvas-component';
+      el.dataset.id = id || Date.now().toString() + Math.floor(Math.random()*1000);
+      el.dataset.type = type;
+      el.style.cssText = \`position:absolute;left:\${x}px;top:\${y}px;cursor:move;padding:8px 12px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:8px;font-size:12px;user-select:none;z-index:10\`;
+      el.textContent = label;
+      
+      // Make draggable within canvas
+      el.addEventListener('mousedown', startDrag);
+      canvas.appendChild(el);
+      placedComponents.push({ id: el.dataset.id, el, type, label });
+      
+      const placeholder = document.getElementById('canvas-placeholder');
+      if (placeholder) placeholder.style.display = 'none';
+      
+      return el.dataset.id;
     }
+
+    function startDrag(e) {
+      if (e.button !== 0) return;
+      const el = e.currentTarget;
+      const startX = e.clientX - parseInt(el.style.left);
+      const startY = e.clientY - parseInt(el.style.top);
+      
+      const onMove = ev => {
+        el.style.left = (ev.clientX - startX) + 'px';
+        el.style.top = (ev.clientY - startY) + 'px';
+        drawConnections();
+      };
+      
+      const onUp = () => { 
+          document.removeEventListener('mousemove', onMove); 
+          document.removeEventListener('mouseup', onUp); 
+      };
+      
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    }
+    
+    function addConnection(id1, id2) {
+        connections.push({from: id1, to: id2});
+    }
+
+    function drawConnections() {
+        const svg = document.getElementById('connection-svg');
+        svg.innerHTML = '';
+        
+        // Add marker def
+        svg.innerHTML += \`
+            <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="rgba(255,255,255,0.4)" />
+                </marker>
+            </defs>
+        \`;
+        
+        connections.forEach(conn => {
+            const comp1 = placedComponents.find(c => c.id === conn.from);
+            const comp2 = placedComponents.find(c => c.id === conn.to);
+            if(comp1 && comp2) {
+                const rect1 = comp1.el.getBoundingClientRect();
+                const rect2 = comp2.el.getBoundingClientRect();
+                const canvasRect = canvas.getBoundingClientRect();
+                
+                const x1 = rect1.left + rect1.width/2 - canvasRect.left;
+                const y1 = rect1.top + rect1.height/2 - canvasRect.top;
+                const x2 = rect2.left + rect2.width/2 - canvasRect.left;
+                const y2 = rect2.top + rect2.height/2 - canvasRect.top;
+                
+                const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+                line.setAttribute('x1', x1);
+                line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2);
+                line.setAttribute('y2', y2);
+                line.setAttribute('stroke', 'rgba(255,255,255,0.4)');
+                line.setAttribute('stroke-width', '2');
+                line.setAttribute('marker-end', 'url(#arrowhead)');
+                svg.appendChild(line);
+            }
+        });
+    }
+
+    function clearCanvas() {
+        placedComponents.forEach(c => c.el.remove());
+        placedComponents = [];
+        connections = [];
+        drawConnections();
+        const placeholder = document.getElementById('canvas-placeholder');
+        if (placeholder) placeholder.style.display = 'block';
+    }
+    
+    function exportCanvas() {
+        if(placedComponents.length === 0) {
+            alert('Canvas is empty!');
+            return;
+        }
+        const counts = {};
+        placedComponents.forEach(c => {
+            counts[c.label] = (counts[c.label] || 0) + 1;
+        });
+        const summary = Object.entries(counts).map(([label, count]) => \`\${count}x \${label}\`).join('\\n');
+        alert("Architecture Components:\\n" + summary);
+    }
+
+    function loadURLShortenerTemplate() {
+        clearCanvas();
+        
+        const client = addComponent('client', '👤 Client', 50, 150);
+        const cdn = addComponent('cdn', '🌐 CDN', 200, 50);
+        const lb = addComponent('lb', '⚖️ Load Balancer', 200, 250);
+        const app1 = addComponent('server', '🖥️ App Server 1', 400, 180);
+        const app2 = addComponent('server', '🖥️ App Server 2', 400, 320);
+        const cache = addComponent('cache', '⚡ Redis Cache', 600, 150);
+        const db = addComponent('db', '🐘 PostgreSQL', 600, 350);
+        
+        addConnection(client, cdn);
+        addConnection(client, lb);
+        addConnection(lb, app1);
+        addConnection(lb, app2);
+        addConnection(app1, cache);
+        addConnection(app1, db);
+        addConnection(app2, cache);
+        addConnection(app2, db);
+        
+        drawConnections();
+    }
+    
+    // Initial draw
+    recalc();
   </script>
 </body>
 </html>

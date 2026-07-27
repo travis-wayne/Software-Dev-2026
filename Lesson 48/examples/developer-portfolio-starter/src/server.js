@@ -1,7 +1,9 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { createRequire } from 'module';
 
+const require = createRequire(import.meta.url);
 dotenv.config();
 
 const app = express();
@@ -11,6 +13,69 @@ const OWNER_NAME = process.env.PORTFOLIO_OWNER_NAME || "Software-Dev-2026 Gradua
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+const { Pool } = require('pg');
+let dbPool = null;
+
+async function initDB() {
+  if (!process.env.DATABASE_URL) return;
+  try {
+    dbPool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    });
+    await dbPool.query(`
+      CREATE TABLE IF NOT EXISTS contact_submissions (
+        id SERIAL PRIMARY KEY,
+        name VARCHAR(255),
+        email VARCHAR(255),
+        subject VARCHAR(500),
+        message TEXT,
+        receipt_id VARCHAR(100),
+        submitted_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
+    console.log('  🐘 Contact submissions DB connected!');
+  } catch (err) {
+    console.error('  ⚠️  DB init failed:', err.message);
+    dbPool = null;
+  }
+}
+
+// Optional: pnpm add resend (only if RESEND_API_KEY is set)
+async function sendEmailNotification(contactData) {
+  if (!process.env.RESEND_API_KEY) {
+    console.log('  📬 Email simulation (no RESEND_API_KEY set):');
+    console.log('  To:', process.env.CONTACT_EMAIL || 'developer@example.com');
+    console.log('  Subject:', contactData.subject);
+    console.log('  From:', contactData.email);
+    return { simulated: true };
+  }
+  
+  try {
+    // Dynamic require so server starts even without resend installed
+    const { Resend } = require('resend');
+    const resend = new Resend(process.env.RESEND_API_KEY);
+    
+    const { data } = await resend.emails.send({
+      from: 'Portfolio Contact <onboarding@resend.dev>',  // Use verified domain in production
+      to: process.env.CONTACT_EMAIL || 'developer@example.com',
+      subject: `[Portfolio Contact] ${contactData.subject}`,
+      html: `
+        <h2>New Portfolio Contact</h2>
+        <p><strong>From:</strong> ${contactData.name} &lt;${contactData.email}&gt;</p>
+        <p><strong>Subject:</strong> ${contactData.subject}</p>
+        <hr>
+        <p>${contactData.message.replace(/\n/g, '<br>')}</p>
+      `
+    });
+    return { sent: true, id: data.id };
+  } catch (err) {
+    console.error('Email send failed:', err.message);
+    return { sent: false, error: err.message };
+  }
+}
+
 
 // --- Mock Database / Portfolio Data ---
 
@@ -113,7 +178,7 @@ app.get('/api/skills', (req, res) => {
 });
 
 // 4. Contact Form Endpoint
-app.post('/api/contact', (req, res) => {
+app.post('/api/contact', async (req, res) => {
   const { name, email, subject, message } = req.body;
 
   if (!name || !email || !message) {
@@ -123,25 +188,50 @@ app.post('/api/contact', (req, res) => {
     });
   }
 
-  // Simulate email sending delay
-  setTimeout(() => {
-    console.log(`\n📧 [EMAIL SIMULATION] New contact message received!`);
-    console.log(`From: ${name} (${email})`);
-    console.log(`Subject: ${subject || 'No Subject'}`);
-    console.log(`Message: ${message}\n`);
+  const receiptId = `msg_${Date.now()}`;
 
-    res.status(201).json({
-      success: true,
-      message: "Thank you for reaching out! Your message has been sent successfully.",
-      receiptId: `msg_${Date.now()}`,
-      timestamp: new Date().toISOString()
-    });
-  }, 800); // 800ms delay to simulate network request
+  // Log to database if connected
+  if (dbPool) {
+    try {
+      await dbPool.query(
+        'INSERT INTO contact_submissions (name, email, subject, message, receipt_id) VALUES ($1, $2, $3, $4, $5)',
+        [name, email, subject || 'No Subject', message, receiptId]
+      );
+    } catch (err) {
+      console.error('Failed to log submission to DB:', err);
+    }
+  }
+
+  // Send email notification
+  await sendEmailNotification({ name, email, subject: subject || 'No Subject', message });
+
+  res.status(201).json({
+    success: true,
+    message: "Thank you for reaching out! Your message has been sent successfully.",
+    receiptId,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET /api/contact/submissions — Admin view of all contact submissions
+app.get('/api/contact/submissions', async (req, res) => {
+  const token = req.headers['x-admin-token'];
+  if (token !== process.env.ADMIN_TOKEN && process.env.ADMIN_TOKEN) {
+    return res.status(403).json({ error: 'Unauthorized' });
+  }
+  if (dbPool) {
+    const { rows } = await dbPool.query(
+      'SELECT id, name, email, subject, receipt_id, submitted_at FROM contact_submissions ORDER BY submitted_at DESC LIMIT 100'
+    );
+    return res.json({ success: true, data: rows, source: 'postgresql' });
+  }
+  res.json({ success: true, data: [], message: 'No DB connected — set DATABASE_URL to store submissions' });
 });
 
 // --- Server Startup ---
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
+  await initDB();
   console.log(`\n======================================================`);
   console.log(`🚀 Developer Portfolio API is running!`);
   console.log(`👤 Owner: ${OWNER_NAME}`);
@@ -152,5 +242,6 @@ app.listen(PORT, () => {
   console.log(`  GET  /api/projects`);
   console.log(`  GET  /api/skills`);
   console.log(`  POST /api/contact`);
+  console.log(`  GET  /api/contact/submissions`);
   console.log(`======================================================\n`);
 });

@@ -39,14 +39,16 @@ model Post {
   tags      Tag[]
   likes     Like[]
   createdAt DateTime @default(now())
+
+  @@index([authorId])
 }
 ```
 
 **Implementation Sprints:**
-- **Sprint 1**: Set up Next.js App Router, Tailwind, Prisma, Neon DB, and NextAuth (GitHub login).
-- **Sprint 2**: Build the Markdown Editor and the Post creation API. Implement direct S3 uploads for embedded images.
-- **Sprint 3**: Build the global feed with Cursor-based pagination. Implement Like and Follow functionality.
-- **Sprint 4**: Polish the UI with Optimistic updates (liking a post feels instant), animations, and responsive design. Deploy to Vercel.
+- **Sprint 1 (2 weeks — ~40 story points total)**: Set up Next.js App Router (5 points), Tailwind (3 points), Prisma, Neon DB (8 points), and NextAuth (GitHub login) (8 points).
+- **Sprint 2 (2 weeks — ~40 story points total)**: Build the Markdown Editor (8 points) and the Post creation API (5 points). Implement direct S3 uploads for embedded images (8 points).
+- **Sprint 3 (2 weeks — ~40 story points total)**: Build the global feed with Cursor-based pagination (8 points). Implement Like (4 points) and Follow functionality (5 points).
+- **Sprint 4 (2 weeks — ~40 story points total)**: Polish the UI with Optimistic updates (liking a post feels instant) (8 points), animations (5 points), and responsive design (5 points). Deploy to Vercel (5 points).
 
 ---
 
@@ -77,6 +79,9 @@ model WorkspaceMember {
   workspaceId String
   role        Role      // ENUM: OWNER, ADMIN, MEMBER
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([userId])
+  @@index([workspaceId])
 }
 
 model Issue {
@@ -87,14 +92,16 @@ model Issue {
   assigneeId  String?
   workspaceId String
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
 }
 ```
 
 **Implementation Sprints:**
-- **Sprint 1**: Database setup, NextAuth integration, and Workspace creation workflows.
-- **Sprint 2**: The core Issue CRUD (Create, Read, Update, Delete) and API routes protected by RBAC middleware.
-- **Sprint 3**: The interactive Kanban Board with Drag-and-Drop, powered by Optimistic UI state.
-- **Sprint 4**: Issue attachments (S3), Activity audit logs, system-wide keyboard shortcuts, and Vercel deployment.
+- **Sprint 1 (2 weeks — ~40 story points total)**: Database setup (5 points), NextAuth integration (8 points), and Workspace creation workflows (8 points).
+- **Sprint 2 (2 weeks — ~40 story points total)**: The core Issue CRUD (Create, Read, Update, Delete) (8 points) and API routes protected by RBAC middleware (8 points).
+- **Sprint 3 (2 weeks — ~40 story points total)**: The interactive Kanban Board (8 points) with Drag-and-Drop (5 points), powered by Optimistic UI state (8 points).
+- **Sprint 4 (2 weeks — ~40 story points total)**: Issue attachments (S3) (8 points), Activity audit logs (5 points), system-wide keyboard shortcuts (5 points), and Vercel deployment (5 points).
 
 ---
 
@@ -121,6 +128,8 @@ model Product {
   category    String
   reviews     Review[]
   orderItems  OrderItem[]
+
+  @@index([vendorId])
 }
 
 model Order {
@@ -130,11 +139,13 @@ model Order {
   total       Float
   items       OrderItem[]
   createdAt   DateTime @default(now())
+
+  @@index([userId])
 }
 ```
 
 **Implementation Sprints:**
-- **Sprint 1**: Product Catalog UI, Database seeding, and dynamic filtering APIs.
-- **Sprint 2**: The global Shopping Cart (Zustand + LocalStorage) and the simulated Checkout flow.
-- **Sprint 3**: Webhook endpoint creation for secure payment validation. Order history processing.
-- **Sprint 4**: The Vendor Analytics Dashboard (aggregating sales data with Prisma `groupBy`), Review system, and Vercel deployment.
+- **Sprint 1 (2 weeks — ~40 story points total)**: Product Catalog UI (8 points), Database seeding (5 points), and dynamic filtering APIs (8 points).
+- **Sprint 2 (2 weeks — ~40 story points total)**: The global Shopping Cart (Zustand + LocalStorage) (8 points) and the simulated Checkout flow (8 points).
+- **Sprint 3 (2 weeks — ~40 story points total)**: Webhook endpoint creation for secure payment validation (8 points). Order history processing (8 points).
+- **Sprint 4 (2 weeks — ~40 story points total)**: The Vendor Analytics Dashboard (aggregating sales data with Prisma `groupBy`) (8 points), Review system (5 points), and Vercel deployment (5 points).

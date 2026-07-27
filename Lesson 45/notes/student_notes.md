@@ -200,7 +200,100 @@ Start with a monolith, extract services when you have PROVEN scale pain ("Monoli
 
 ---
 
-## 10. Common Mistakes
+## 10. Saga Pattern Deep Dive — Coordinating Distributed Transactions
+
+Explain the problem: In microservices, you cannot use a single SQL transaction across multiple services. If Order Service writes to DB and then Payment Service fails, you need a rollback strategy — this is the Saga Pattern.
+
+Two types with ASCII sequence diagrams:
+
+**Choreography Saga (Event-Driven):**
+```
+Client
+  │
+  ▼
+Order Service ──creates order──▶ [Event: ORDER_CREATED]
+                                         │
+                                         ▼
+                              Payment Service ──processes──▶ [Event: PAYMENT_SUCCESS]
+                                                                      │
+                                                                      ▼
+                                                        Inventory Service ──reserves──▶ [Event: STOCK_RESERVED]
+                                                                                                │
+                                                                                                ▼
+                                                                                   Notification Service ──sends email
+```
+Compensating transactions: If PAYMENT_FAILS event fires, Order Service listens and cancels the order.
+
+**Orchestration Saga (Central Coordinator):**
+```
+Client
+  │
+  ▼
+Saga Orchestrator
+  ├──1. Create Order──▶ Order Service ──▶ Success
+  ├──2. Charge Card──▶ Payment Service ──▶ Success  
+  ├──3. Reserve Stock──▶ Inventory Service ──▶ FAIL!
+  │                                              │
+  │   ◀── compensate: Refund Card ──────────────┘
+  └── compensate: Cancel Order ──▶ Order Service
+```
+Pros/Cons table: Choreography (decoupled but harder to debug) vs Orchestration (visible workflow but single point of failure)
+
+---
+
+## 11. Distributed Tracing — Finding Bugs Across Services
+
+The problem: When a request spans 5 microservices and something fails after 2 seconds, which service caused the delay? `console.log` is useless across distributed systems.
+
+Solution: OpenTelemetry W3C Trace Context
+- Every incoming request gets assigned a `traceId` (unique per request) and `spanId` (unique per service hop)
+- Each service propagates the trace context via HTTP headers:
+  ```
+  traceparent: 00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01
+  ```
+- All spans from all services are collected by a tracing backend (Jaeger, Zipkin, or Grafana Tempo)
+- You get a waterfall timeline showing exactly which service took how long!
+
+Code snippet showing OpenTelemetry instrumentation in Node.js/Express:
+```javascript
+// Install: npm install @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node
+const { NodeSDK } = require('@opentelemetry/sdk-node');
+const { getNodeAutoInstrumentations } = require('@opentelemetry/auto-instrumentations-node');
+
+const sdk = new NodeSDK({
+  serviceName: 'order-service',
+  instrumentations: [getNodeAutoInstrumentations()]
+});
+sdk.start();
+// That's it! Express routes are automatically traced.
+```
+When to use: Mandatory in production microservices with 3+ services.
+
+---
+
+## 12. When NOT to Use Microservices (The Monolith-First Rule)
+
+Do NOT jump to microservices if:
+- Your team has fewer than 8 engineers (Conway's Law: your system mirrors your org structure)
+- You don't have solid CI/CD pipelines yet
+- Your domain boundaries are unclear (splitting prematurely creates the Distributed Monolith anti-pattern!)
+- You haven't had real scaling problems yet
+
+Decision checklist table:
+```
+| Signal | Go Microservices | Stay Monolith |
+|--------|-----------------|---------------|
+| Team size | 8+ engineers | < 8 engineers |
+| Deploy frequency | Multiple per day | Weekly |
+| Clear domain boundaries | Yes | Unclear |
+| Independent scaling needs | Yes | One bottleneck |
+| CI/CD maturity | Automated pipelines | Manual deploys |
+```
+Martin Fowler's rule: "Don't start a new project with microservices, even if you're sure your application will be large enough to make it worthwhile."
+
+---
+
+## 13. Common Mistakes
 
 | Mistake | Problem | Fix |
 |---------|---------|-----|

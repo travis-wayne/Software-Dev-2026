@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lesson 48 | Software-Dev-2026 Graduation Lab</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0b1120;
@@ -371,6 +371,44 @@
             to { transform: translateY(100vh) rotate(720deg); }
         }
 
+        /* Checklists */
+        .skills-checklist {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .skills-checklist h3 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+        .month-group {
+            margin-bottom: 1.5rem;
+        }
+        .month-group h4 {
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 0.5rem;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+        .checkbox-item label {
+            margin: 0;
+        }
+
         /* Utilities */
         .mt-2 { margin-top: 1rem; }
         .mb-2 { margin-bottom: 1rem; }
@@ -507,15 +545,27 @@
                     </div>
                     
                     <div class="result-box mb-2">
-                        <strong style="color: var(--info);">Question:</strong>
-                        <p id="mi-question" class="mt-2" style="font-size: 1.1rem;">Why did you choose PostgreSQL over MongoDB for your capstone project?</p>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                            <strong style="color: var(--info);">Question:</strong>
+                            <span id="question-counter" style="color: var(--text-muted); font-size: 0.9rem;">Question 1 of 4</span>
+                        </div>
+                        <p id="mi-question" class="mt-2" style="font-size: 1.1rem;"></p>
                     </div>
                     
-                    <button class="btn" onclick="toggleBlueprint()">Show Strong Hire Answer Blueprint</button>
+                    <div style="display: flex; gap: 1rem;">
+                        <button class="btn" onclick="toggleBlueprint()">Show Strong Hire Answer Blueprint</button>
+                        <button class="btn btn-secondary" onclick="nextQuestion()">Next Question →</button>
+                        <button class="btn" onclick="bookmarkQuestion()">📌 Bookmark</button>
+                    </div>
                     
                     <div class="result-box mt-2" id="mi-blueprint" style="display: none; border-color: var(--primary);">
                         <strong style="color: var(--primary);">Blueprint:</strong>
-                        <p id="mi-answer" class="mt-2 text-muted">Focus on relational data integrity, ACID compliance, and the need for complex JOINs across users, tickets, and organizations which NoSQL handles poorly.</p>
+                        <p id="mi-answer" class="mt-2 text-muted"></p>
+                    </div>
+                    
+                    <div id="bookmarked-drawer" style="margin-top: 2rem; border-top: 1px solid var(--glass-border); padding-top: 1rem; display: none;">
+                        <h3>📌 Bookmarked Questions</h3>
+                        <ul id="bookmark-list" style="margin-top: 1rem; padding-left: 1rem; color: var(--text-muted);"></ul>
                     </div>
                 </div>
 
@@ -563,6 +613,27 @@
                     <h2>The Official Graduation Diploma</h2>
                     <p class="mb-2 text-muted">You've completed the 4-month journey. Claim your credential.</p>
                     
+                    <div class="skills-checklist">
+                        <h3>✅ Your 4-Month Journey — Skills Mastered</h3>
+                        <div class="month-group">
+                            <h4>Month 1 — Web Foundations</h4>
+                            <div class="checkbox-grid" id="m1-grid"></div>
+                        </div>
+                        <div class="month-group">
+                            <h4>Month 2 — Frontend Engineering</h4>
+                            <div class="checkbox-grid" id="m2-grid"></div>
+                        </div>
+                        <div class="month-group">
+                            <h4>Month 3 — Backend & Databases</h4>
+                            <div class="checkbox-grid" id="m3-grid"></div>
+                        </div>
+                        <div class="month-group">
+                            <h4>Month 4 — Cloud, DevOps & Career</h4>
+                            <div class="checkbox-grid" id="m4-grid"></div>
+                        </div>
+                        <p style="margin-top: 1rem;"><strong id="skills-count">0 / 48</strong> modules mastered</p>
+                    </div>
+
                     <div class="form-group">
                         <label>Enter Your Full Name</label>
                         <input type="text" id="grad-name" placeholder="e.g. Jane Doe">
@@ -576,7 +647,7 @@
             <div class="diploma" id="diploma-render">
                 <h3>Certificate of Completion</h3>
                 <p>This certifies that</p>
-                <div class="student-name" id="diploma-name-display">Student Name</div>
+                <div class="student-name" id="diploma-name-display" style="font-family: 'Playfair Display', serif;">Student Name</div>
                 <p>has successfully mastered the full-stack engineering curriculum of <strong>Software-Dev-2026</strong>, demonstrating elite competence in modern web architecture, distributed database systems, cloud DevOps orchestration, and enterprise software design.</p>
                 <p style="color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">Awarded on July 2026</p>
                 <div class="diploma-seal">SD-2026</div>
@@ -678,22 +749,80 @@ ${metrics}
 
         // Tab 3: Mock Interview
         const questions = {
-            tech: { q: "Why did you choose PostgreSQL over MongoDB for your capstone project?", a: "Focus on relational data integrity, ACID compliance, and the need for complex JOINs across users, tickets, and organizations which NoSQL handles poorly." },
-            sys: { q: "How would you design a URL shortener like Bitly?", a: "Discuss base62 encoding for the short hash, a highly available relational DB or Key-Value store, and an aggressive Redis caching layer for read operations." },
-            star: { q: "Tell me about a time you had a technical disagreement with a teammate.", a: "STAR format. Situation: Disagreed on tech stack. Task: Needed to align the team. Action: Built a small proof-of-concept to demonstrate metrics. Result: Team adopted the approach smoothly." }
+            tech: [
+                { q: "Walk me through how a HTTP request travels from a user's browser to a database and back. What happens at each layer?", a: "Discuss DNS resolution, TCP handshake, TLS, load balancer, reverse proxy, web server application code (middleware, controllers), database queries via ORM or raw SQL, and the response bubbling back up as JSON/HTML." },
+                { q: "Why did you choose PostgreSQL over MongoDB for your capstone project? What were the trade-offs you considered?", a: "Focus on relational data integrity, ACID compliance, and the need for complex JOINs across users, tickets, and organizations which NoSQL handles poorly." },
+                { q: "Explain how JWT authentication works. What are the security risks of storing JWTs in localStorage versus httpOnly cookies?", a: "Explain Header, Payload, Signature. Storing in localStorage exposes the token to XSS attacks. httpOnly cookies prevent JS access but require CSRF protection." },
+                { q: "What is the difference between `useEffect` with no dependency array, an empty dependency array `[]`, and a dependency array with values?", a: "No array: runs every render. Empty array: runs once on mount. With values: runs when those values change." }
+            ],
+            sys: [
+                { q: "Design a URL shortener like TinyURL. Walk me through the requirements, estimation, architecture, and key design decisions.", a: "Discuss base62 encoding for the short hash, a highly available relational DB or Key-Value store, and an aggressive Redis caching layer for read operations." },
+                { q: "How would you design the notification system for a social media app that needs to support push, email, and in-app notifications for 50M users?", a: "Discuss message queues (RabbitMQ/Kafka), fanout workers, deduplication, user preferences service, and APNS/FCM/SES integrations." },
+                { q: "Design the file upload system for a SaaS application. How would you handle large files (up to 5GB) without timing out?", a: "Discuss bypassing the application server via pre-signed S3 URLs. Client uploads directly to bucket, then notifies server. Discuss multipart uploads." },
+                { q: "How would you scale a PostgreSQL database that has grown to 10TB and is struggling with read performance?", a: "Discuss indexing, materialized views, read replicas (leader-follower architecture), connection pooling (PgBouncer), and eventually sharding or archiving." }
+            ],
+            star: [
+                { q: "Tell me about a time you had a technical disagreement with a teammate. How did you resolve it?", a: "STAR format. Situation: Disagreed on tech stack. Task: Needed to align the team. Action: Built a small proof-of-concept to demonstrate metrics. Result: Team adopted the approach smoothly." },
+                { q: "Describe the most complex technical bug you have ever solved. Walk me through your debugging process.", a: "STAR format. Situation: System crashed under load. Task: Identify root cause. Action: Used profiling tools, isolated the N+1 query, rewrote query. Result: System stabilized, latency dropped 90%." },
+                { q: "Tell me about a time you had to learn a new technology under tight time constraints.", a: "STAR format. Situation: Client requested feature requiring new tech. Task: Deliver in 1 week. Action: Read docs, built small isolated prototypes, integrated. Result: Feature shipped on time." },
+                { q: "Describe a time you fell behind on a deadline. How did you handle it and what did you learn?", a: "STAR format. Situation: Underestimated complexity. Task: Manage expectations. Action: Communicated early, proposed reduced scope for v1. Result: MVP shipped on time, learned to estimate better." }
+            ]
         };
 
+        let questionIndex = { tech: 0, sys: 0, star: 0 };
+        let currentCategory = 'tech';
+        
+        let bookmarked = JSON.parse(localStorage.getItem('bookmarkedQuestions')) || [];
+
         function loadQuestion() {
-            const cat = document.getElementById('mi-category').value;
-            document.getElementById('mi-question').innerText = questions[cat].q;
-            document.getElementById('mi-answer').innerText = questions[cat].a;
+            currentCategory = document.getElementById('mi-category').value;
+            displayQuestion();
+        }
+
+        function nextQuestion() {
+            questionIndex[currentCategory] = (questionIndex[currentCategory] + 1) % questions[currentCategory].length;
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const q = questions[currentCategory][questionIndex[currentCategory]];
+            const total = questions[currentCategory].length;
+            const idx = questionIndex[currentCategory];
+            document.getElementById('question-counter').innerText = `Question ${idx + 1} of ${total}`;
+            document.getElementById('mi-question').innerText = q.q;
+            document.getElementById('mi-answer').innerText = q.a;
             document.getElementById('mi-blueprint').style.display = 'none';
+        }
+
+        function bookmarkQuestion() {
+            const q = questions[currentCategory][questionIndex[currentCategory]].q;
+            if (!bookmarked.includes(q)) {
+                bookmarked.push(q);
+                localStorage.setItem('bookmarkedQuestions', JSON.stringify(bookmarked));
+                renderBookmarks();
+            }
+        }
+        
+        function renderBookmarks() {
+            const list = document.getElementById('bookmark-list');
+            const drawer = document.getElementById('bookmarked-drawer');
+            if (bookmarked.length > 0) {
+                drawer.style.display = 'block';
+                list.innerHTML = bookmarked.map(b => `<li style="margin-bottom: 0.5rem;">${b}</li>`).join('');
+            }
         }
 
         function toggleBlueprint() {
             const el = document.getElementById('mi-blueprint');
             el.style.display = el.style.display === 'none' ? 'block' : 'none';
         }
+        
+        // Initialize interview lab
+        window.addEventListener('DOMContentLoaded', () => {
+            loadQuestion();
+            renderBookmarks();
+            initChecklist();
+        });
 
         function negotiate(option) {
             const res = document.getElementById('neg-result');
@@ -743,6 +872,46 @@ ${metrics}
                 // Cleanup
                 setTimeout(() => conf.remove(), 5000);
             }
+        }
+        
+        // Checklist Logic
+        function initChecklist() {
+            const savedState = JSON.parse(localStorage.getItem('gradChecklist')) || {};
+            let checkedCount = 0;
+            
+            for(let m = 1; m <= 4; m++) {
+                const grid = document.getElementById(`m${m}-grid`);
+                if(!grid) continue;
+                for(let i = 1; i <= 12; i++) {
+                    const lessonId = (m-1)*12 + i;
+                    const id = `l${lessonId}`;
+                    const isChecked = savedState[id] || false;
+                    if(isChecked) checkedCount++;
+                    
+                    const div = document.createElement('div');
+                    div.className = 'checkbox-item';
+                    div.innerHTML = `
+                        <input type="checkbox" id="${id}" onchange="updateChecklist()" ${isChecked ? 'checked' : ''}>
+                        <label for="${id}">Lesson ${lessonId}</label>
+                    `;
+                    grid.appendChild(div);
+                }
+            }
+            document.getElementById('skills-count').innerText = `${checkedCount} / 48`;
+        }
+        
+        function updateChecklist() {
+            const savedState = {};
+            let count = 0;
+            for(let i = 1; i <= 48; i++) {
+                const el = document.getElementById(`l${i}`);
+                if(el && el.checked) {
+                    savedState[`l${i}`] = true;
+                    count++;
+                }
+            }
+            localStorage.setItem('gradChecklist', JSON.stringify(savedState));
+            document.getElementById('skills-count').innerText = `${count} / 48`;
         }
     </script>
 </body>

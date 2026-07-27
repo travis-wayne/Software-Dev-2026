@@ -520,16 +520,128 @@ export default async function Page() {
       <h2>Capstone Mastery Quiz</h2>
       <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
         <div id="quiz-container">
-          <h3 id="q-title">Q1: Why use AWS S3 Pre-signed URLs instead of standard Next.js API route uploads?</h3>
+          <h3 id="q-title">Q1: Why should you use pre-signed S3 URLs instead of uploading files through your Next.js server?</h3>
           <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;" id="q-options">
-            <button class="btn" style="text-align: left" onclick="answerQuiz(0)">A) It encrypts the file automatically.</button>
-            <button class="btn" style="text-align: left" onclick="answerQuiz(1)">B) It bypasses serverless memory and timeout limits.</button>
-            <button class="btn" style="text-align: left" onclick="answerQuiz(2)">C) It converts images to WebP format.</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(0, 1)">A) Pre-signed URLs are faster to generate</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(1, 1)">B) They allow direct browser-to-S3 upload, bypassing server memory limits and avoiding 502 timeouts on large files</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(2, 1)">C) Next.js cannot handle file uploads at all</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(3, 1)">D) S3 requires pre-signed URLs by default</button>
           </div>
           <p id="q-feedback" style="margin-top: 1rem; font-weight: 500;"></p>
         </div>
       </div>
     </div>
+  </main>
+  
+  <script>
+    const quizQuestions = [
+      {
+        question: "Why should you use pre-signed S3 URLs instead of uploading files through your Next.js server?",
+        options: [
+          "A) Pre-signed URLs are faster to generate",
+          "B) They allow direct browser-to-S3 upload, bypassing server memory limits and avoiding 502 timeouts on large files",
+          "C) Next.js cannot handle file uploads at all",
+          "D) S3 requires pre-signed URLs by default"
+        ],
+        correct: 1,
+        explanation: "Next.js serverless functions have a 4.5MB body limit and 10-30 second timeouts. A 50MB video upload through the server would crash with a 502. Pre-signed URLs bypass the server entirely."
+      },
+      {
+        question: "In Neon PostgreSQL, what is the difference between `DATABASE_URL` and `DIRECT_URL`?",
+        options: [
+          "A) They are the same connection string with different names",
+          "B) `DATABASE_URL` is for app queries (pooled); `DIRECT_URL` is for Prisma migrations (non-pooled)",
+          "C) `DIRECT_URL` is for production; `DATABASE_URL` is for development",
+          "D) `DIRECT_URL` bypasses SSL"
+        ],
+        correct: 1,
+        explanation: "Neon uses PgBouncer connection pooling by default. Prisma migrations require DDL operations (CREATE TABLE, ALTER TABLE) that are incompatible with pgBouncer. The `DIRECT_URL` connects directly to the Neon compute, bypassing PgBouncer."
+      },
+      {
+        question: "What is Optimistic UI and what risk does it carry?",
+        options: [
+          "A) A UI that loads instantly with no data",
+          "B) A UI that pre-renders on the server",
+          "C) Updating the UI immediately before the server confirms the operation, then rolling back if it fails",
+          "D) Showing a spinner while waiting for server response"
+        ],
+        correct: 2,
+        explanation: "Optimistic UI (used by Linear, Notion, Slack) makes apps feel instant. The risk: the server might reject the operation (validation error, network timeout), requiring a rollback that the user sees as a \"flash\" revert. Must implement proper error handling and rollback."
+      },
+      {
+        question: "What happens if you prefix a server-side secret with `NEXT_PUBLIC_`?",
+        options: [
+          "A) Nothing — environment variables are always server-side only",
+          "B) The variable is automatically encrypted",
+          "C) The secret is embedded in the client-side JavaScript bundle and exposed to all users in their browser",
+          "D) Next.js throws a build error"
+        ],
+        correct: 2,
+        explanation: "`NEXT_PUBLIC_` variables are inlined into the browser-side JavaScript at build time by webpack. This is how the $4,000 crypto-mining incident happened — `NEXT_PUBLIC_AWS_SECRET_ACCESS_KEY` was visible to anyone who ran `view-source:` on the deployed URL."
+      },
+      {
+        question: "How do you prevent N+1 queries in Prisma?",
+        options: [
+          "A) Use raw SQL instead of Prisma ORM",
+          "B) Use `include` to eager-load related data in a single query",
+          "C) Use `findFirst` instead of `findMany`",
+          "D) Enable Prisma Accelerate"
+        ],
+        correct: 1,
+        explanation: "N+1 occurs when you fetch N records then loop to fetch each one's relations (N extra queries). `include: { author: true }` uses a SQL JOIN to fetch everything in ONE query regardless of result count."
+      }
+    ];
+
+    let currentQuestion = 0;
+    let score = 0;
+
+    function renderQuestion(index) {
+      if (index >= quizQuestions.length) {
+        document.getElementById('quiz-container').innerHTML = `
+          <h3 style="color: var(--primary); text-align: center;">🏆 Capstone Architecture Mastery Achieved!</h3>
+          <p style="text-align: center; margin-top: 1rem;">Score: ${score}/${quizQuestions.length}</p>
+        `;
+        return;
+      }
+
+      const q = quizQuestions[index];
+      document.getElementById('q-title').innerText = \`Q\${index + 1}: \${q.question}\`;
+      
+      const optionsContainer = document.getElementById('q-options');
+      optionsContainer.innerHTML = '';
+      
+      q.options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn';
+        btn.style.textAlign = 'left';
+        btn.innerText = opt;
+        btn.onclick = () => answerQuizNew(i, index);
+        optionsContainer.appendChild(btn);
+      });
+      
+      document.getElementById('q-feedback').innerText = '';
+    }
+
+    function answerQuizNew(selectedOption, questionIndex) {
+      const q = quizQuestions[questionIndex];
+      const fb = document.getElementById('q-feedback');
+      
+      if (selectedOption === q.correct) {
+        fb.innerText = "✅ Correct! " + q.explanation;
+        fb.style.color = "var(--primary)";
+        if (questionIndex === currentQuestion) {
+          score++;
+        }
+      } else {
+        fb.innerText = "❌ Incorrect. " + q.explanation;
+        fb.style.color = "var(--danger)";
+      }
+      
+      if (questionIndex === currentQuestion) {
+        currentQuestion++;
+        setTimeout(() => renderQuestion(currentQuestion), 3500);
+      }
+    }
 
   </main>
 

@@ -130,6 +130,99 @@ You've made it! Celebrate the journey from writing your first `<h1>` tag in HTML
 
 ---
 
+**New Section 3b: Structuring a System Design Interview Answer (The 5-Minute Framework)**
+
+Even in a career development lesson, engineers must be ready for system design rounds. Here is the exact framework:
+
+**The 5-Step Answer Structure (30-45 minutes total):**
+
+**Step 1 — Clarify Requirements (5 min):**
+Never jump to solutions immediately! Ask:
+- "Is this a read-heavy or write-heavy system?"
+- "How many DAU are we targeting?"
+- "Do we need real-time updates or is eventual consistency acceptable?"
+- "What are the SLA requirements (99.9% vs 99.99% uptime)?"
+
+**Step 2 — Back-of-Envelope Estimation (5 min):**
+For a URL Shortener example:
+- 100M DAU, 1% create (1M writes/day), 99% read (99M reads/day)
+- Write QPS: 1M ÷ 86,400 ≈ 12 writes/second
+- Read QPS: 99M ÷ 86,400 ≈ 1,146 reads/second (~100:1 read:write)
+
+**Step 3 — High-Level Architecture (10 min):**
+```
+Client → Load Balancer → App Servers → Redis Cache → PostgreSQL
+                                     ↘ CDN (static assets)
+```
+
+**Step 4 — API Design (5 min):**
+```
+POST /shorten  { url: "https://..." } → { shortCode: "abc123" }
+GET  /{code}   → 302 Redirect to original URL
+```
+
+**Step 5 — Deep Dive on Hardest Part (15 min):**
+ID Generation: MD5 hash (collision risk) vs Counter (sequential, guessable) vs Snowflake ID (best: unique, sortable, distributed). Choose Snowflake + Base62 encode → 7-char codes.
+
+**Quick STAR Story Blueprints for Common Questions:**
+
+| Question | Situation | Task | Action | Result |
+|----------|-----------|------|--------|--------|
+| "Hardest bug you fixed" | N+1 query causing 3,400ms response time on launch day | Reduce DB query count without changing API | Added Prisma `include` for eager loading, added `@@index` on FK columns | Response time dropped from 3,400ms to 45ms, 99th percentile latency |
+| "Disagreement with teammate" | Teammate wanted MongoDB, I advocated PostgreSQL for relational data | Present technical case respectfully | Built a proof-of-concept with both, presented metrics to team | Team chose PostgreSQL; I learned to always back opinions with data, not just preference |
+| "Learning new tech under pressure" | Client required Redis caching in 48 hours — I had never used Redis | Get Redis working with Express in 48hrs | Read docs, found a proven pattern, built increment and tested in staging | Feature shipped on time; I added Redis to my resume stack |
+
+**New Section 5b: Understanding Equity & Stock Options**
+
+Total Compensation (TC) is NOT just base salary:
+
+| Component | Description | Typical Range |
+|-----------|-------------|---------------|
+| Base Salary | Fixed monthly cash | $80k-$180k (varies by city/company) |
+| Performance Bonus | Annual cash % of base | 5-20% |
+| Signing Bonus | One-time joining cash | $5k-$50k |
+| RSUs (Restricted Stock Units) | Company stock vesting over 4 years | $0-$200k+/year |
+| 401(k) Match | Employer retirement contribution | 3-6% of salary |
+
+**Vesting Explained:**
+- Standard: 4-year vesting with 1-year cliff
+- Cliff: You receive NOTHING for the first year (if you leave month 11, you keep $0 of RSUs)
+- After cliff: 25% vests immediately, then monthly/quarterly vesting for remaining 3 years
+
+Example: Offer with $100,000 RSUs on a 4-year vest, 1-year cliff:
+- Year 0-11 months: Leave → $0 RSUs
+- Year 1 exactly: $25,000 RSUs vest immediately (the cliff!)
+- Year 1-4: ~$2,083/month vesting until fully vested
+
+**Always ask these equity questions before accepting:**
+- What is the current 409A valuation (fair market value)?
+- When was the last funding round and what was the valuation?
+- What percentage of the company does my equity grant represent?
+- Are these ISOs or NSOs? (Tax implications differ significantly)
+
+**New Section 6b: Building in Public & Open Source Strategy**
+
+How to accelerate your career visibility 10x:
+
+**Building in Public:**
+- Tweet/post weekly technical breakdowns of what you built in Software-Dev-2026
+- Example thread structure: "I just solved the N+1 query problem in Prisma 🧵"
+  - Tweet 1: The problem (attach a screenshot of the slow query log)
+  - Tweet 2: The bad code (naive findMany + loop)
+  - Tweet 3: The fix (Prisma include + @@index)
+  - Tweet 4: The benchmark result (3400ms → 45ms)
+  - Tweet 5: The lesson (always check for eager loading!)
+- Every week of building in public is a week of documented engineering growth that recruiters can verify!
+
+**Open Source Contribution Strategy (For Beginners):**
+1. Start with documentation improvements (fix typos, clarify confusing README sections)
+2. Look for `good first issue` labels on GitHub projects you actually use (Next.js, Prisma, Tailwind)
+3. Fix one small bug with a clear, focused PR — resist the urge to "clean up everything"
+4. Add one unit test to an untested function
+5. How to list on resume: "Contributed to [ProjectName] (XX,000 ⭐) — improved X"
+
+---
+
 ## ⚠️ Section 7: Common Career & Job Search Pitfalls
 
 | The Trap | Why It Fails | The Solution |
@@ -142,4 +235,5 @@ You've made it! Celebrate the journey from writing your first `<h1>` tag in HTML
 | **The "I" vs. "We" Trap** | Saying "I did everything, my team was bad" fails the culture fit round instantly. | Highlight team collaboration, even if you did the heavy lifting. |
 
 ---
+
 **Congratulations, Engineer! The world needs your code. Go build the future.**

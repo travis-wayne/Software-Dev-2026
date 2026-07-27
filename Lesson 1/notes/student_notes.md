@@ -178,6 +178,63 @@ Semantic tags have built-in meaning:
 <footer>...</footer>
 ```
 
+## Section 4b: The Big Picture — HTML, CSS & JavaScript Working Together (The House Analogy)
+- HTML = The bricks, walls, framing, and roof structure (skeleton). Without this, nothing stands.
+- CSS = Interior design, paint colors, furniture, window dressings (style). Makes it look beautiful.
+- JavaScript = Electrical wiring, plumbing, smart home automation, elevator (logic and interactivity).
+- Key rule: You build the walls BEFORE you paint them. You cannot style (CSS) or animate (JS) something that doesn't exist in HTML yet!
+
+```text
+=======================
+|     JAVASCRIPT      | (Interactivity / Logic)
+=======================
+|        CSS          | (Styling / Design)
+=======================
+|        HTML         | (Structure / Skeleton)
+=======================
+```
+
+## Section 5b: Block vs. Inline Elements — Understanding the Flow
+- Block elements: start on a new line, stretch full width by default → `<h1>`, `<p>`, `<div>`, `<ul>`, `<section>`, `<article>`, `<header>`, `<footer>`
+- Inline elements: flow within text, only as wide as their content → `<a>`, `<span>`, `<strong>`, `<em>`, `<img>`
+
+**Visual Flow Comparison:**
+```text
+Block Elements:
+[================= <p> =================]
+[================ <div> ================]
+
+Inline Elements:
+[ <span> ][ <a> ][ <strong> ]
+```
+Common beginner confusion: Why can't I put a `<p>` inside an `<a>`? → Block inside inline is invalid HTML5!
+
+## Section 5c: Introduction to HTML Forms — Capturing User Input
+Forms are the primary way users send data to a server (login, signup, search, contact).
+
+Essential form elements:
+```html
+<form action="/submit" method="POST">
+  <label for="name">Your Name:</label>
+  <input type="text" id="name" name="name" placeholder="Enter your name" required />
+  
+  <label for="email">Email Address:</label>
+  <input type="email" id="email" name="email" required />
+  
+  <label for="message">Message:</label>
+  <textarea id="message" name="message" rows="4"></textarea>
+  
+  <button type="submit">Send Message</button>
+</form>
+```
+- `action`: Where the data goes.
+- `method`: How it's sent (GET vs POST).
+- `name`: How form data gets labeled for the server.
+- `required`: Prevents submission if empty.
+- `placeholder`: Hint text in the input.
+
+Where does this data GO when you hit Submit? Into a database like PostgreSQL — that is exactly what Month 3 covers! For now, just know that forms are the front door of every web application.
+
 ## Section 7: Common Beginner Mistakes & How to Avoid Them
 
 | Mistake | Consequence | How to Fix |
@@ -187,6 +244,10 @@ Semantic tags have built-in meaning:
 | **Missing `alt` attributes on images** | Fails accessibility audits; screen readers read the raw filename to blind users. | Always include `alt="Descriptive text"`. |
 | **Multiple `<h1>` tags** | Confuses search engines and disrupts the logical document outline. | Use one `<h1>` per page, then `<h2>`, `<h3>`, etc. |
 | **Working directly on the Desktop** | Creates a chaotic workspace; hard to link files relatively. | Create a dedicated `workspace/project-name` folder structure and open that *entire folder* in VS Code. |
-| **Using `<b>` instead of `<strong>`** | `<b>` just makes text bold visually. `<strong>` adds semantic importance for accessibility. | Use `<strong>` and `<em>` instead of `<b>` and `<i>`. |
+| **Using `<b>` instead of `<strong>`** | `<b>` is purely visual; `<strong>` has semantic meaning (screen readers emphasize it). | Always prefer `<strong>` for important text. |
+| **Nesting block inside inline** (`<a><p>text</p></a>`) | Invalid HTML5; browser renders it unpredictably. | Never put block elements inside inline elements. |
+| **Skipping heading levels** (e.g., `<h1>` to `<h4>`) | Confuses screen readers and breaks document outline. | Always use semantic heading hierarchy (`<h1>` -> `<h2>` -> `<h3>`). |
+| **Not linking CSS/JS correctly** | Your styles or logic won't load, leaving a plain or broken page. | Double check file paths in `<link>` and `<script>` tags. |
+| **Using IDs multiple times on one page** | Breaks JS targeting and accessibility links. | Use `class` for multiple elements, `id` MUST be unique per page. |
 
 Welcome to the world of software engineering! Let's get building.

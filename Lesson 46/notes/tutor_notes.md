@@ -25,6 +25,25 @@ Don'ts:
 - Don't accept hand-wavy answers: "Add more servers" → ask "How? Which algorithm routes requests?"
 - Don't skip estimation — it's where most candidates fail
 
+**Expanded Mock Interview Script — Branching Follow-Up Questions:**
+
+After the existing mock interview script, add branching scenarios:
+
+**If student misses vanity alias collision handling:**
+> Interviewer: "Great! You've designed the ID generation. But what if two users both try to register the custom alias 'google' at the same time?"
+- Bad answer: "Whoever submits first wins" (doesn't address race condition)
+- Good answer: Use DB unique constraint + optimistic concurrency: `INSERT INTO urls (slug) VALUES ('google') ON CONFLICT DO NOTHING` — then check if 0 rows inserted and return 409 Conflict
+
+**If student misses analytics tracking:**
+> Interviewer: "Your URL shortener is popular. The marketing team now wants real-time analytics — which countries, devices, referrers are clicking each link. How do you add this without slowing down redirects?"
+- Answer: Don't block the redirect. Fire-and-forget to a Kafka topic (`url_clicked` event). An analytics consumer service writes to ClickHouse (column-store optimized for aggregation). Redirect response time stays under 50ms.
+
+**Coaching Tips for Interview-Frozen Students:**
+- If student goes completely silent: Prompt with "Start by thinking out loud — what is the simplest possible system that could work?"
+- If student jumps straight to complexity: "Before microservices, can you design a simpler single-server version?"
+- If student uses the wrong data structure: Ask "What is the read:write ratio for this system?" to guide them toward the right choice.
+- Physical tip: Teach students to write/draw on the whiteboard WHILE they talk — interviewers evaluate process, not just the final answer.
+
 ### 3. Production War Stories
 
 **War Story 1: The 301 vs 302 Redirect Mistake**
