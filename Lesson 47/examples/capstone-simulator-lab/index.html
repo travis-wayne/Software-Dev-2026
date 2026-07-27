@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lesson 47 Capstone — Architecture Simulator</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg-color: #0b1120;
+      --glass-bg: rgba(255, 255, 255, 0.05);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-blur: 12px;
+      
+      --primary: #10b981;
+      --secondary: #8b5cf6;
+      --danger: #f43f5e;
+      --warning: #f59e0b;
+      --info: #06b6d4;
+      
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Ambient Blobs */
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      z-index: -1;
+      opacity: 0.4;
+      animation: pulse 10s infinite alternate;
+    }
+    .blob-1 {
+      top: -10%; left: -10%; width: 40vw; height: 40vw; background: var(--primary);
+    }
+    .blob-2 {
+      bottom: -10%; right: -10%; width: 50vw; height: 50vw; background: var(--secondary);
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 0.3; }
+      100% { transform: scale(1.1); opacity: 0.5; }
+    }
+
+    header {
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid var(--glass-border);
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .status-bar {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+    }
+
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .status-badge span {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+      box-shadow: 0 0 8px var(--primary);
+    }
+
+    /* Tabs */
+    .tabs-container {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--glass-border);
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.75rem 1.5rem;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s ease;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active {
+      color: var(--text-main);
+    }
+
+    .tab-btn.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      box-shadow: 0 0 10px var(--primary);
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .tab-content {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Glass Cards */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .hover-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Typography inside content */
+    h2 { font-size: 1.25rem; margin-bottom: 1rem; color: var(--text-main); }
+    h3 { font-size: 1.1rem; margin-bottom: 0.75rem; color: var(--text-main); }
+    p { margin-bottom: 1rem; line-height: 1.6; color: var(--text-muted); }
+    
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.3);
+      padding: 0.2rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+    
+    pre {
+      font-family: 'JetBrains Mono', monospace;
+      background: rgba(0,0,0,0.5);
+      padding: 1rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 0.85rem;
+      border: 1px solid var(--glass-border);
+      margin-bottom: 1rem;
+    }
+
+    /* Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    /* UI Elements */
+    .btn {
+      background: var(--glass-bg);
+      color: var(--text-main);
+      border: 1px solid var(--glass-border);
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    .btn.primary {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #000;
+      font-weight: 600;
+    }
+    .btn.primary:hover {
+      background: #0ea5e9; /* fallback */
+      box-shadow: 0 0 15px rgba(16, 185, 129, 0.5);
+    }
+    .btn.danger {
+      background: var(--danger);
+      border-color: var(--danger);
+    }
+
+    /* Custom styles for specific tabs */
+    
+    /* Tab 1: Architecture Layers */
+    .layer-card {
+      margin-bottom: 0.75rem;
+      cursor: pointer;
+      border-left: 4px solid transparent;
+    }
+    .layer-card.active {
+      border-left-color: var(--primary);
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Tab 2: Kanban Simulator */
+    .kanban-board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    .kanban-col {
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      min-height: 400px;
+    }
+    .kanban-col h3 {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid var(--glass-border);
+    }
+    .task-card {
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      font-size: 0.9rem;
+      position: relative;
+    }
+    .task-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      margin-top: 0.5rem;
+    }
+    .badge-sync { background: var(--warning); color: #000; }
+    .badge-done { background: var(--primary); color: #000; }
+
+    /* Tab 3: Chaos Engine */
+    .terminal {
+      background: #000;
+      color: #0f0;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 1rem;
+      border-radius: 8px;
+      height: 200px;
+      overflow-y: auto;
+      margin-top: 1rem;
+      border: 1px solid #333;
+    }
+    .log-line { margin-bottom: 0.2rem; font-size: 0.85rem; }
+    .log-error { color: var(--danger); }
+    .log-success { color: var(--primary); }
+    
+    /* Upload Simulator */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: var(--glass-border);
+      border-radius: 3px;
+      margin-top: 0.5rem;
+      overflow: hidden;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: var(--primary);
+      transition: width 0.1s linear;
+    }
+    
+    .input-group {
+      margin-bottom: 1rem;
+    }
+    .input-group label {
+      display: block;
+      margin-bottom: 0.4rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 0.5rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--glass-border);
+      color: white;
+      border-radius: 4px;
+      font-family: inherit;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <header>
+    <h1>Lesson 47 Capstone — Full-Stack Architecture Lab</h1>
+    <div class="status-bar">
+      <div class="status-badge"><span></span> Backend: Simulator Mode</div>
+      <div class="status-badge"><span></span> DB: Dual-Mode RAM</div>
+      <div class="status-badge"><span></span> Cloud: S3 Active</div>
+    </div>
+  </header>
+
+  <div class="tabs-container">
+    <button class="tab-btn active" onclick="openTab('arch')">🏗️ Architecture Builder</button>
+    <button class="tab-btn" onclick="openTab('sandbox')">⚡ Live Sandbox</button>
+    <button class="tab-btn" onclick="openTab('chaos')">🛠️ Chaos Engine</button>
+    <button class="tab-btn" onclick="openTab('quiz')">🧠 Capstone Quiz</button>
+  </div>
+
+  <main>
+    <!-- TAB 1: Architecture -->
+    <div id="arch" class="tab-content active">
+      <div class="grid-2">
+        <div>
+          <h2>Interactive Stack Layers</h2>
+          <p>Click a layer to inspect its configuration and production code sample.</p>
+          <div class="glass-card hover-card layer-card active" onclick="selectLayer(1)">
+            <h3>1. Frontend UI Layer</h3>
+            <p>Next.js App Router, React Server Components, TailwindCSS</p>
+          </div>
+          <div class="glass-card hover-card layer-card" onclick="selectLayer(2)">
+            <h3>2. State & Cache Layer</h3>
+            <p>Zustand (UI State) + TanStack Query / SWR (Server State)</p>
+          </div>
+          <div class="glass-card hover-card layer-card" onclick="selectLayer(3)">
+            <h3>3. API & Edge Layer</h3>
+            <p>Next.js API Routes, Server Actions, NextAuth.js RBAC</p>
+          </div>
+          <div class="glass-card hover-card layer-card" onclick="selectLayer(4)">
+            <h3>4. Data & ORM Layer</h3>
+            <p>Prisma ORM, Neon PostgreSQL Connection Pooling</p>
+          </div>
+          <div class="glass-card hover-card layer-card" onclick="selectLayer(5)">
+            <h3>5. Cloud Storage Layer</h3>
+            <p>AWS S3 Pre-signed URL Direct Uploads</p>
+          </div>
+        </div>
+        
+        <div>
+          <h2>Architecture Inspector</h2>
+          <div class="glass-card" id="inspector-panel" style="min-height: 480px;">
+            <h3 id="insp-title">1. Frontend UI Layer</h3>
+            <p id="insp-desc">Server Components handle secure data fetching directly from the DB, while Client Components handle interactivity. This reduces JS bundle size.</p>
+            <div style="margin-top: 1rem;">
+              <strong>Code Sample:</strong>
+              <pre id="insp-code">
+// app/page.tsx (Server Component)
+export default async function Page() {
+  // Direct DB call, never shipped to browser
+  const users = await prisma.user.findMany();
+  
+  return (
+    &lt;main&gt;
+      &lt;UserList initialUsers={users} /&gt;
+    &lt;/main&gt;
+  );
+}</pre>
+            </div>
+            <div class="glass-card" style="margin-top: 1rem; background: rgba(245, 158, 11, 0.1); border-color: rgba(245, 158, 11, 0.3);">
+              <strong style="color: var(--warning)">💡 Pro Tip:</strong>
+              <p id="insp-tip" style="margin-bottom: 0; margin-top: 0.5rem;">Never fetch data in a useEffect in the Next.js App Router if you can fetch it in a Server Component instead.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: Sandbox -->
+    <div id="sandbox" class="tab-content">
+      <div class="grid-2">
+        <div class="glass-card">
+          <h2>Interactive Control Console</h2>
+          
+          <div class="input-group">
+            <label>Current Role</label>
+            <select id="role-select" onchange="updatePermissions()">
+              <option value="OWNER">👑 Workspace Owner</option>
+              <option value="ADMIN">🛠️ Admin</option>
+              <option value="MEMBER">👤 Developer Member</option>
+              <option value="GUEST">👀 Guest</option>
+            </select>
+          </div>
+
+          <hr style="border:0; border-top: 1px solid var(--glass-border); margin: 1.5rem 0;" />
+
+          <h3>Create Issue</h3>
+          <div class="input-group">
+            <label>Title</label>
+            <input type="text" id="issue-title" placeholder="e.g., Fix Navigation Bug" value="Fix Navigation Bug">
+          </div>
+          
+          <div class="input-group">
+            <label>Upload Attachment (S3 Simulation)</label>
+            <button class="btn" onclick="simulateUpload()">Select File</button>
+            <div class="progress-bar-container" id="upload-progress-container">
+              <div class="progress-bar" id="upload-progress"></div>
+            </div>
+            <p id="upload-status" style="font-size: 0.75rem; margin-top: 0.25rem;"></p>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem;">
+            <div>
+              <input type="checkbox" id="opt-ui-toggle" checked>
+              <label for="opt-ui-toggle" style="font-size: 0.85rem;">Enable Optimistic UI</label>
+            </div>
+            <button class="btn primary" id="btn-create-issue" onclick="createIssue()">Create Issue</button>
+          </div>
+        </div>
+
+        <div>
+          <h2>Live Kanban Board</h2>
+          <div class="kanban-board">
+            <div class="kanban-col" id="col-todo">
+              <h3>TODO</h3>
+              <div class="task-card">
+                Setup NextAuth
+                <br><span class="task-badge badge-done">✅ Synced</span>
+              </div>
+            </div>
+            <div class="kanban-col" id="col-inprog">
+              <h3>IN PROGRESS</h3>
+            </div>
+            <div class="kanban-col" id="col-done">
+              <h3>DONE</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Chaos -->
+    <div id="chaos" class="tab-content">
+      <h2>Production Debugger & Chaos Engine</h2>
+      <p>Select a real-world disaster scenario to debug.</p>
+      
+      <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+        <button class="btn hover-card" onclick="loadScenario(1)">🚨 1: S3 Upload Crash</button>
+        <button class="btn hover-card" onclick="loadScenario(2)">🚨 2: N+1 Query Disaster</button>
+        <button class="btn hover-card" onclick="loadScenario(3)">🚨 3: Token Leak</button>
+      </div>
+
+      <div class="grid-2">
+        <div class="glass-card" id="scenario-details">
+          <h3>Select a scenario above</h3>
+          <p>Read the incident report and choose a fix.</p>
+        </div>
+        
+        <div>
+          <h3>Live Server Terminal</h3>
+          <div class="terminal" id="terminal">
+            <div class="log-line">Server started on port 3015...</div>
+            <div class="log-line">Waiting for incident report...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: Quiz -->
+    <div id="quiz" class="tab-content">
+      <h2>Capstone Mastery Quiz</h2>
+      <div class="glass-card" style="max-width: 800px; margin: 0 auto;">
+        <div id="quiz-container">
+          <h3 id="q-title">Q1: Why use AWS S3 Pre-signed URLs instead of standard Next.js API route uploads?</h3>
+          <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem;" id="q-options">
+            <button class="btn" style="text-align: left" onclick="answerQuiz(0)">A) It encrypts the file automatically.</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(1)">B) It bypasses serverless memory and timeout limits.</button>
+            <button class="btn" style="text-align: left" onclick="answerQuiz(2)">C) It converts images to WebP format.</button>
+          </div>
+          <p id="q-feedback" style="margin-top: 1rem; font-weight: 500;"></p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    // Tab Logic
+    function openTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      event.currentTarget.classList.add('active');
+    }
+
+    // Architecture Builder Logic
+    const layers = [
+      {
+        title: "1. Frontend UI Layer",
+        desc: "Server Components handle secure data fetching directly from the DB, while Client Components handle interactivity. This reduces JS bundle size.",
+        code: `// app/page.tsx (Server Component)
+export default async function Page() {
+  const users = await prisma.user.findMany();
+  return (
+    <main>
+      <UserList initialUsers={users} />
+    </main>
+  );
+}`,
+        tip: "Never fetch data in a useEffect in the Next.js App Router if you can fetch it in a Server Component instead."
+      },
+      {
+        title: "2. State & Cache Layer",
+        desc: "Zustand manages local UI state (modals, theme), while TanStack Query handles server state caching, background syncing, and optimistic updates.",
+        code: `// Optimistic UI with Zustand
+const useIssueStore = create((set) => ({
+  issues: [],
+  addIssueOpt: (issue) => set((state) => ({ 
+    issues: [...state.issues, { ...issue, syncing: true }] 
+  }))
+}));`,
+        tip: "Don't put everything in global state! Keep server data in React Query/SWR and UI toggles in Zustand."
+      },
+      {
+        title: "3. API & Edge Layer",
+        desc: "Next.js API Routes and Server Actions process requests. NextAuth middleware intercepts requests at the Edge to verify JWT sessions and enforce RBAC.",
+        code: `// app/api/issues/route.ts
+export async function POST(req) {
+  const session = await getServerSession(authOptions);
+  if (!session || session.user.role !== 'ADMIN') {
+    return new Response("Unauthorized", { status: 403 });
+  }
+  // Safe to proceed...
+}`,
+        tip: "Always re-verify permissions on the server. Hiding a button in the UI does not secure the API!"
+      },
+      {
+        title: "4. Data & ORM Layer",
+        desc: "Prisma provides type-safe DB access. Since Serverless functions create many connections, a connection pooler (PgBouncer/Neon) is required.",
+        code: `// .env
+# Used for App queries (Pooler)
+DATABASE_URL="postgres://user:pass@pooler.neon.tech/db"
+
+# Used ONLY for 'prisma db push'
+DIRECT_URL="postgres://user:pass@compute.neon.tech/db"`,
+        tip: "Use Prisma `include` to solve N+1 query problems when fetching nested relations."
+      },
+      {
+        title: "5. Cloud Storage Layer",
+        desc: "To prevent serverless timeouts (10s) and memory crashes (1024MB) during large uploads, the server generates a pre-signed URL for direct-to-S3 client uploads.",
+        code: `// 1. Client asks API for URL
+const { uploadUrl } = await fetch('/api/presign');
+
+// 2. Client uploads directly to AWS (bypassing Next.js)
+await fetch(uploadUrl, {
+  method: 'PUT',
+  body: fileData
+});`,
+        tip: "Set appropriate CORS rules on your S3 bucket so the browser is allowed to perform the PUT request."
+      }
+    ];
+
+    function selectLayer(index) {
+      document.querySelectorAll('.layer-card').forEach(el => el.classList.remove('active'));
+      event.currentTarget.classList.add('active');
+      
+      const layer = layers[index - 1];
+      document.getElementById('insp-title').innerText = layer.title;
+      document.getElementById('insp-desc').innerText = layer.desc;
+      document.getElementById('insp-code').innerText = layer.code;
+      document.getElementById('insp-tip').innerText = layer.tip;
+    }
+
+    // Sandbox Logic
+    function updatePermissions() {
+      const role = document.getElementById('role-select').value;
+      const btn = document.getElementById('btn-create-issue');
+      if (role === 'GUEST') {
+        btn.disabled = true;
+        btn.innerText = '🔒 Access Denied (Guests Cannot Create)';
+        btn.style.opacity = '0.5';
+      } else {
+        btn.disabled = false;
+        btn.innerText = 'Create Issue';
+        btn.style.opacity = '1';
+      }
+    }
+
+    function simulateUpload() {
+      const container = document.getElementById('upload-progress-container');
+      const bar = document.getElementById('upload-progress');
+      const status = document.getElementById('upload-status');
+      
+      container.style.display = 'block';
+      bar.style.width = '0%';
+      status.innerText = "Requesting Presigned URL from API (20ms)...";
+      
+      setTimeout(() => {
+        bar.style.width = '20%';
+        status.innerText = "Uploading binary directly to S3 via PUT (80ms)...";
+        
+        setTimeout(() => {
+          bar.style.width = '100%';
+          status.innerText = "✅ File securely stored on S3!";
+          status.style.color = "var(--primary)";
+        }, 800);
+      }, 400);
+    }
+
+    function createIssue() {
+      const title = document.getElementById('issue-title').value;
+      if (!title) return;
+
+      const isOpt = document.getElementById('opt-ui-toggle').checked;
+      const col = document.getElementById('col-todo');
+      
+      const card = document.createElement('div');
+      card.className = 'task-card';
+      
+      if (isOpt) {
+        // Optimistic UI: Render instantly
+        card.innerHTML = `${title}<br><span class="task-badge badge-sync" id="badge-${Date.now()}">⏳ Syncing...</span>`;
+        col.appendChild(card);
+        
+        // Simulate DB delay
+        setTimeout(() => {
+          const badge = card.querySelector('.task-badge');
+          badge.className = 'task-badge badge-done';
+          badge.innerText = '✅ Synced';
+        }, 800);
+      } else {
+        // Blocking UI: Wait for DB
+        const oldBtnText = document.getElementById('btn-create-issue').innerText;
+        document.getElementById('btn-create-issue').innerText = '⏳ Waiting for DB...';
+        document.getElementById('btn-create-issue').disabled = true;
+        
+        setTimeout(() => {
+          card.innerHTML = `${title}<br><span class="task-badge badge-done">✅ Synced</span>`;
+          col.appendChild(card);
+          document.getElementById('btn-create-issue').innerText = oldBtnText;
+          document.getElementById('btn-create-issue').disabled = false;
+        }, 1200);
+      }
+    }
+
+    // Chaos Engine Logic
+    const scenarios = [
+      {
+        title: "🚨 The 502 Gateway Timeout",
+        desc: "500 students are trying to upload a 50MB video at the exact same time to `/api/upload`. The Vercel serverless functions are hitting the 1024MB memory limit and crashing.",
+        options: [
+          "A) Increase the server timeout to 60 seconds.",
+          "B) Refactor to use S3 Pre-signed URLs for direct client uploads.",
+          "C) Compress the video on the server using FFmpeg."
+        ],
+        correct: 1,
+        successLog: "> Refactored to Presigned URLs.\n> API Payload reduced to 2KB.\n> Memory usage stable at 120MB.\n> ✅ Incident Resolved!"
+      },
+      {
+        title: "🚨 The N+1 Query Disaster",
+        desc: "Product Hunt launch! 1000 visitors hit the homepage. The feed renders 50 posts. The UI component fetches the author for each post individually, creating 51,000 DB queries. Neon DB connections are maxed out.",
+        options: [
+          "A) Use Prisma `include: { author: true }`.",
+          "B) Upgrade Neon DB to the $500/month tier.",
+          "C) Use a React useEffect to delay the avatar loading."
+        ],
+        correct: 0,
+        successLog: "> Applied Prisma `include`.\n> SQL JOIN executed.\n> DB Queries per page load reduced from 51 to 1.\n> Latency dropped from 3400ms to 45ms.\n> ✅ Incident Resolved!"
+      },
+      {
+        title: "🚨 Token Leak in Client Bundle",
+        desc: "A GitHub scanner alerted you: your AWS Secret Key is exposed in the production JS bundle! Bots are spinning up EC2 instances.",
+        options: [
+          "A) Delete the `node_modules` folder.",
+          "B) Encode the key in Base64 in the React component.",
+          "C) Remove the `NEXT_PUBLIC_` prefix from the .env variable."
+        ],
+        correct: 2,
+        successLog: "> Removed NEXT_PUBLIC_ prefix.\n> Next.js stripped secret from client bundle.\n> Keys rotated.\n> ✅ Incident Resolved!"
+      }
+    ];
+
+    let currentScenario = 0;
+
+    function loadScenario(index) {
+      currentScenario = index - 1;
+      const s = scenarios[currentScenario];
+      
+      let html = `<h3>${s.title}</h3><p>${s.desc}</p><div style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">`;
+      s.options.forEach((opt, i) => {
+        html += `<button class="btn" style="text-align: left;" onclick="solveScenario(${i})">${opt}</button>`;
+      });
+      html += `</div>`;
+      
+      document.getElementById('scenario-details').innerHTML = html;
+      logTerminal(`[SYSTEM] Initialized Scenario: ${s.title}`, 'error');
+      logTerminal(`[ALARM] Critical failure detected in production!`, 'error');
+    }
+
+    function solveScenario(choice) {
+      const s = scenarios[currentScenario];
+      if (choice === s.correct) {
+        logTerminal(`[DEPLOY] Applying fix...`, '');
+        setTimeout(() => logTerminal(s.successLog, 'success'), 500);
+      } else {
+        logTerminal(`[FAILED] Applying fix failed. Production is still down! Incorrect architecture choice.`, 'error');
+      }
+    }
+
+    function logTerminal(msg, type) {
+      const t = document.getElementById('terminal');
+      let lines = msg.split('\n');
+      lines.forEach(l => {
+        t.innerHTML += `<div class="log-line ${type === 'error' ? 'log-error' : type === 'success' ? 'log-success' : ''}">${l}</div>`;
+      });
+      t.scrollTop = t.scrollHeight;
+    }
+
+    // Quiz Logic
+    let qState = 0;
+    function answerQuiz(opt) {
+      const fb = document.getElementById('q-feedback');
+      if (opt === 1) {
+        fb.innerText = "✅ Correct! By generating a pre-signed URL, the client uploads directly to AWS, completely bypassing Vercel's serverless constraints.";
+        fb.style.color = "var(--primary)";
+      } else {
+        fb.innerText = "❌ Incorrect. Try again! Think about Vercel's 10-second serverless execution limits.";
+        fb.style.color = "var(--danger)";
+      }
+    }
+
+  </script>
+</body>
+</html>
